@@ -1,7 +1,9 @@
 package nz.ac.aut.comp705.sortmystuff;
 
 /**
- * Created by DonnaCello on 22 Apr 2017.
+ * @author Donna
+ *
+ * A Field class to store field information
  */
 
 public class Field {
