@@ -3,11 +3,13 @@ package nz.ac.aut.comp705.sortmystuff;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -20,6 +22,10 @@ import java.util.ArrayList;
 public class IndexView extends AppCompatActivity {
 
     final Context context = this;
+    //set index as the existing index_list id in content_index_view
+    ListView index;
+    //creates a dummy Asset to start
+    Asset dummyRoot = Asset.loadDummyAssets();
 
 
     @Override
@@ -29,40 +35,46 @@ public class IndexView extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        //set index as the existing index_list id in content_index_view
-        ListView index = (ListView)findViewById(R.id.index_list);
-        //loads a dummy list of Assets in Root
-        final ArrayList<String> dummy = Asset.loadDummyAssets().getContentNames();
-        //creates an array adapter to load assets from an array of asset names
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
-                this, android.R.layout.simple_list_item_1,
-                dummy);
+        index = (ListView)findViewById(R.id.index_list);
 
+        //creates an array adapter to load an array of asset names
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
+                this, android.R.layout.simple_selectable_list_item,
+                dummyRoot.getContentNames());
         //links arrayAdapter to the index for viewing
         index.setAdapter(arrayAdapter);
 
+        //the "fab" is the Add button
        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.addAssetButton);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                //create a dialog box
                 AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(context);
                 dialogBuilder.setTitle("Add Asset");
+                //create an input area
                 final EditText input = new EditText(context);
                 dialogBuilder.setView(input);
+                //creates the Save button and what happens when clicked
                 dialogBuilder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog,int id) {
                         // get user input and add input as asset
-                        dummy.add(input.getText().toString());
+                        String inputName = input.getText().toString();
+                        dummyRoot.addContent(inputName);
+                        //workaround on list not updating
+                        ArrayAdapter<String> updateOnAdd = new ArrayAdapter<String>(
+                                context, android.R.layout.simple_selectable_list_item,
+                                dummyRoot.getContentNames());
+                        index.setAdapter(updateOnAdd);
                     }
                 });
+                //creates the Cancel button and what happens when clicked
                 dialogBuilder.setNegativeButton("Cancel",new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog,int id) {
-                        dialog.cancel();
-                    }
+                    public void onClick(DialogInterface dialog,int id) {dialog.cancel();}
                 });
-
+                //show the created dialog box
                 AlertDialog dialog = dialogBuilder.create();
-
+                //shows the dialog box upon click of addAssetButton
                 dialog.show();
             }
         });

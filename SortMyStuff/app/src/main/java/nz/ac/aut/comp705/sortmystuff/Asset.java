@@ -12,20 +12,29 @@ public class Asset {
     private List<Asset> index;
     private List<ExtendedDetail> detailList;
 
+    /* Private Constructor to create an Asset with just its name
+     *
+     * @param name the name of the new Asset
+     */
     private Asset(String name) {
         nameAs(name);
         index = new ArrayList<Asset>();
         detailList = new ArrayList<ExtendedDetail>();
     }
 
-    private Asset(String n, List<Asset> content, List<ExtendedDetail> details){
-        nameAs(n);
+    /* Private Constructor to create an Asset with its name, content, and details, if any
+     *
+     * @param name the name of the new Asset
+     * @param name
+     */
+    private Asset(String name, List<Asset> content, List<ExtendedDetail> details){
+        nameAs(name);
         index = content;
         detailList = details;
     }
 
-    public static Asset createFromFile(String n, List<Asset> content, List<ExtendedDetail> details){
-        return new Asset(n,content,details);
+    public static Asset createFromFile(String name, List<Asset> content, List<ExtendedDetail> details){
+        return new Asset(name,content,details);
     }
 
     public static Asset createAsset(String n){
@@ -63,8 +72,10 @@ public class Asset {
         return name;
     }
 
-    public List<Asset> getContent(){
-        return index;
+    public ArrayList<Asset> getContent(){
+        ArrayList<Asset> contents = new ArrayList<Asset>();
+        contents.addAll(index);
+        return contents;
     }
 
     public ArrayList<String> getContentNames(){
@@ -80,7 +91,8 @@ public class Asset {
     }
 
     public String toString(){
-        return name;
+
+        return name +": " + getContentNames().toString();
     }
 
 }
