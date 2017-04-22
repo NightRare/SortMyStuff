@@ -1,0 +1,27 @@
+{
+	"name": "Apartment",
+	"content":[
+		{
+			"name": "Fridge",
+			"content":[
+				{
+					"name": "Apple",
+					"content": [],
+					"extendedDetail": []
+				}
+			],
+			"extendedDetail":[
+				{
+					"label": "Brand",
+					"field": "Samsung"
+				}
+			]
+		}
+	],
+	"extendedDetail":[
+		{
+			"label": "Address",
+			"field": "5 Whitaker Place"
+		}
+	]
+}
