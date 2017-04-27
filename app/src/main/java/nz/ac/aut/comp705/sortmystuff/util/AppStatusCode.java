@@ -1,7 +1,7 @@
 package nz.ac.aut.comp705.sortmystuff.util;
 
 /**
- * Created by Vince on 2017/4/26.
+ * Created by Yuan on 2017/4/26.
  */
 
 public class AppStatusCode {

@@ -18,7 +18,7 @@ import nz.ac.aut.comp705.sortmystuff.data.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.TextDetail;
 
 /**
- * Created by Vince on 2017/4/25.
+ * Created by Yuan on 2017/4/25.
  */
 
 
