@@ -15,8 +15,11 @@
 //import android.widget.ListView;
 //
 //import nz.ac.aut.comp705.sortmystuff.data.Asset;
+//import nz.ac.aut.comp705.sortmystuff.ui.IPresenter;
 //
 //public class IndexView extends AppCompatActivity {
+//
+//    private IPresenter presenter;
 //
 //    final Context context = this;
 //    //set index as the existing index_list id in content_index_view
@@ -58,6 +61,9 @@
 //                    public void onClick(DialogInterface dialog,int id) {
 //                        // get user input and add input as asset
 //                        String inputName = input.getText().toString();
+//
+//                        presenter.changeName(id, inputName);
+//
 //                        dummyRoot.addContent(inputName);
 //                        //workaround on list not updating
 //                        ArrayAdapter<String> updateOnAdd = new ArrayAdapter<String>(
@@ -99,4 +105,13 @@
 //
 //        return super.onOptionsItemSelected(item);
 //    }
+//}
+//
+////////// in presenter
+//
+//
+//void changeName(String assetId, String newName) {
+//    dataManager.updateName(newName);
+//
+//    view.updateAssetName();
 //}

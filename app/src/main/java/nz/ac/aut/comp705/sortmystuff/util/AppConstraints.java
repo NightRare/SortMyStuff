@@ -26,5 +26,5 @@ public class AppConstraints {
     // IDataManager
     //********************************************
 
-    public final static int CACHED_DETAILS_LIST_NUM = 3;
+    public final static int CACHED_DETAILS_LIST_NUM = 10;
 }

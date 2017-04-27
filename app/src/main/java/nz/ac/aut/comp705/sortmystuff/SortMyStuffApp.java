@@ -14,6 +14,7 @@ import nz.ac.aut.comp705.sortmystuff.data.local.IJsonHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.JsonHelper;
 import nz.ac.aut.comp705.sortmystuff.di.Factory;
 import nz.ac.aut.comp705.sortmystuff.di.IFactory;
+import nz.ac.aut.comp705.sortmystuff.util.AppStatusCode;
 
 /**
  * Created by Yuan on 2017/4/25.
@@ -28,6 +29,7 @@ public class SortMyStuffApp extends Application {
         super.onCreate();
 
         factory = new Factory(this);
+
     }
 
     public IFactory getFactory() {
