@@ -179,7 +179,7 @@ public final class Asset {
         return container.contents.add(this);
     }
 
-    // TODO delete removeDetail
+    // TODO delete addDetail
     @Deprecated
     boolean addDetail(Detail detail) {
         Preconditions.checkNotNull(detail);
