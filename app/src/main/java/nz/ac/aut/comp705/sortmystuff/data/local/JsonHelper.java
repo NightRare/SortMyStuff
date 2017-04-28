@@ -57,7 +57,11 @@ public class JsonHelper implements IJsonHelper {
     @Override
     public Asset deserialiseAsset(final String assetId) {
         Preconditions.checkNotNull(assetId);
-        Preconditions.checkArgument(!assetId.isEmpty());
+
+        if (!rootExists()) {
+            Log.e(getClass().getName(), "Root Asset file not exists or valid.");
+            return null;
+        }
 
         return deserialiseAssetFromFile(
                 userDir + File.separator + assetId + File.separator + ASSET_FILENAME);

@@ -69,6 +69,13 @@ public interface IDataManager {
     //********************************************
 
     /**
+     * Get the Root asset from the local data source.
+     *
+     * @return the Root asset of the current user; or null if no root asset record
+     */
+    Asset getRootAsset();
+
+    /**
      * Get the Root asset from the data sources.
      *
      * @param callback see {@link GetAssetCallback}
@@ -109,6 +116,30 @@ public interface IDataManager {
      * @throws NullPointerException if any argument is {@code null}
      */
     void getContentAssetsAsync(@NonNull String containerId, @NonNull LoadAssetsCallback callback);
+
+    /**
+     * Get the parent assets stored in a list in which the first element is the container of the
+     * asset and the last element is the Root asset (if this asset is not contained by Root).
+     * For example, Root -> Apartment -> Bookshelf -> Drawer, if query the parent Asset of Drawer
+     * the items in list would be [Bookshelf, Apartment, Root].
+     *
+     * @param asset    the asset whose parent assets are queried
+     * @param callback see {@link LoadAssetsCallback}
+     * @throws NullPointerException if any argument is {@code null}
+     */
+    void getParentAssetsAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback);
+
+    /**
+     * Get the parent assets stored in a list in which the first element is the container of the
+     * asset and the last element is the Root asset (if this asset is not contained by Root).
+     * For example, Root -> Apartment -> Bookshelf -> Drawer, if query the parent Asset of Drawer
+     * the items in list would be [Bookshelf, Apartment, Root].
+     *
+     * @param assetId    the id of the asset whose parent assets are queried
+     * @param callback see {@link LoadAssetsCallback}
+     * @throws NullPointerException if any argument is {@code null}
+     */
+    void getParentAssetsAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback);
 
     /**
      * Get an asset according to the id.
@@ -225,7 +256,7 @@ public interface IDataManager {
      * Remove the detail from the asset.
      *
      * @param assetId the id of the owner asset
-     * @param detail the detail
+     * @param detail  the detail
      * @throws NullPointerException              if any argument is {@code null}
      * @throws UpdateLocalStorageFailedException if update local storage failed
      */
@@ -234,7 +265,7 @@ public interface IDataManager {
     /**
      * Remove the detail from the asset.
      *
-     * @param assetId the id of the owner asset
+     * @param assetId  the id of the owner asset
      * @param detailId the id of the detail
      * @throws NullPointerException              if any argument is {@code null}
      * @throws UpdateLocalStorageFailedException if update local storage failed
@@ -244,9 +275,9 @@ public interface IDataManager {
     /**
      * Update the TextDetail according to the given arguments.
      *
-     * @param detail  the detail
-     * @param label   the new label
-     * @param field   the new field
+     * @param detail the detail
+     * @param label  the new label
+     * @param field  the new field
      * @throws NullPointerException              if any argument is {@code null}
      * @throws IllegalArgumentException          if label is empty string; or the length of
      *                                           label or field exceeds app constraints

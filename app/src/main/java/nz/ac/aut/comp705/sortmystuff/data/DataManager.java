@@ -97,6 +97,18 @@ public class DataManager implements IDataManager {
     }
 
     @Override
+    public Asset getRootAsset() {
+        if (dirtyCachedAssets || cachedRootAsset == null) {
+            int code = loadCachedAssetsFromLocal();
+            if (code != AppStatusCode.OK) {
+                Log.e(getClass().getName(), "Root asset not available. Error code: " + code);
+                return null;
+            }
+        }
+        return cachedRootAsset;
+    }
+
+    @Override
     public void getRootAssetAsync(@NonNull GetAssetCallback callback) {
         Preconditions.checkNotNull(callback);
 
@@ -174,6 +186,39 @@ public class DataManager implements IDataManager {
             return;
         }
         callback.onAssetsLoaded(container.getContents());
+    }
+
+    @Override
+    public void getParentAssetsAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback) {
+        Preconditions.checkNotNull(asset);
+
+        getParentAssetsAsync(asset.getId(), callback);
+    }
+
+    @Override
+    public void getParentAssetsAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback) {
+        Preconditions.checkNotNull(assetId);
+        Preconditions.checkNotNull(callback);
+
+        if (dirtyCachedAssets || cachedAssets == null) {
+            int code = loadCachedAssetsFromLocal();
+            if (code != AppStatusCode.OK) {
+                callback.dataNotAvailable(code);
+                return;
+            }
+        }
+        if (!cachedAssets.containsKey(assetId)) {
+            callback.dataNotAvailable(AppStatusCode.ASSET_NOT_EXISTS);
+            return;
+        }
+
+        Asset asset = cachedAssets.get(assetId);
+        List<Asset> parents = new LinkedList<>();
+        while(!asset.isRoot()) {
+            parents.add(asset.getContainer());
+            asset = asset.getContainer();
+        }
+        callback.onAssetsLoaded(parents);
     }
 
     @Override
