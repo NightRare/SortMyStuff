@@ -1,5 +1,7 @@
 package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
+import android.view.View;
+
 import nz.ac.aut.comp705.sortmystuff.ui.IView;
 
 /**
@@ -8,6 +10,8 @@ import nz.ac.aut.comp705.sortmystuff.ui.IView;
 
 public interface IContentsView extends IView<IContentsPresenter> {
 
-    void showAssetList();
+    void showAssetList(String assetID);
+
+    void showMessageOnScreen(View view, CharSequence msg, int length);
 
 }
