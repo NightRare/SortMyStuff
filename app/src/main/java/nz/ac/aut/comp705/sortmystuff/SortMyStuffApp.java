@@ -29,7 +29,6 @@ public class SortMyStuffApp extends Application {
         super.onCreate();
 
         factory = new Factory(this);
-
     }
 
     public IFactory getFactory() {
