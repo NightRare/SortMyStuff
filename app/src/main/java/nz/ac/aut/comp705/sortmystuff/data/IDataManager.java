@@ -69,6 +69,13 @@ public interface IDataManager {
     //********************************************
 
     /**
+     * Get the Root asset from the local data source.
+     *
+     * @return the Root asset of the current user; or null if no root asset record
+     */
+    Asset getRootAsset();
+
+    /**
      * Get the Root asset from the data sources.
      *
      * @param callback see {@link GetAssetCallback}

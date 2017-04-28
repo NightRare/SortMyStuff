@@ -97,6 +97,18 @@ public class DataManager implements IDataManager {
     }
 
     @Override
+    public Asset getRootAsset() {
+        if (dirtyCachedAssets || cachedRootAsset == null) {
+            int code = loadCachedAssetsFromLocal();
+            if (code != AppStatusCode.OK) {
+                Log.e(getClass().getName(), "Root asset not available. Error code: " + code);
+                return null;
+            }
+        }
+        return cachedRootAsset;
+    }
+
+    @Override
     public void getRootAssetAsync(@NonNull GetAssetCallback callback) {
         Preconditions.checkNotNull(callback);
 
