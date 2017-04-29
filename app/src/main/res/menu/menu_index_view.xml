@@ -6,4 +6,8 @@
         android:title="Detail"
         android:orderInCategory="100"
         app:showAsAction="never" />
+    <item android:id="@+id/search_button"
+        android:icon="@drawable/ic_search_white_48dp"
+        android:title="Search"
+        app:showAsAction="ifRoom" />
 </menu>
