@@ -46,13 +46,13 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         toolbar = (Toolbar) findViewById(R.id.toolbarMain);
         setSupportActionBar(toolbar);
         // clicking on name on toolbar
-//        toolbar.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                presenter.setCurrentAssetId(presenter.getParentOf(presenter.getCurrentAssetId()));
-//                showAssetList(presenter.getCurrentAssetId());
-//            }
-//        });
+        toolbar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                presenter.setCurrentAssetId(presenter.getParentOf(presenter.getCurrentAssetId()));
+                showAssetList(presenter.getCurrentAssetId());
+            }
+        });
 
         // list view
         index = (ListView)findViewById(R.id.index_list);
