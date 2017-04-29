@@ -19,7 +19,7 @@ public interface IContentsPresenter extends IPresenter {
 
     List<String> loadContents(String assetID);
 
-    void addAsset(String assetName, String containerID);
+    void addAsset(String assetName);
 
     void setCurrentAssetId(String assetId);
 
