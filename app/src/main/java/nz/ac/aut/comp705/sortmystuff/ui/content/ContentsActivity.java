@@ -50,6 +50,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
             public void onClick(View v) {
                 presenter.setCurrentAssetId(presenter.getParentOf(presenter.getCurrentAssetId()));
                 showAssetList(presenter.getCurrentAssetId());
+                setTitle(presenter.getAssetName(presenter.getCurrentAssetId()));
             }
         });
 

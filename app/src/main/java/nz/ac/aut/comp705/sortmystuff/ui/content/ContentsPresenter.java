@@ -109,4 +109,20 @@ public class ContentsPresenter implements IContentsPresenter{
         return parentID[0];
     }
 
+    public String getAssetName(String assetID){
+        final String[] assetName = new String[1];
+        dm.getAssetAsync(assetID, new IDataManager.GetAssetCallback() {
+            @Override
+            public void onAssetLoaded(Asset asset) {
+                assetName[0] = asset.getName();
+            }
+
+            @Override
+            public void dataNotAvailable(int errorCode) {
+                Log.i("Name not found","Error:"+errorCode);
+            }
+        });
+        return assetName[0];
+    }
+
 }
