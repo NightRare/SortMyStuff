@@ -1,7 +1,6 @@
 package nz.ac.aut.comp705.sortmystuff.data;
 
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.google.common.base.Preconditions;
 
@@ -14,6 +13,7 @@ import nz.ac.aut.comp705.sortmystuff.data.local.IJsonHelper;
 import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 import nz.ac.aut.comp705.sortmystuff.util.AppStatusCode;
 import nz.ac.aut.comp705.sortmystuff.util.exceptions.UpdateLocalStorageFailedException;
+import nz.ac.aut.comp705.sortmystuff.util.Log;
 
 /**
  * Created by Yuan on 2017/4/24.
