@@ -17,11 +17,13 @@ public interface IContentsPresenter extends IPresenter {
 
     void start();
 
-    List<String> loadContents(String assetID);
+    List<Asset> loadContents(String assetID);
 
     void addAsset(String assetName);
 
     void setCurrentAssetId(String assetId);
 
     String getCurrentAssetId();
+
+    String getParentOf(String currentAssetId);
 }

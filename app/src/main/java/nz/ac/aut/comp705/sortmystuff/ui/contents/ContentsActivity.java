@@ -7,10 +7,14 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
@@ -29,6 +33,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     private AlertDialog.Builder addDialogBuilder;
     private FloatingActionButton fab;
     ListView index;
+    Toolbar toolbar;
 
     private static final String CURRENT_ASSET_ID = "CURRENT_ASSET_ID";
 
@@ -38,11 +43,32 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         setContentView(R.layout.activity_index_view);
 
         // toolbar
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbarMain);
+        toolbar = (Toolbar) findViewById(R.id.toolbarMain);
         setSupportActionBar(toolbar);
+        // clicking on name on toolbar
+//        toolbar.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                presenter.setCurrentAssetId(presenter.getParentOf(presenter.getCurrentAssetId()));
+//                showAssetList(presenter.getCurrentAssetId());
+//            }
+//        });
 
         // list view
         index = (ListView)findViewById(R.id.index_list);
+        // clicking on an asset in the list
+        index.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                //fetches the selected asset in the list
+                Asset a = (Asset) parent.getItemAtPosition(position);
+                //sets the selected asset's ID as the current asset (to be viewed)
+                presenter.setCurrentAssetId(a.getId());
+                toolbar.setTitle(a.getName());
+                // reloads the index to the selected asset
+                showAssetList(a.getId());
+            }
+        });
 
         // register Floating ActionButton
         fab = (FloatingActionButton) findViewById(R.id.addAssetButton);
@@ -80,7 +106,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
     @Override
     public void showAssetList(String assetID) {
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(
+        ArrayAdapter<Asset> arrayAdapter = new ArrayAdapter<Asset>(
                 this, android.R.layout.simple_list_item_1,
                 presenter.loadContents(presenter.getCurrentAssetId()));
         index.setAdapter(arrayAdapter);
@@ -128,4 +154,23 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
             public void onClick(DialogInterface dialog,int id) {dialog.cancel();}
         });
     }
+
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        // Inflate the menu; this adds items to the action bar if it is present.
+//        getMenuInflater().inflate(R.menu.menu_index_view, menu);
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        int id = item.getItemId();
+//        //action button stuff
+//        if (id == R.id.action_settings) {
+//            Toast.makeText(this,"this should go to detail",Toast.LENGTH_LONG).show();
+//            return true;
+//        }
+//
+//        return super.onOptionsItemSelected(item);
+//    }
 }

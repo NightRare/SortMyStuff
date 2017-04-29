@@ -65,7 +65,7 @@ public class ContentsPresenter implements IContentsPresenter{
     }
 
     @Override
-    public List<String> loadContents(String assetID){
+    public List<Asset> loadContents(String assetID){
         final ArrayList assetList = new ArrayList();
 
         dm.getContentAssetsAsync(assetID, new IDataManager.LoadAssetsCallback() {
@@ -88,4 +88,25 @@ public class ContentsPresenter implements IContentsPresenter{
         dm.createAsset(assetName, currentAssetId);
         view.showAssetList(currentAssetId);
     }
+
+    public String getParentOf(String currentAssetId){
+        final String[] parentID = new String[1];
+        dm.getParentAssetsAsync(currentAssetId, new IDataManager.LoadAssetsCallback() {
+            @Override
+            public void onAssetsLoaded(List<Asset> assets) {
+                if(getCurrentAssetId() == dm.getRootAsset().getId()){
+                    parentID[0] = dm.getRootAsset().getId();
+                } else {
+                    parentID[0] = assets.get(0).getId();
+                }
+            }
+
+            @Override
+            public void dataNotAvailable(int errorCode) {
+
+            }
+        });
+        return parentID[0];
+    }
+
 }
