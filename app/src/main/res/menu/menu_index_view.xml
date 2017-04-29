@@ -1,7 +1,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsActivity" >
+    tools:context="nz.ac.aut.comp705.sortmystuff.ui.content.ContentsActivity" >
     <item android:id="@+id/action_settings"
         android:title="Detail"
         android:orderInCategory="100"

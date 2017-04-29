@@ -1,4 +1,4 @@
-package nz.ac.aut.comp705.sortmystuff.ui.contents;
+package nz.ac.aut.comp705.sortmystuff.ui.content;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -14,7 +14,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
@@ -55,7 +54,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         });
 
         // list view
-        index = (ListView)findViewById(R.id.index_list);
+        index = (ListView) findViewById(R.id.index_list);
         // clicking on an asset in the list
         index.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -80,7 +79,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         });
 
         // Create the presenter
-        IDataManager dm = ((SortMyStuffApp)getApplication()).getFactory().getDataManager();
+        IDataManager dm = ((SortMyStuffApp) getApplication()).getFactory().getDataManager();
         IContentsPresenter p = new ContentsPresenter(dm, this);
         setPresenter(p);
 
@@ -115,7 +114,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
     @Override
     public void showAddDialog() {
-        if(addDialogBuilder == null)
+        if (addDialogBuilder == null)
             initDialogBuilder();
 
         //create an input area
@@ -124,7 +123,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
         //creates the Save button and what happens when clicked
         addDialogBuilder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog,int id) {
+            public void onClick(DialogInterface dialog, int id) {
                 // get user input and add input as asset
                 presenter.addAsset(input.getText().toString());
             }
@@ -150,8 +149,10 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         addDialogBuilder.setTitle("Add Asset");
 
         //creates the Cancel button and what happens when clicked
-        addDialogBuilder.setNegativeButton("Cancel",new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog,int id) {dialog.cancel();}
+        addDialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                dialog.cancel();
+            }
         });
     }
 
@@ -167,7 +168,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         int id = item.getItemId();
         //action button stuff
         if (id == R.id.action_settings) {
-            Toast.makeText(this,"this should go to detail",Toast.LENGTH_LONG).show();
+            //Intent intent = new Intent(this,);
             return true;
         }
 

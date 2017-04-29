@@ -1,9 +1,5 @@
-package nz.ac.aut.comp705.sortmystuff.ui.contents;
+package nz.ac.aut.comp705.sortmystuff.ui.content;
 
-import android.content.Context;
-import android.support.design.widget.FloatingActionButton;
-
-import java.util.ArrayList;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.Asset;
