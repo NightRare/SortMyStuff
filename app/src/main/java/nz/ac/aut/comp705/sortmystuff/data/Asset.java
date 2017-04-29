@@ -97,10 +97,6 @@ public final class Asset {
         return name;
     }
 
-    public Asset getContainer() {
-        return container;
-    }
-
     public String getContainerId() {
         return containerId;
     }
@@ -110,6 +106,10 @@ public final class Asset {
     }
 
     public boolean isRoot() { return isRoot; }
+
+    Asset getContainer() {
+        return container;
+    }
 
     List<Asset> getContents() {
         if(contents != null)
@@ -133,6 +133,9 @@ public final class Asset {
 
     void setName(@NonNull String name) {
         checkIllegalName(name);
+        if(isRoot())
+            return;
+
         this.name = name;
         updateTimeStamp();
     }
@@ -140,7 +143,7 @@ public final class Asset {
     boolean moveTo(@NonNull Asset containerObj) {
         Preconditions.checkNotNull(containerObj);
         // cannot move Root asset
-        if (isRoot)
+        if (isRoot())
             return false;
 
         // cannot move to its children asset
