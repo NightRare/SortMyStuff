@@ -258,12 +258,11 @@ public interface IDataManager {
     /**
      * Remove the detail from the asset.
      *
-     * @param assetId the id of the owner asset
      * @param detail  the detail
      * @throws NullPointerException              if any argument is {@code null}
      * @throws UpdateLocalStorageFailedException if update local storage failed
      */
-    void removeDetail(@NonNull String assetId, @NonNull Detail detail);
+    void removeDetail(@NonNull Detail detail);
 
     /**
      * Remove the detail from the asset.

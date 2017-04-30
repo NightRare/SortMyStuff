@@ -388,10 +388,10 @@ public class DataManager implements IDataManager {
     }
 
     @Override
-    public void removeDetail(@NonNull String assetId, @NonNull Detail detail) {
+    public void removeDetail(@NonNull Detail detail) {
         Preconditions.checkNotNull(detail);
 
-        removeDetail(assetId, detail.getId());
+        removeDetail(detail.getAssetId(), detail.getId());
     }
 
     @Override
@@ -406,12 +406,18 @@ public class DataManager implements IDataManager {
         }
 
         List<Detail> details = cachedDetails.get(assetId);
+        boolean removed = false;
         for(Detail d : details) {
             if(d.getId().equals(detailId)) {
                 details.remove(d);
+                removed = true;
                 break;
             }
         }
+
+        // if nothing removed, do nothing
+        if(!removed)
+            return;
 
         cachedAssets.get(assetId).updateTimeStamp();
         if (!jsonHelper.serialiseDetails(details) ||
