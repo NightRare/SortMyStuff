@@ -214,14 +214,17 @@ public final class Asset {
     }
 
     void updateTimeStamp() {
+        if(isRoot()) return;
         modifyTimestamp = System.currentTimeMillis();
     }
 
     void recycle() {
+        if(isRoot()) return;
         isRecycled = true;
     }
 
     void restore() {
+        if(isRoot()) return;
         isRecycled = false;
     }
 
