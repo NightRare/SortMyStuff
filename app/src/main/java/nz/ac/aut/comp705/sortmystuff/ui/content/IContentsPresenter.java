@@ -21,6 +21,8 @@ public interface IContentsPresenter extends IPresenter {
 
     String getCurrentAssetId();
 
+    boolean isRootCurrentAsset();
+
     String getParentOf(String currentAssetId);
 
     String getAssetName(String assetID);

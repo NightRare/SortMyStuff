@@ -2,6 +2,7 @@ package nz.ac.aut.comp705.sortmystuff.ui.content;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -14,11 +15,13 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
+import nz.ac.aut.comp705.sortmystuff.ui.detail.DetailActivity;
 
 /**
  * Created by Yuan on 2017/4/28.
@@ -168,9 +171,13 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         //action button stuff
-        if (id == R.id.action_settings) {
-            //Intent intent = new Intent(this,);
+        if (id == R.id.action_settings && !presenter.isRootCurrentAsset()) {
+            Intent intent = new Intent(this, DetailActivity.class);
+            intent.putExtra("AssetID", presenter.getCurrentAssetId());
+            startActivity(intent);
             return true;
+        } else {
+            Toast.makeText(this, "Root has no detail",Toast.LENGTH_LONG).show();
         }
 
         return super.onOptionsItemSelected(item);

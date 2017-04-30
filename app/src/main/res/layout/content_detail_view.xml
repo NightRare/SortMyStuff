@@ -8,24 +8,12 @@
     tools:context="nz.ac.aut.comp705.sortmystuff.ui.detail.DetailActivity"
     tools:showIn="@layout/activity_detail_view">
 
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="0dip"
-        android:layout_weight="1"
-        android:layout_height="fill_parent">
-        <TextView
-            android:id="@+id/toptext"
-            android:layout_width="fill_parent"
-            android:layout_height="0dip"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            />
-        <TextView
-            android:layout_width="fill_parent"
-            android:layout_height="0dip"
-            android:layout_weight="1"
-            android:id="@+id/bottomtext"
-            />
-    </LinearLayout>
+    <ListView
+        android:id="@+id/detail_list"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:divider="@android:drawable/divider_horizontal_textfield"
+        android:footerDividersEnabled="true"
+        android:headerDividersEnabled="false" />
 
 </android.support.constraint.ConstraintLayout>

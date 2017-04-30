@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="nz.ac.aut.comp705.sortmystuff.ui.content.ContentsActivity" >
     <item android:id="@+id/action_settings"
-        android:title="Detail"
+        android:title="@string/action_button_detail"
         android:orderInCategory="100"
         app:showAsAction="never" />
     <item android:id="@+id/search_button"

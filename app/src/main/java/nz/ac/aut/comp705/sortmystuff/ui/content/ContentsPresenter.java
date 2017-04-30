@@ -65,6 +65,11 @@ public class ContentsPresenter implements IContentsPresenter{
     }
 
     @Override
+    public boolean isRootCurrentAsset(){
+        return dm.getRootAsset().getId() == getCurrentAssetId();
+    }
+
+    @Override
     public List<Asset> loadContents(String assetID){
         final ArrayList assetList = new ArrayList();
 
