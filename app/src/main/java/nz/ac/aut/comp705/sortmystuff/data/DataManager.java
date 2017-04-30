@@ -93,7 +93,8 @@ public class DataManager implements IDataManager {
         Preconditions.checkArgument(label.length() < AppConstraints.DETAIL_LABEL_CAP);
         Preconditions.checkArgument(field.length() < AppConstraints.TEXTDETAIL_FIELD_CAP);
 
-        return addOrUpdateTextDetail(assetId, null, label, field).getId();
+        TextDetail td = addOrUpdateTextDetail(assetId, null, label, field);
+        return td == null ? null : td.getId();
     }
 
     @Override
