@@ -37,12 +37,13 @@ public interface IDataManager {
     String createRootAsset();
 
     /**
-     * Create a TextDetail and save it to the local storage.
+     * Create a TextDetail and save it to the local storage. Cannot create Detail for Root
+     * asset.
      *
      * @param asset the owner
      * @param label the title
      * @param field the content of this detail
-     * @return the Id of the created TextDetail
+     * @return the Id of the created TextDetail; or null if failed
      * @throws NullPointerException              if any argument is {@code null}
      * @throws IllegalArgumentException          if label is empty string; or the length of
      *                                           label or field exceeds app constraints
@@ -51,12 +52,13 @@ public interface IDataManager {
     String createTextDetail(@NonNull Asset asset, @NonNull String label, @NonNull String field);
 
     /**
-     * Create a TextDetail and save it to the local storage.
+     * Create a TextDetail and save it to the local storage. Cannot create Detail for Root
+     * asset.
      *
      * @param assetId the id of the owner
      * @param label   the title
      * @param field   the content of this detail
-     * @return the Id of the created TextDetail
+     * @return the Id of the created TextDetail; or null if failed
      * @throws NullPointerException              if any argument is {@code null}
      * @throws IllegalArgumentException          if label is empty string; or the length of
      *                                           label or field exceeds app constraints
@@ -81,6 +83,7 @@ public interface IDataManager {
      * @param callback see {@link GetAssetCallback}
      * @throws NullPointerException if callback is {@code null}
      */
+    @Deprecated
     void getRootAssetAsync(@NonNull GetAssetCallback callback);
 
     /**

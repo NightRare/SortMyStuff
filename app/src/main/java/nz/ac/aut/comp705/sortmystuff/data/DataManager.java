@@ -11,9 +11,15 @@ import java.util.Map;
 
 import nz.ac.aut.comp705.sortmystuff.data.local.IJsonHelper;
 import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
-import nz.ac.aut.comp705.sortmystuff.util.AppStatusCode;
-import nz.ac.aut.comp705.sortmystuff.util.exceptions.UpdateLocalStorageFailedException;
 import nz.ac.aut.comp705.sortmystuff.util.Log;
+import nz.ac.aut.comp705.sortmystuff.util.exceptions.UpdateLocalStorageFailedException;
+
+import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.ASSET_NOT_EXISTS;
+import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.LOCAL_DATA_CORRUPT;
+import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.NO_ROOT_ASSET;
+import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.OK;
+import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.ROOT_ASSET_IMMUTABLE;
+import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.UNEXPECTED_ERROR;
 
 /**
  * Created by Yuan on 2017/4/24.
@@ -93,6 +99,10 @@ public class DataManager implements IDataManager {
         Preconditions.checkArgument(label.length() < AppConstraints.DETAIL_LABEL_CAP);
         Preconditions.checkArgument(field.length() < AppConstraints.TEXTDETAIL_FIELD_CAP);
 
+        // cannot create detail for Root asset
+        if(assetId.equals(getRootAsset().getId()))
+            return null;
+
         TextDetail td = addOrUpdateTextDetail(assetId, null, label, field);
         return td == null ? null : td.getId();
     }
@@ -101,7 +111,7 @@ public class DataManager implements IDataManager {
     public Asset getRootAsset() {
         if (dirtyCachedAssets || cachedRootAsset == null) {
             int code = loadCachedAssetsFromLocal();
-            if (code != AppStatusCode.OK) {
+            if (code != OK) {
                 Log.e(getClass().getName(), "Root asset not available. Error code: " + code);
                 return null;
             }
@@ -115,7 +125,7 @@ public class DataManager implements IDataManager {
 
         if (dirtyCachedAssets || cachedRootAsset == null) {
             int code = loadCachedAssetsFromLocal();
-            if (code != AppStatusCode.OK) {
+            if (code != OK) {
                 callback.dataNotAvailable(code);
                 return;
             }
@@ -130,7 +140,7 @@ public class DataManager implements IDataManager {
 
         if (dirtyCachedAssets || cachedAssets == null) {
             int code = loadCachedAssetsFromLocal();
-            if (code != AppStatusCode.OK) {
+            if (code != OK) {
                 callback.dataNotAvailable(code);
                 return;
             }
@@ -146,7 +156,7 @@ public class DataManager implements IDataManager {
 
         if (dirtyCachedAssets || cachedRecycledAssets == null) {
             int code = loadCachedAssetsFromLocal();
-            if (code != AppStatusCode.OK) {
+            if (code != OK) {
                 callback.dataNotAvailable(code);
                 return;
             }
@@ -170,20 +180,20 @@ public class DataManager implements IDataManager {
 
         if (dirtyCachedAssets || cachedAssets == null) {
             int code = loadCachedAssetsFromLocal();
-            if (code != AppStatusCode.OK) {
+            if (code != OK) {
                 callback.dataNotAvailable(code);
                 return;
             }
         }
 
         if (!cachedAssets.containsKey(containerId)) {
-            callback.dataNotAvailable(AppStatusCode.ASSET_NOT_EXISTS);
+            callback.dataNotAvailable(ASSET_NOT_EXISTS);
             return;
         }
         Asset container = cachedAssets.get(containerId);
 
         if (container.getContents() == null) {
-            callback.dataNotAvailable(AppStatusCode.LOCAL_DATA_CORRUPT);
+            callback.dataNotAvailable(LOCAL_DATA_CORRUPT);
             return;
         }
         callback.onAssetsLoaded(container.getContents());
@@ -203,13 +213,13 @@ public class DataManager implements IDataManager {
 
         if (dirtyCachedAssets || cachedAssets == null) {
             int code = loadCachedAssetsFromLocal();
-            if (code != AppStatusCode.OK) {
+            if (code != OK) {
                 callback.dataNotAvailable(code);
                 return;
             }
         }
         if (!cachedAssets.containsKey(assetId)) {
-            callback.dataNotAvailable(AppStatusCode.ASSET_NOT_EXISTS);
+            callback.dataNotAvailable(ASSET_NOT_EXISTS);
             return;
         }
 
@@ -229,14 +239,14 @@ public class DataManager implements IDataManager {
 
         if (dirtyCachedAssets || cachedAssets == null) {
             int code = loadCachedAssetsFromLocal();
-            if (code != AppStatusCode.OK) {
+            if (code != OK) {
                 callback.dataNotAvailable(code);
                 return;
             }
         }
 
         if (!cachedAssets.containsKey(assetId)) {
-            callback.dataNotAvailable(AppStatusCode.ASSET_NOT_EXISTS);
+            callback.dataNotAvailable(ASSET_NOT_EXISTS);
             return;
         }
         callback.onAssetLoaded(cachedAssets.get(assetId));
@@ -254,13 +264,19 @@ public class DataManager implements IDataManager {
         Preconditions.checkNotNull(assetId);
         Preconditions.checkNotNull(callback);
 
+        // if get the Details of the Root asset, always return empty list
+        if(assetId.equals(getRootAsset().getId())) {
+            callback.onDetailsLoaded(new LinkedList<Detail>());
+            return;
+        }
+
         int code = loadCachedDetailsFromLocal(assetId);
-        if (code != AppStatusCode.OK) {
+        if (code != OK) {
             callback.dataNotAvailable(code);
             return;
         }
         if (!cachedDetails.containsKey(assetId)) {
-            callback.dataNotAvailable(AppStatusCode.UNEXPECTED_ERROR);
+            callback.dataNotAvailable(UNEXPECTED_ERROR);
             return;
         }
         callback.onDetailsLoaded(cachedDetails.get(assetId));
@@ -380,7 +396,7 @@ public class DataManager implements IDataManager {
         Preconditions.checkNotNull(detailId);
 
         int code = loadCachedDetailsFromLocal(assetId);
-        if (code != AppStatusCode.OK) {
+        if (code != OK) {
             Log.e(getClass().getName(), "Cannot create detail, error code: " + code);
             return;
         }
@@ -457,7 +473,7 @@ public class DataManager implements IDataManager {
 
     private synchronized int loadCachedAssetsFromLocal() {
         if(!jsonHelper.rootExists())
-            return AppStatusCode.NO_ROOT_ASSET;
+            return NO_ROOT_ASSET;
 
         cachedAssets = new HashMap<>();
         cachedRecycledAssets = new HashMap<>();
@@ -485,30 +501,30 @@ public class DataManager implements IDataManager {
         }
 
         dirtyCachedAssets = false;
-        return AppStatusCode.OK;
+        return OK;
     }
 
     private synchronized int loadCachedDetailsFromLocal(String assetId) {
         if(!jsonHelper.rootExists())
-            return AppStatusCode.NO_ROOT_ASSET;
+            return NO_ROOT_ASSET;
         if(!assetExists(assetId)) {
-            return AppStatusCode.ASSET_NOT_EXISTS;
+            return ASSET_NOT_EXISTS;
         }
         if(dirtyCachedDetails || cachedDetails == null) {
             cachedDetails = new HashMap<>();
         }
         if(cachedDetails.containsKey(assetId)) {
-            return AppStatusCode.OK;
+            return OK;
         }
         releaseOneCachedDetails();
         List<Detail> details = jsonHelper.deserialiseDetails(assetId);
         if(details == null) {
-            return AppStatusCode.LOCAL_DATA_CORRUPT;
+            return LOCAL_DATA_CORRUPT;
         }
         cachedDetails.put(assetId, details);
 
         dirtyCachedDetails = false;
-        return AppStatusCode.OK;
+        return OK;
     }
 
 
@@ -544,7 +560,7 @@ public class DataManager implements IDataManager {
     private TextDetail addOrUpdateTextDetail(String assetId, String detailId, String label, String field) {
 
         int code = loadCachedDetailsFromLocal(assetId);
-        if (code != AppStatusCode.OK) {
+        if (code != OK) {
             Log.e(getClass().getName(), "Cannot create detail, error code: " + code);
             return null;
         }
