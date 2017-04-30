@@ -581,13 +581,17 @@ public class DataManager implements IDataManager {
             cachedDetails.get(assetId).add(td);
         }
         else {
+            boolean updated = false;
             for(Detail detail : cachedDetails.get(assetId)) {
                 if(detail.getId().equals(detailId)) {
+                    updated = true;
                     td = (TextDetail) detail;
                     td.setLabel(label);
                     td.setField(field);
                 }
             }
+            if(!updated)
+                return td;
         }
 
         cachedAssets.get(assetId).updateTimeStamp();
