@@ -363,6 +363,10 @@ public class DataManager implements IDataManager {
             return;
         }
         Asset asset = cachedAssets.get(assetId);
+        if(asset.isRoot()) {
+            Log.e(getClass().getName(), "cannot recycle Root asset");
+            return;
+        }
         asset.recycle();
         cachedRecycledAssets.put(assetId, cachedAssets.remove(assetId));
         if (!jsonHelper.serialiseAsset(asset)) {
