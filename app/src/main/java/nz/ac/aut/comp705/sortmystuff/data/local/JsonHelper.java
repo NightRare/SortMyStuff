@@ -1,7 +1,6 @@
 package nz.ac.aut.comp705.sortmystuff.data.local;
 
 import android.app.Application;
-import android.util.Log;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
@@ -19,6 +18,7 @@ import java.util.List;
 import nz.ac.aut.comp705.sortmystuff.data.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.Detail;
 import nz.ac.aut.comp705.sortmystuff.util.DetailAdapter;
+import nz.ac.aut.comp705.sortmystuff.util.Log;
 
 /**
  * Created by Yuan on 2017/4/25.
