@@ -1,0 +1,13 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="nz.ac.aut.comp705.sortmystuff.ui.content.ContentsActivity" >
+    <item android:id="@+id/action_settings"
+        android:title="Detail"
+        android:orderInCategory="100"
+        app:showAsAction="never" />
+    <item android:id="@+id/search_button"
+        android:icon="@drawable/ic_search_white_48dp"
+        android:title="Search"
+        app:showAsAction="ifRoom" />
+</menu>
