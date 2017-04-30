@@ -17,7 +17,7 @@ public interface IContentsView extends IView<IContentsPresenter> {
 
     void showAddDialog();
 
-    void showMessageOnScreen(View view, CharSequence msg, int length);
+    void showMessageOnScreen(String message);
 
 
 

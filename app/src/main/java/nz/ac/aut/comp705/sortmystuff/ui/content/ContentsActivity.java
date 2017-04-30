@@ -130,6 +130,8 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
             public void onClick(DialogInterface dialog, int id) {
                 // get user input and add input as asset
                 presenter.addAsset(input.getText().toString());
+                //show a success message
+                showMessageOnScreen("Successfully added " + input.getText().toString());
             }
         });
 
@@ -137,8 +139,8 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     }
 
     @Override
-    public void showMessageOnScreen(View view, CharSequence msg, int length) {
-        Snackbar.make(view, msg, Snackbar.LENGTH_LONG).setAction("Action", null).show();
+    public void showMessageOnScreen(String message) {
+        Toast.makeText(this,message,Toast.LENGTH_LONG);
     }
 
 
