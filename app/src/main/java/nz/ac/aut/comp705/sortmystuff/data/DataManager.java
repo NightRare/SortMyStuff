@@ -363,6 +363,10 @@ public class DataManager implements IDataManager {
             return;
         }
         Asset asset = cachedAssets.get(assetId);
+        if(asset.isRoot()) {
+            Log.e(getClass().getName(), "cannot recycle Root asset");
+            return;
+        }
         asset.recycle();
         cachedRecycledAssets.put(assetId, cachedAssets.remove(assetId));
         if (!jsonHelper.serialiseAsset(asset)) {
@@ -384,10 +388,10 @@ public class DataManager implements IDataManager {
     }
 
     @Override
-    public void removeDetail(@NonNull String assetId, @NonNull Detail detail) {
+    public void removeDetail(@NonNull Detail detail) {
         Preconditions.checkNotNull(detail);
 
-        removeDetail(assetId, detail.getId());
+        removeDetail(detail.getAssetId(), detail.getId());
     }
 
     @Override
@@ -402,12 +406,18 @@ public class DataManager implements IDataManager {
         }
 
         List<Detail> details = cachedDetails.get(assetId);
+        boolean removed = false;
         for(Detail d : details) {
             if(d.getId().equals(detailId)) {
                 details.remove(d);
+                removed = true;
                 break;
             }
         }
+
+        // if nothing removed, do nothing
+        if(!removed)
+            return;
 
         cachedAssets.get(assetId).updateTimeStamp();
         if (!jsonHelper.serialiseDetails(details) ||
@@ -571,13 +581,17 @@ public class DataManager implements IDataManager {
             cachedDetails.get(assetId).add(td);
         }
         else {
+            boolean updated = false;
             for(Detail detail : cachedDetails.get(assetId)) {
                 if(detail.getId().equals(detailId)) {
+                    updated = true;
                     td = (TextDetail) detail;
                     td.setLabel(label);
                     td.setField(field);
                 }
             }
+            if(!updated)
+                return td;
         }
 
         cachedAssets.get(assetId).updateTimeStamp();
