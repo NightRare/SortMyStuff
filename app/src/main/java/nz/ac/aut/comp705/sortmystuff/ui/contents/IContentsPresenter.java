@@ -11,19 +11,31 @@ import nz.ac.aut.comp705.sortmystuff.ui.IPresenter;
 
 public interface IContentsPresenter extends IPresenter {
 
+    @Deprecated
+    List<Asset> loadContents();
+
+    @Deprecated
+    boolean isRootCurrentAsset();
+
+    @Deprecated
+    String getParentOf(String currentAssetId);
+
+    @Deprecated
+    String getAssetName(String assetID);
+
+    // refactored methods
+
     void start();
 
-    List<Asset> loadContents(String assetID);
-
-    void addAsset(String assetName);
+    void loadCurrentContents(boolean forceRefreshFromLocal);
 
     void setCurrentAssetId(String assetId);
 
+    void setCurrentAssetIdToRoot();
+
+    void setCurrentAssetIdToContainer();
+
     String getCurrentAssetId();
 
-    boolean isRootCurrentAsset();
-
-    String getParentOf(String currentAssetId);
-
-    String getAssetName(String assetID);
+    void addAsset(String assetName);
 }

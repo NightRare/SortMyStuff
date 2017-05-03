@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -14,7 +15,10 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
@@ -35,6 +39,8 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     private FloatingActionButton fab;
     ListView index;
     Toolbar toolbar;
+    private TextView pathBarRoot;
+    private RecyclerView pathBarPath;
 
     private static final String CURRENT_ASSET_ID = "CURRENT_ASSET_ID";
 
@@ -47,39 +53,19 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         toolbar = (Toolbar) findViewById(R.id.toolbarMain);
         setSupportActionBar(toolbar);
         // clicking on name on toolbar
-        toolbar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                presenter.setCurrentAssetId(presenter.getParentOf(presenter.getCurrentAssetId()));
-                showAssetList(presenter.getCurrentAssetId());
-                setTitle(presenter.getAssetName(presenter.getCurrentAssetId()));
-            }
-        });
+
+        // register Floating ActionButton
+        fab = (FloatingActionButton) findViewById(R.id.addAssetButton);
 
         // list view
         index = (ListView) findViewById(R.id.index_list);
         // clicking on an asset in the list
-        index.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                //fetches the selected asset in the list
-                Asset a = (Asset) parent.getItemAtPosition(position);
-                //sets the selected asset's ID as the current asset (to be viewed)
-                presenter.setCurrentAssetId(a.getId());
-                toolbar.setTitle(a.getName());
-                // reloads the index to the selected asset
-                showAssetList(a.getId());
-            }
-        });
 
-        // register Floating ActionButton
-        fab = (FloatingActionButton) findViewById(R.id.addAssetButton);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showAddDialog();
-            }
-        });
+        pathBarRoot = (TextView) findViewById(R.id.pathbar_root);
+        pathBarPath = (RecyclerView) findViewById(R.id.pathbar_pathview);
+
+        // register all the listeners
+        registerListeners();
 
         // Create the presenter
         IDataManager dm = ((SortMyStuffApp) getApplication()).getFactory().getDataManager();
@@ -102,17 +88,34 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     }
 
     @Override
-    public void showContainerAsset(Asset asset) {
-        setTitle(asset.getName());
+    public void showRootAssetList() {
+        presenter.setCurrentAssetIdToRoot();
+
     }
 
     @Override
-    public void showAssetList(String assetID) {
+    public void showContainerAsset() {
+
+    }
+
+    @Override
+    public void showAssetList(Asset container) {
         ArrayAdapter<Asset> arrayAdapter = new ArrayAdapter<Asset>(
                 this, android.R.layout.simple_list_item_1,
-                presenter.loadContents(presenter.getCurrentAssetId()));
+                presenter.loadContents());
         index.setAdapter(arrayAdapter);
+    }
 
+    @Override
+    public void showAssetTitle(String name) {
+        setTitle(name);
+    }
+
+    @Override
+    public void showAssetContents(List<Asset> assets) {
+        ArrayAdapter<Asset> arrayAdapter = new ArrayAdapter<>(
+                this, android.R.layout.simple_list_item_1, assets);
+        index.setAdapter(arrayAdapter);
     }
 
     @Override
@@ -182,5 +185,41 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void registerListeners() {
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showAddDialog();
+            }
+        });
+
+        toolbar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                presenter.setCurrentAssetIdToContainer();
+                presenter.loadCurrentContents(false);
+            }
+        });
+
+        index.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                //fetches the selected asset in the list
+                Asset a = (Asset) parent.getItemAtPosition(position);
+                //sets the selected asset's ID as the current asset (to be viewed)
+                presenter.setCurrentAssetId(a.getId());
+                presenter.loadCurrentContents(false);
+            }
+        });
+
+        pathBarRoot.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                presenter.setCurrentAssetIdToRoot();
+                presenter.loadCurrentContents(false);
+            }
+        });
     }
 }

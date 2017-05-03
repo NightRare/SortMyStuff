@@ -1,5 +1,7 @@
 package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
+import java.util.List;
+
 import nz.ac.aut.comp705.sortmystuff.data.Asset;
 import nz.ac.aut.comp705.sortmystuff.ui.IView;
 
@@ -9,14 +11,22 @@ import nz.ac.aut.comp705.sortmystuff.ui.IView;
 
 public interface IContentsView extends IView<IContentsPresenter> {
 
-    void showContainerAsset(Asset asset);
+    void showRootAssetList();
 
-    void showAssetList(String assetID);
+    @Deprecated
+    void showContainerAsset();
+
+    @Deprecated
+    void showAssetList(Asset asset);
+
+
+    // refactored methods
+
+    void showAssetTitle(String name);
+
+    void showAssetContents(List<Asset> assets);
 
     void showAddDialog();
 
     void showMessageOnScreen(String message);
-
-
-
 }

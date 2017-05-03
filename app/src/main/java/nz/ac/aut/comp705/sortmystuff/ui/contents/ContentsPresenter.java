@@ -39,12 +39,30 @@ public class ContentsPresenter implements IContentsPresenter{
                 currentAssetId = dm.getRootAsset().getId();
             }
         }
+        loadCurrentContents(false);
+    }
+
+    @Override
+    public void loadCurrentContents(boolean forceRefreshFromLocal) {
+        if(forceRefreshFromLocal)
+            dm.refreshFromLocal();
 
         dm.getAssetAsync(currentAssetId, new IDataManager.GetAssetCallback() {
             @Override
             public void onAssetLoaded(Asset asset) {
-                view.showContainerAsset(asset);
-                view.showAssetList(asset.getId());
+                view.showAssetTitle(asset.getName());
+
+                dm.getContentAssetsAsync(asset, new IDataManager.LoadAssetsCallback() {
+                    @Override
+                    public void onAssetsLoaded(List<Asset> assets) {
+                        view.showAssetContents(assets);
+                    }
+
+                    @Override
+                    public void dataNotAvailable(int errorCode) {
+
+                    }
+                });
             }
 
             @Override
@@ -60,6 +78,28 @@ public class ContentsPresenter implements IContentsPresenter{
     }
 
     @Override
+    public void setCurrentAssetIdToRoot() {
+        currentAssetId = dm.getRootAsset().getId();
+    }
+
+    @Override
+    public void setCurrentAssetIdToContainer() {
+        dm.getParentAssetsAsync(currentAssetId, new IDataManager.LoadAssetsCallback() {
+            @Override
+            public void onAssetsLoaded(List<Asset> assets) {
+                if(!assets.isEmpty()) {
+                    currentAssetId = assets.get(0).getId();
+                }
+            }
+
+            @Override
+            public void dataNotAvailable(int errorCode) {
+
+            }
+        });
+    }
+
+    @Override
     public String getCurrentAssetId() {
         return currentAssetId;
     }
@@ -69,11 +109,12 @@ public class ContentsPresenter implements IContentsPresenter{
         return dm.getRootAsset().getId() == getCurrentAssetId();
     }
 
+    @Deprecated
     @Override
-    public List<Asset> loadContents(String assetID){
+    public List<Asset> loadContents(){
         final ArrayList assetList = new ArrayList();
 
-        dm.getContentAssetsAsync(assetID, new IDataManager.LoadAssetsCallback() {
+        dm.getContentAssetsAsync(currentAssetId, new IDataManager.LoadAssetsCallback() {
 
             @Override
             public void onAssetsLoaded(List<Asset> assets) {
@@ -91,7 +132,7 @@ public class ContentsPresenter implements IContentsPresenter{
 
     public void addAsset(String assetName) {
         dm.createAsset(assetName, currentAssetId);
-        view.showAssetList(currentAssetId);
+        loadCurrentContents(false);
     }
 
     public String getParentOf(String currentAssetId){
