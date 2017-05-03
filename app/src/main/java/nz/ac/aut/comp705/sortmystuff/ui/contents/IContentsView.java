@@ -1,6 +1,4 @@
-package nz.ac.aut.comp705.sortmystuff.ui.content;
-
-import android.view.View;
+package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
 import nz.ac.aut.comp705.sortmystuff.data.Asset;
 import nz.ac.aut.comp705.sortmystuff.ui.IView;

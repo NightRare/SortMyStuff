@@ -1,4 +1,4 @@
-package nz.ac.aut.comp705.sortmystuff.ui.content;
+package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
 import java.util.List;
 
