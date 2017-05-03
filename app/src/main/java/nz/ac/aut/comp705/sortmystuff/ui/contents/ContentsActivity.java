@@ -34,8 +34,8 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
     // UI Components
     private FloatingActionButton fab;
-    ListView index;
-    Toolbar toolbar;
+    private ListView index;
+    private Toolbar toolbar;
     private TextView pathBarRoot;
     private RecyclerView pathBarPath;
 
