@@ -11,13 +11,14 @@ import nz.ac.aut.comp705.sortmystuff.ui.IView;
 
 public interface IContentsView extends IView<IContentsPresenter> {
 
+    @Deprecated
     void showRootAssetList();
 
     @Deprecated
-    void showContainerAsset();
+    void showContainerAsset(Asset asset);
 
     @Deprecated
-    void showAssetList(Asset asset);
+    void showAssetList(String assetID);
 
 
     // refactored methods

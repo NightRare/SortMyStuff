@@ -12,7 +12,7 @@ import nz.ac.aut.comp705.sortmystuff.ui.IPresenter;
 public interface IContentsPresenter extends IPresenter {
 
     @Deprecated
-    List<Asset> loadContents();
+    List<Asset> loadContents(String assetID);
 
     @Deprecated
     boolean isRootCurrentAsset();
@@ -24,8 +24,6 @@ public interface IContentsPresenter extends IPresenter {
     String getAssetName(String assetID);
 
     // refactored methods
-
-    void start();
 
     void loadCurrentContents(boolean forceRefreshFromLocal);
 

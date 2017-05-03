@@ -20,7 +20,6 @@ public class ContentsPresenter implements IContentsPresenter{
 
     private String currentAssetId;
 
-
     public ContentsPresenter(IDataManager dm, IContentsView view) {
         this.dm = dm;
         this.view = view;
@@ -105,70 +104,37 @@ public class ContentsPresenter implements IContentsPresenter{
     }
 
     @Override
-    public boolean isRootCurrentAsset(){
-        return dm.getRootAsset().getId() == getCurrentAssetId();
-    }
-
-    @Deprecated
-    @Override
-    public List<Asset> loadContents(){
-        final ArrayList assetList = new ArrayList();
-
-        dm.getContentAssetsAsync(currentAssetId, new IDataManager.LoadAssetsCallback() {
-
-            @Override
-            public void onAssetsLoaded(List<Asset> assets) {
-                for(Asset a: assets){assetList.add(a);}
-            }
-
-
-            @Override
-            public void dataNotAvailable(int errorCode) {
-                Log.e("Does not have assets","Error " + errorCode);
-            }
-        });
-        return assetList;
-    }
-
     public void addAsset(String assetName) {
         dm.createAsset(assetName, currentAssetId);
         loadCurrentContents(false);
     }
 
-    public String getParentOf(String currentAssetId){
-        final String[] parentID = new String[1];
-        dm.getParentAssetsAsync(currentAssetId, new IDataManager.LoadAssetsCallback() {
-            @Override
-            public void onAssetsLoaded(List<Asset> assets) {
-                if(getCurrentAssetId() == dm.getRootAsset().getId()){
-                    parentID[0] = dm.getRootAsset().getId();
-                } else {
-                    parentID[0] = assets.get(0).getId();
-                }
-            }
-
-            @Override
-            public void dataNotAvailable(int errorCode) {
-
-            }
-        });
-        return parentID[0];
+    @Deprecated
+    @Override
+    public List<Asset> loadContents(String assetID) {
+        // deprecated method
+        return null;
     }
 
-    public String getAssetName(String assetID){
-        final String[] assetName = new String[1];
-        dm.getAssetAsync(assetID, new IDataManager.GetAssetCallback() {
-            @Override
-            public void onAssetLoaded(Asset asset) {
-                assetName[0] = asset.getName();
-            }
+    @Deprecated
+    @Override
+    public boolean isRootCurrentAsset() {
+        // deprecated method
+        return false;
+    }
 
-            @Override
-            public void dataNotAvailable(int errorCode) {
-                Log.i("Name not found","Error:"+errorCode);
-            }
-        });
-        return assetName[0];
+    @Deprecated
+    @Override
+    public String getParentOf(String currentAssetId) {
+        // deprecated method
+        return null;
+    }
+
+    @Deprecated
+    @Override
+    public String getAssetName(String assetID) {
+        // deprecated method
+        return null;
     }
 
 }
