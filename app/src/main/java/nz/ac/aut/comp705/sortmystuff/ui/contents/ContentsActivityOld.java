@@ -159,6 +159,10 @@ public class ContentsActivityOld extends AppCompatActivity implements IContentsV
         Toast.makeText(this,message,Toast.LENGTH_LONG);
     }
 
+    @Override
+    public void showPath(List<Asset> assets) {
+        // no implementation
+    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -189,7 +193,7 @@ public class ContentsActivityOld extends AppCompatActivity implements IContentsV
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         //action button stuff
-        if (id == R.id.action_settings && !presenter.isRootCurrentAsset()) {
+        if (id == R.id.action_view_details && !presenter.isRootCurrentAsset()) {
             Intent intent = new Intent(this, DetailActivity.class);
             intent.putExtra("AssetID", presenter.getCurrentAssetId());
             startActivity(intent);

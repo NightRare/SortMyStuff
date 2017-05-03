@@ -1,5 +1,7 @@
 package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
+import android.content.Intent;
+
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.Asset;
@@ -30,4 +32,6 @@ public interface IContentsView extends IView<IContentsPresenter> {
     void showAddDialog();
 
     void showMessageOnScreen(String message);
+
+    void showPath(List<Asset> assets);
 }

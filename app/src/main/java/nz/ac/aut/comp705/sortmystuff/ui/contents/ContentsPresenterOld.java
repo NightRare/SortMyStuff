@@ -1,6 +1,7 @@
 package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
 import android.util.Log;
+import android.view.MenuItem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -107,6 +108,12 @@ public class ContentsPresenterOld implements IContentsPresenter {
     public void addAsset(String assetName) {
         dm.createAsset(assetName, currentAssetId);
         view.showAssetList(currentAssetId);
+    }
+
+    @Override
+    public boolean selectOptionItem(MenuItem item) {
+        // no implementation
+        return false;
     }
 
     public String getParentOf(String currentAssetId){

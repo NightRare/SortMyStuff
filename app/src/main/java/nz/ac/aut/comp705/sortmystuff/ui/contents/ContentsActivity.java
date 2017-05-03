@@ -2,7 +2,6 @@ package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -24,7 +23,6 @@ import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
-import nz.ac.aut.comp705.sortmystuff.ui.detail.DetailActivity;
 
 /**
  * Created by Yuan on 2017/4/28.
@@ -35,7 +33,6 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     private IContentsPresenter presenter;
 
     // UI Components
-    private AlertDialog.Builder addDialogBuilder;
     private FloatingActionButton fab;
     ListView index;
     Toolbar toolbar;
@@ -69,7 +66,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
         // Create the presenter
         IDataManager dm = ((SortMyStuffApp) getApplication()).getFactory().getDataManager();
-        IContentsPresenter p = new ContentsPresenter(dm, this);
+        IContentsPresenter p = new ContentsPresenter(dm, this, this);
         setPresenter(p);
 
         // Load previously saved state, if available
@@ -102,24 +99,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
     @Override
     public void showAddDialog() {
-        if (addDialogBuilder == null)
-            initDialogBuilder();
-
-        //create an input area
-        final EditText input = new EditText(this);
-        addDialogBuilder.setView(input);
-
-        //creates the Save button and what happens when clicked
-        addDialogBuilder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                // get user input and add input as asset
-                presenter.addAsset(input.getText().toString());
-                //show a success message
-                showMessageOnScreen("Successfully added " + input.getText().toString());
-            }
-        });
-
-        addDialogBuilder.create().show();
+        getAddAssetDialogBuilder().create().show();
     }
 
     @Override
@@ -127,10 +107,14 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         Toast.makeText(this,message,Toast.LENGTH_LONG);
     }
 
+    @Override
+    public void showPath(List<Asset> assets) {
+
+    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        outState.putSerializable(CURRENT_ASSET_ID, presenter.getCurrentAssetId());
+        outState.putString(CURRENT_ASSET_ID, presenter.getCurrentAssetId());
         super.onSaveInstanceState(outState);
     }
 
@@ -143,17 +127,8 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        //action button stuff
-        if (id == R.id.action_settings && !presenter.isRootCurrentAsset()) {
-            Intent intent = new Intent(this, DetailActivity.class);
-            intent.putExtra("AssetID", presenter.getCurrentAssetId());
-            startActivity(intent);
+        if(presenter.selectOptionItem(item))
             return true;
-        } else {
-            Toast.makeText(this, "Root has no detail",Toast.LENGTH_LONG).show();
-        }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -175,16 +150,30 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         // deprecated methods
     }
 
-    private void initDialogBuilder() {
-        addDialogBuilder = new AlertDialog.Builder(this);
-        addDialogBuilder.setTitle("Add Asset");
+    private AlertDialog.Builder getAddAssetDialogBuilder() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Add Asset");
 
+        final EditText input = new EditText(this);
+        builder.setView(input);
+
+        builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // get user input and add input as asset
+                presenter.addAsset(input.getText().toString());
+                //show a success message
+                showMessageOnScreen("Successfully added " + input.getText().toString());
+            }
+        });
         //creates the Cancel button and what happens when clicked
-        addDialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                 dialog.cancel();
             }
         });
+
+        return builder;
     }
 
     private void registerListeners() {
@@ -221,5 +210,6 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
                 presenter.loadCurrentContents(false);
             }
         });
+
     }
 }
