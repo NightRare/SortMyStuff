@@ -40,14 +40,13 @@ public class PathBarAdapter extends
     @Override
     public void onBindViewHolder(ViewHolder holder, final int position) {
         StringBuffer sb = new StringBuffer();
-        String sep = " > ";
 
         if(position == 0)
-            sb.append(" ");
+            sb.append("  ");
         else
-            sb.append(sep);
+            sb.append(" >  ");
+
         sb.append(assets.get(position).getName());
-        sb.append(" ");
 
         holder.nameView.setText(sb.toString());
 
