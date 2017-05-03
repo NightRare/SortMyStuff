@@ -6,8 +6,6 @@
     android:layout_height="match_parent"
     tools:context="nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsActivity">
 
-    <include layout="@layout/content_index_view" />
-
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/addAssetButton"
         android:layout_width="wrap_content"
@@ -31,5 +29,41 @@
             tools:titleTextColor="#00000" />
 
     </android.support.design.widget.AppBarLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <RelativeLayout android:id="@+id/pathbar_layout"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            xmlns:android="http://schemas.android.com/apk/res/android">
+
+            <TextView
+                android:id="@+id/pathbar_root"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_alignParentLeft="true"
+                android:fontFamily="sans-serif-smallcaps"
+                android:gravity="center"
+                android:text="  Root >"
+                android:textAppearance="@android:style/TextAppearance"
+                android:textColor="@color/dark_grey" />
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/pathbar_pathview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_toRightOf="@id/pathbar_root"
+                android:orientation="horizontal">
+
+
+            </android.support.v7.widget.RecyclerView>
+        </RelativeLayout>
+
+        <include
+            layout="@layout/content_index_view"/>
+    </RelativeLayout>
 
 </android.support.design.widget.CoordinatorLayout>

@@ -4,44 +4,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_below="@+id/pathbar_layout"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsActivity"
     tools:showIn="@layout/activity_index_view">
 
-    <RelativeLayout
-        android:layout_width="368dp"
-        android:layout_height="495dp"
-        tools:layout_editor_absoluteX="8dp"
-        tools:layout_editor_absoluteY="8dp">
-
-        <RelativeLayout
-            android:id="@+id/pathbar_layout"
-            android:layout_width="match_parent"
-            android:layout_height="30dp">
-
-            <TextView
-                android:id="@+id/pathbar_root"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_alignParentLeft="true"
-                android:gravity="center"
-                android:text="  Root > "
-                android:textAppearance="@android:style/TextAppearance.Material.Widget.Button" />
-
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/pathbar_pathview"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_toRightOf="@id/pathbar_root"/>
-        </RelativeLayout>
-
-        <ListView
-            android:id="@+id/index_list"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/pathbar_layout"
-            tools:layout_editor_absoluteX="0dp"
-            tools:layout_editor_absoluteY="0dp" />
-    </RelativeLayout>
+    <ListView
+        android:id="@+id/index_list"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/pathbar_layout"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="0dp" />
 
 </android.support.constraint.ConstraintLayout>

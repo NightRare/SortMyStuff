@@ -233,6 +233,40 @@ public class DataManager implements IDataManager {
     }
 
     @Override
+    public void getParentAssetsDescAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback) {
+        Preconditions.checkNotNull(asset);
+
+        getParentAssetsDescAsync(asset.getId(), callback);
+    }
+
+    @Override
+    public void getParentAssetsDescAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback) {
+        Preconditions.checkNotNull(assetId);
+
+        if (dirtyCachedAssets || cachedAssets == null) {
+            int code = loadCachedAssetsFromLocal();
+            if (code != OK) {
+                callback.dataNotAvailable(code);
+                return;
+            }
+        }
+        if (!cachedAssets.containsKey(assetId)) {
+            callback.dataNotAvailable(ASSET_NOT_EXISTS);
+            return;
+        }
+
+        Asset asset = cachedAssets.get(assetId);
+        List<Asset> parents = new LinkedList<>();
+        while(!asset.isRoot()) {
+            parents.add(0, asset);
+            asset = asset.getContainer();
+        }
+        // add the root
+        parents.add(0, asset);
+        callback.onAssetsLoaded(parents);
+    }
+
+    @Override
     public void getAssetAsync(@NonNull String assetId, @NonNull GetAssetCallback callback) {
         Preconditions.checkNotNull(assetId);
         Preconditions.checkNotNull(callback);

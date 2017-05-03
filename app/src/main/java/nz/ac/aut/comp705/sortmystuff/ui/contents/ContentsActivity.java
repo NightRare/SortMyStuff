@@ -5,11 +5,14 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -17,6 +20,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
@@ -37,7 +41,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     private ListView index;
     private Toolbar toolbar;
     private TextView pathBarRoot;
-    private RecyclerView pathBarPath;
+    private RecyclerView pathBar;
 
     private static final String CURRENT_ASSET_ID = "CURRENT_ASSET_ID";
 
@@ -59,7 +63,11 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         // clicking on an asset in the list
 
         pathBarRoot = (TextView) findViewById(R.id.pathbar_root);
-        pathBarPath = (RecyclerView) findViewById(R.id.pathbar_pathview);
+        pathBar = (RecyclerView) findViewById(R.id.pathbar_pathview);
+        LinearLayoutManager llm = new LinearLayoutManager(this);
+        llm.setOrientation(LinearLayoutManager.HORIZONTAL);
+        pathBar.setLayoutManager(llm);
+
 
         // register all the listeners
         registerListeners();
@@ -109,7 +117,8 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
     @Override
     public void showPath(List<Asset> assets) {
-
+        PathBarAdapter pba = new PathBarAdapter(this, assets, presenter);
+        pathBar.setAdapter(pba);
     }
 
     @Override
@@ -210,6 +219,5 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
                 presenter.loadCurrentContents(false);
             }
         });
-
     }
 }

@@ -178,10 +178,13 @@ public class ContentsPresenter implements IContentsPresenter {
     }
 
     private void loadPathBar(final Asset asset) {
-        dm.getParentAssetsAsync(asset, new IDataManager.LoadAssetsCallback() {
+        dm.getParentAssetsDescAsync(asset, new IDataManager.LoadAssetsCallback() {
             @Override
             public void onAssetsLoaded(List<Asset> assets) {
-                assets.add(0, asset);
+                // remove the Root
+                if(!assets.isEmpty())
+                    assets.remove(0);
+
                 view.showPath(assets);
             }
 
