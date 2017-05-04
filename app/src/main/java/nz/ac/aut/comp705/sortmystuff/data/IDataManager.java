@@ -123,7 +123,7 @@ public interface IDataManager {
     /**
      * Get the parent assets stored in a list in which the first element is the container of the
      * asset and the last element is the Root asset (if this asset is not contained by Root).
-     * For example, Root -> Apartment -> Bookshelf -> Drawer, if query the parent Asset of Drawer
+     * For example, Root -> Apartment -> Bookshelf -> Drawer, if query the parent Assets of Drawer
      * the items in list would be [Bookshelf, Apartment, Root].
      *
      * @param asset    the asset whose parent assets are queried
@@ -135,7 +135,7 @@ public interface IDataManager {
     /**
      * Get the parent assets stored in a list in which the first element is the container of the
      * asset and the last element is the Root asset (if this asset is not contained by Root).
-     * For example, Root -> Apartment -> Bookshelf -> Drawer, if query the parent Asset of Drawer
+     * For example, Root -> Apartment -> Bookshelf -> Drawer, if query the parent Assets of Drawer
      * the items in list would be [Bookshelf, Apartment, Root].
      *
      * @param assetId    the id of the asset whose parent assets are queried
@@ -143,6 +143,31 @@ public interface IDataManager {
      * @throws NullPointerException if any argument is {@code null}
      */
     void getParentAssetsAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback);
+
+    /**
+     * Get the parent assets stored in a list in which the first element is the Root asset
+     * and the last element is the asset itself (if this asset is not contained by Root).
+     * For example, Root -> Apartment -> Bookshelf -> Drawer, if query the parent Assets of Drawer
+     * in descendant order, the items in list would be [Root, Apartment, Bookshelf, Drawer].
+     *
+     * @param asset    the asset whose parent assets are queried
+     * @param callback see {@link LoadAssetsCallback}
+     * @throws NullPointerException if any argument is {@code null}
+     */
+    void getParentAssetsDescAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback);
+
+    /**
+     * Get the parent assets stored in a list in which the first element is the Root asset
+     * and the last element is the asset itself (if this asset is not contained by Root).
+     * For example, Root -> Apartment -> Bookshelf -> Drawer, if query the parent Assets of Drawer
+     * in descendant order, the items in list would be [Root, Apartment, Bookshelf, Drawer].
+     *
+     * @param assetId    the id of the asset whose parent assets are queried
+     * @param callback see {@link LoadAssetsCallback}
+     * @throws NullPointerException if any argument is {@code null}
+     */
+    void getParentAssetsDescAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback);
+
 
     /**
      * Get an asset according to the id.
@@ -258,12 +283,11 @@ public interface IDataManager {
     /**
      * Remove the detail from the asset.
      *
-     * @param assetId the id of the owner asset
      * @param detail  the detail
      * @throws NullPointerException              if any argument is {@code null}
      * @throws UpdateLocalStorageFailedException if update local storage failed
      */
-    void removeDetail(@NonNull String assetId, @NonNull Detail detail);
+    void removeDetail(@NonNull Detail detail);
 
     /**
      * Remove the detail from the asset.

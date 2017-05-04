@@ -233,6 +233,40 @@ public class DataManager implements IDataManager {
     }
 
     @Override
+    public void getParentAssetsDescAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback) {
+        Preconditions.checkNotNull(asset);
+
+        getParentAssetsDescAsync(asset.getId(), callback);
+    }
+
+    @Override
+    public void getParentAssetsDescAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback) {
+        Preconditions.checkNotNull(assetId);
+
+        if (dirtyCachedAssets || cachedAssets == null) {
+            int code = loadCachedAssetsFromLocal();
+            if (code != OK) {
+                callback.dataNotAvailable(code);
+                return;
+            }
+        }
+        if (!cachedAssets.containsKey(assetId)) {
+            callback.dataNotAvailable(ASSET_NOT_EXISTS);
+            return;
+        }
+
+        Asset asset = cachedAssets.get(assetId);
+        List<Asset> parents = new LinkedList<>();
+        while(!asset.isRoot()) {
+            parents.add(0, asset);
+            asset = asset.getContainer();
+        }
+        // add the root
+        parents.add(0, asset);
+        callback.onAssetsLoaded(parents);
+    }
+
+    @Override
     public void getAssetAsync(@NonNull String assetId, @NonNull GetAssetCallback callback) {
         Preconditions.checkNotNull(assetId);
         Preconditions.checkNotNull(callback);
@@ -363,6 +397,10 @@ public class DataManager implements IDataManager {
             return;
         }
         Asset asset = cachedAssets.get(assetId);
+        if(asset.isRoot()) {
+            Log.e(getClass().getName(), "cannot recycle Root asset");
+            return;
+        }
         asset.recycle();
         cachedRecycledAssets.put(assetId, cachedAssets.remove(assetId));
         if (!jsonHelper.serialiseAsset(asset)) {
@@ -384,10 +422,10 @@ public class DataManager implements IDataManager {
     }
 
     @Override
-    public void removeDetail(@NonNull String assetId, @NonNull Detail detail) {
+    public void removeDetail(@NonNull Detail detail) {
         Preconditions.checkNotNull(detail);
 
-        removeDetail(assetId, detail.getId());
+        removeDetail(detail.getAssetId(), detail.getId());
     }
 
     @Override
@@ -402,12 +440,18 @@ public class DataManager implements IDataManager {
         }
 
         List<Detail> details = cachedDetails.get(assetId);
+        boolean removed = false;
         for(Detail d : details) {
             if(d.getId().equals(detailId)) {
                 details.remove(d);
+                removed = true;
                 break;
             }
         }
+
+        // if nothing removed, do nothing
+        if(!removed)
+            return;
 
         cachedAssets.get(assetId).updateTimeStamp();
         if (!jsonHelper.serialiseDetails(details) ||
@@ -571,13 +615,17 @@ public class DataManager implements IDataManager {
             cachedDetails.get(assetId).add(td);
         }
         else {
+            boolean updated = false;
             for(Detail detail : cachedDetails.get(assetId)) {
                 if(detail.getId().equals(detailId)) {
+                    updated = true;
                     td = (TextDetail) detail;
                     td.setLabel(label);
                     td.setField(field);
                 }
             }
+            if(!updated)
+                return td;
         }
 
         cachedAssets.get(assetId).updateTimeStamp();

@@ -1,6 +1,7 @@
-package nz.ac.aut.comp705.sortmystuff.ui.content;
+package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
 import android.util.Log;
+import android.view.MenuItem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +13,7 @@ import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
  * Created by Yuan on 2017/4/28.
  */
 
-public class ContentsPresenter implements IContentsPresenter{
+public class ContentsPresenterOld implements IContentsPresenter {
 
     private IContentsView view;
 
@@ -21,7 +22,7 @@ public class ContentsPresenter implements IContentsPresenter{
     private String currentAssetId;
 
 
-    public ContentsPresenter(IDataManager dm, IContentsView view) {
+    public ContentsPresenterOld(IDataManager dm, IContentsView view) {
         this.dm = dm;
         this.view = view;
     }
@@ -55,8 +56,23 @@ public class ContentsPresenter implements IContentsPresenter{
     }
 
     @Override
+    public void loadCurrentContents(boolean forceRefreshFromLocal) {
+        // no implementation
+    }
+
+    @Override
     public void setCurrentAssetId(String assetId) {
         currentAssetId = assetId;
+    }
+
+    @Override
+    public void setCurrentAssetIdToRoot() {
+        // no implementation
+    }
+
+    @Override
+    public void setCurrentAssetIdToContainer() {
+        // no implementation
     }
 
     @Override
@@ -92,6 +108,12 @@ public class ContentsPresenter implements IContentsPresenter{
     public void addAsset(String assetName) {
         dm.createAsset(assetName, currentAssetId);
         view.showAssetList(currentAssetId);
+    }
+
+    @Override
+    public boolean selectOptionItem(MenuItem item) {
+        // no implementation
+        return false;
     }
 
     public String getParentOf(String currentAssetId){

@@ -1,11 +1,10 @@
-package nz.ac.aut.comp705.sortmystuff.ui.content;
+package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -17,6 +16,8 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.util.List;
+
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.Asset;
@@ -27,7 +28,7 @@ import nz.ac.aut.comp705.sortmystuff.ui.detail.DetailActivity;
  * Created by Yuan on 2017/4/28.
  */
 
-public class ContentsActivity extends AppCompatActivity implements IContentsView {
+public class ContentsActivityOld extends AppCompatActivity implements IContentsView {
 
     private IContentsPresenter presenter;
 
@@ -42,7 +43,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_index_view);
+        setContentView(R.layout.contents_act);
 
         // toolbar
         toolbar = (Toolbar) findViewById(R.id.toolbarMain);
@@ -103,6 +104,11 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     }
 
     @Override
+    public void showRootAssetList() {
+        // no implementation
+    }
+
+    @Override
     public void showContainerAsset(Asset asset) {
         setTitle(asset.getName());
     }
@@ -114,6 +120,16 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
                 presenter.loadContents(presenter.getCurrentAssetId()));
         index.setAdapter(arrayAdapter);
 
+    }
+
+    @Override
+    public void showAssetTitle(String name) {
+        // no implementation
+    }
+
+    @Override
+    public void showAssetContents(List<Asset> assets) {
+        // no implementation
     }
 
     @Override
@@ -143,6 +159,10 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         Toast.makeText(this,message,Toast.LENGTH_LONG);
     }
 
+    @Override
+    public void showPath(List<Asset> assets) {
+        // no implementation
+    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -165,7 +185,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_index_view, menu);
+        getMenuInflater().inflate(R.menu.contents_menu, menu);
         return true;
     }
 
@@ -173,7 +193,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         //action button stuff
-        if (id == R.id.action_settings && !presenter.isRootCurrentAsset()) {
+        if (id == R.id.action_view_details && !presenter.isRootCurrentAsset()) {
             Intent intent = new Intent(this, DetailActivity.class);
             intent.putExtra("AssetID", presenter.getCurrentAssetId());
             startActivity(intent);
