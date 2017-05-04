@@ -35,10 +35,12 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <RelativeLayout android:id="@+id/pathbar_layout"
+        <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/pathbar_layout"
             android:layout_width="match_parent"
             android:layout_height="30dp"
-            xmlns:android="http://schemas.android.com/apk/res/android">
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp">
 
             <TextView
                 android:id="@+id/pathbar_root"
@@ -47,7 +49,7 @@
                 android:layout_alignParentLeft="true"
                 android:fontFamily="sans-serif-smallcaps"
                 android:gravity="center"
-                android:text="  Root >"
+                android:text="Root >"
                 android:textAppearance="@android:style/TextAppearance"
                 android:textColor="@color/dark_grey" />
 
@@ -63,7 +65,7 @@
         </RelativeLayout>
 
         <include
-            layout="@layout/content_index_view"/>
+            layout="@layout/contents_list"/>
     </RelativeLayout>
 
 </android.support.design.widget.CoordinatorLayout>

@@ -7,7 +7,7 @@
     android:layout_below="@+id/pathbar_layout"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsActivity"
-    tools:showIn="@layout/activity_index_view">
+    tools:showIn="@layout/contents_act">
 
     <ListView
         android:id="@+id/index_list"

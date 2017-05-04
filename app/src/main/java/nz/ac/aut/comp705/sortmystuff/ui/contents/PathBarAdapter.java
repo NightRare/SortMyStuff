@@ -1,7 +1,6 @@
 package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,7 +31,7 @@ public class PathBarAdapter extends
 
     @Override
     public PathBarAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = inflater.inflate(R.layout.content_index_pathbar_asset_view, parent, false);
+        View view = inflater.inflate(R.layout.contents_pathbar, parent, false);
         ViewHolder vh = new ViewHolder(view);
         return vh;
     }

@@ -43,7 +43,7 @@ public class ContentsActivityOld extends AppCompatActivity implements IContentsV
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_index_view);
+        setContentView(R.layout.contents_act);
 
         // toolbar
         toolbar = (Toolbar) findViewById(R.id.toolbarMain);
@@ -185,7 +185,7 @@ public class ContentsActivityOld extends AppCompatActivity implements IContentsV
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_index_view, menu);
+        getMenuInflater().inflate(R.menu.contents_menu, menu);
         return true;
     }
 
