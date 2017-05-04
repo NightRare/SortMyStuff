@@ -167,6 +167,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         builder.setTitle("Add Asset");
 
         final EditText input = new EditText(this);
+        input.setSingleLine();
         builder.setView(input);
 
         builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
