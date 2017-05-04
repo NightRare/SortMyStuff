@@ -6,6 +6,10 @@
     android:layout_height="match_parent"
     tools:context="nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsActivity">
 
+
+
+
+
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/addAssetButton"
         android:layout_width="wrap_content"
@@ -66,6 +70,9 @@
 
         <include
             layout="@layout/contents_list"/>
+
     </RelativeLayout>
+
+
 
 </android.support.design.widget.CoordinatorLayout>

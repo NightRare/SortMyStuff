@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_below="@+id/pathbar_layout"
+    android:orientation="vertical"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsActivity"
     tools:showIn="@layout/contents_act">
@@ -13,6 +14,37 @@
         android:id="@+id/index_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_weight="7"
         android:layout_below="@id/pathbar_layout" />
+
+    <LinearLayout
+        android:id="@+id/action_buttons"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:orientation="horizontal"
+        android:layout_weight="1"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/move_button"
+            android:text="MOVE"
+            style="@style/action_button_style" />
+
+        <Button
+            android:id="@+id/copy_button"
+            android:text="COPY"
+            style="@style/action_button_style" />
+
+        <Button
+            android:id="@+id/delete_button"
+            android:text="DELETE"
+            style="@style/action_button_style" />
+
+        <Button
+            android:id="@+id/cancel_button"
+            android:text="CANCEL"
+            style="@style/action_button_style" />
+
+    </LinearLayout>
 
 </LinearLayout>
