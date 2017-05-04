@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.CheckBox;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -30,11 +32,14 @@ public class ContentsPresenter implements IContentsPresenter {
 
     private String currentAssetId;
 
+    private boolean inEditMode;
+
     @Deprecated
     public ContentsPresenter(IDataManager dm, IContentsView view) {
         this.dm = dm;
         this.view = view;
         this.activity = (ContentsActivity) view;
+        inEditMode = false;
     }
 
     public ContentsPresenter(IDataManager dm, IContentsView view, ContentsActivity activity) {
@@ -78,6 +83,7 @@ public class ContentsPresenter implements IContentsPresenter {
         });
     }
 
+
     @Override
     public void setCurrentAssetId(String assetId) {
         currentAssetId = assetId;
@@ -104,6 +110,8 @@ public class ContentsPresenter implements IContentsPresenter {
             }
         });
     }
+
+
 
     @Override
     public String getCurrentAssetId() {
@@ -193,6 +201,25 @@ public class ContentsPresenter implements IContentsPresenter {
 
             }
         });
+    }
+
+    public boolean isInEditMode() {
+        return inEditMode;
+    }
+
+    public void setInEditMode(boolean inEditMode) {
+        this.inEditMode = inEditMode;
+    }
+
+    public void enableEditMode(View view) {
+        setCheckboxStatus(view, true);
+    }
+
+    private void setCheckboxStatus(View view, boolean checked) {
+        CheckBox checkBox = (CheckBox) view.findViewById(R.id.asset_checkbox);
+        checkBox.setVisibility(View.VISIBLE);
+        if (checkBox != null)
+            checkBox.setChecked(checked);
     }
 
 }

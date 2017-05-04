@@ -13,6 +13,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -39,6 +40,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     private Toolbar toolbar;
     private TextView pathBarRoot;
     private RecyclerView pathBar;
+    private AssetsAdapter arrayAdapter;
 
     private static final String CURRENT_ASSET_ID = "CURRENT_ASSET_ID";
 
@@ -92,7 +94,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
     @Override
     public void showAssetContents(List<Asset> assets) {
-        ArrayAdapter<Asset> arrayAdapter = new AssetsAdapter(
+        arrayAdapter = new AssetsAdapter(
                 this, R.layout.assets_layout, assets);
         index.setAdapter(arrayAdapter);
     }
@@ -213,6 +215,16 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
             }
         });
 
+        index.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+
+                presenter.enableEditMode(view);
+
+                return true;
+            }
+        });
+
         pathBarRoot.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -221,4 +233,8 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
             }
         });
     }
+
+
 }
+
+

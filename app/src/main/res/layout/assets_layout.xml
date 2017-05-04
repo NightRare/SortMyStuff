@@ -26,7 +26,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end|center_vertical"
-            android:checked="false"
-            android:visibility="gone"/>
+            android:checked="false" />
 
 </LinearLayout>

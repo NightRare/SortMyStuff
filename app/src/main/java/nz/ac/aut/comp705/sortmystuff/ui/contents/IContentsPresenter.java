@@ -3,6 +3,7 @@ package nz.ac.aut.comp705.sortmystuff.ui.contents;
 import android.content.Context;
 import android.content.Intent;
 import android.view.MenuItem;
+import android.view.View;
 
 import java.util.List;
 
@@ -42,4 +43,6 @@ public interface IContentsPresenter extends IPresenter {
     void addAsset(String assetName);
 
     boolean selectOptionItem(MenuItem item);
+
+    void enableEditMode(View view);
 }
