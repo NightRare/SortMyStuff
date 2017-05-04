@@ -92,8 +92,8 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
     @Override
     public void showAssetContents(List<Asset> assets) {
-        ArrayAdapter<Asset> arrayAdapter = new ArrayAdapter<>(
-                this, android.R.layout.simple_list_item_1, assets);
+        ArrayAdapter<Asset> arrayAdapter = new AssetsAdapter(
+                this, R.layout.assets_layout, assets);
         index.setAdapter(arrayAdapter);
     }
 
