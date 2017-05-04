@@ -23,10 +23,20 @@ import nz.ac.aut.comp705.sortmystuff.data.Asset;
 public class AssetsAdapter extends ArrayAdapter<Asset> {
 
     private int resourceId;
+    private boolean isEditMode = false;
 
-    public AssetsAdapter(@NonNull Context context, @LayoutRes int textViewResourceId, @NonNull List<Asset> objects) {
+    public AssetsAdapter(@NonNull Context context, @LayoutRes int textViewResourceId,
+                         @NonNull List<Asset> objects) {
         super(context, textViewResourceId, objects);
         resourceId = textViewResourceId;
+    }
+
+    public boolean isEditMode() {
+        return isEditMode;
+    }
+
+    public void setEditMode(boolean editMode) {
+        isEditMode = editMode;
     }
 
 
@@ -45,7 +55,7 @@ public class AssetsAdapter extends ArrayAdapter<Asset> {
             viewHolder.assetName = (TextView) view.findViewById(R.id.asset_name);
             viewHolder.checkBox = (CheckBox) view.findViewById(R.id.asset_checkbox);
 
-            //setCheckboxVisibility(asset, viewHolder);
+            setCheckboxVisibility(asset, viewHolder, isEditMode);
 
             view.setTag(viewHolder);
         }
@@ -53,7 +63,7 @@ public class AssetsAdapter extends ArrayAdapter<Asset> {
             view = convertView;
             viewHolder = (ViewHolder) view.getTag();
 
-            //setCheckboxVisibility(asset, viewHolder);
+            setCheckboxVisibility(asset, viewHolder, isEditMode);
         }
 
         viewHolder.assetImage.setImageResource(R.drawable.folder_icon);
@@ -64,12 +74,12 @@ public class AssetsAdapter extends ArrayAdapter<Asset> {
         return view;
     }
 
-//    private void setCheckboxVisibility(Asset asset, ViewHolder viewHolder) {
-//        if (asset.isInEditMode() == false)
-//            viewHolder.checkBox.setVisibility(View.GONE);
-//        else
-//            viewHolder.checkBox.setVisibility(View.VISIBLE);
-//    }
+    private void setCheckboxVisibility(Asset asset, ViewHolder viewHolder, boolean isEditMode) {
+        if (isEditMode == false)
+            viewHolder.checkBox.setVisibility(View.GONE);
+        else
+            viewHolder.checkBox.setVisibility(View.VISIBLE);
+    }
 
     class ViewHolder {
         ImageView assetImage;

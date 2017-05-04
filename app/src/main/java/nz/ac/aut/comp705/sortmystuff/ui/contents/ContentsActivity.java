@@ -2,6 +2,7 @@ package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -13,7 +14,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -39,6 +43,10 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     private Toolbar toolbar;
     private TextView pathBarRoot;
     private RecyclerView pathBar;
+    private AssetsAdapter arrayAdapter;
+    private LinearLayout assetListView;
+    private Button cancel_button;
+
 
     private static final String CURRENT_ASSET_ID = "CURRENT_ASSET_ID";
 
@@ -54,6 +62,9 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
         // register Floating ActionButton
         fab = (FloatingActionButton) findViewById(R.id.addAssetButton);
+
+        assetListView = (LinearLayout) findViewById(R.id.action_buttons);
+        cancel_button = (Button) findViewById(R.id.cancel_button);
 
         // list view
         index = (ListView) findViewById(R.id.index_list);
@@ -92,7 +103,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
     @Override
     public void showAssetContents(List<Asset> assets) {
-        ArrayAdapter<Asset> arrayAdapter = new AssetsAdapter(
+        arrayAdapter = new AssetsAdapter(
                 this, R.layout.assets_layout, assets);
         index.setAdapter(arrayAdapter);
     }
@@ -187,6 +198,8 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     }
 
     private void registerListeners() {
+
+
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -213,6 +226,26 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
             }
         });
 
+        index.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+
+                presenter.enableEditMode(view);
+                fab.setVisibility(View.GONE);
+                assetListView.setVisibility(View.VISIBLE);
+
+                return true;
+            }
+        });
+
+        cancel_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                assetListView.setVisibility(View.GONE);
+                fab.setVisibility(View.VISIBLE);
+            }
+        });
+
         pathBarRoot.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -221,4 +254,8 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
             }
         });
     }
+
+
 }
+
+

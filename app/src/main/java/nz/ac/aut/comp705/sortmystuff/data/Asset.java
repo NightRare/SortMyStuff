@@ -228,6 +228,7 @@ public final class Asset {
         isRecycled = false;
     }
 
+
     //********************************************
     // OBJECT METHODS OVERRIDING
     //********************************************
@@ -305,4 +306,5 @@ public final class Asset {
         if (name.length() > AppConstraints.ASSET_NAME_CAP)
             throw new IllegalArgumentException("string length exceeds cap");
     }
+
 }

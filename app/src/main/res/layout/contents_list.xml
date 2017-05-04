@@ -1,18 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_below="@+id/pathbar_layout"
-    app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsActivity"
-    tools:showIn="@layout/contents_act">
+    android:orientation="vertical">
 
     <ListView
         android:id="@+id/index_list"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_below="@id/pathbar_layout" />
 
-</LinearLayout>
+    <LinearLayout
+        android:id="@+id/action_buttons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_alignParentBottom="true"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/move_button"
+            android:text="MOVE"
+            style="@style/action_button_style" />
+
+        <Button
+            android:id="@+id/copy_button"
+            android:text="COPY"
+            style="@style/action_button_style" />
+
+        <Button
+            android:id="@+id/delete_button"
+            android:text="DELETE"
+            style="@style/action_button_style" />
+
+        <Button
+            android:id="@+id/cancel_button"
+            android:text="CANCEL"
+            style="@style/action_button_style" />
+
+    </LinearLayout>
+
+</RelativeLayout>
