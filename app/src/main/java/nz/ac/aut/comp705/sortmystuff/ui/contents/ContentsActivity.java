@@ -44,7 +44,9 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     private TextView pathBarRoot;
     private RecyclerView pathBar;
     private AssetsAdapter arrayAdapter;
+    private LinearLayout assetListView;
     private Button cancel_button;
+
 
     private static final String CURRENT_ASSET_ID = "CURRENT_ASSET_ID";
 
@@ -61,6 +63,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         // register Floating ActionButton
         fab = (FloatingActionButton) findViewById(R.id.addAssetButton);
 
+        assetListView = (LinearLayout) findViewById(R.id.action_buttons);
         cancel_button = (Button) findViewById(R.id.cancel_button);
 
         // list view
@@ -229,8 +232,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
                 presenter.enableEditMode(view);
                 fab.setVisibility(View.GONE);
-                LinearLayout l = (LinearLayout) findViewById(R.id.action_buttons);
-                l.setVisibility(View.VISIBLE);
+                assetListView.setVisibility(View.VISIBLE);
 
                 return true;
             }
@@ -239,7 +241,8 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         cancel_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                assetListView.setVisibility(View.GONE);
+                fab.setVisibility(View.VISIBLE);
             }
         });
 
