@@ -62,12 +62,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         index = (ListView) findViewById(R.id.index_list);
         // clicking on an asset in the list
 
-        pathBarRoot = (TextView) findViewById(R.id.pathbar_root);
-        pathBar = (RecyclerView) findViewById(R.id.pathbar_pathview);
-        LinearLayoutManager llm = new LinearLayoutManager(this);
-        llm.setOrientation(LinearLayoutManager.HORIZONTAL);
-        pathBar.setLayoutManager(llm);
-
+        initPathBar();
 
         // register all the listeners
         registerListeners();
@@ -183,6 +178,15 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         });
 
         return builder;
+    }
+
+    private void initPathBar() {
+        pathBarRoot = (TextView) findViewById(R.id.pathbar_root);
+        pathBar = (RecyclerView) findViewById(R.id.pathbar_pathview);
+        LinearLayoutManager llm = new LinearLayoutManager(this);
+        llm.setOrientation(LinearLayoutManager.HORIZONTAL);
+        llm.setStackFromEnd(true);
+        pathBar.setLayoutManager(llm);
     }
 
     private void registerListeners() {
