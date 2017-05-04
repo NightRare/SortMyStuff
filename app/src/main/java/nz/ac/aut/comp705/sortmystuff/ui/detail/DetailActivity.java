@@ -81,10 +81,12 @@ public class DetailActivity extends AppCompatActivity implements IDetailView{
         layout.setOrientation(LinearLayout.VERTICAL);
 
         final EditText labelText = new EditText(context);
+        labelText.setSingleLine();
         labelText.setHint("Label");
         layout.addView(labelText);
 
         final EditText fieldText = new EditText(context);
+        fieldText.setSingleLine();
         fieldText.setHint("Field");
         layout.addView(fieldText);
 
