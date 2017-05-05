@@ -44,57 +44,7 @@ import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 public class ContentsActivity extends AppCompatActivity
         implements IContentsView, View.OnClickListener {
 
-    private IContentsPresenter presenter;
-
-    // UI Components
-    private FloatingActionButton fab;
-
-    private Toolbar toolbar;
-    private TextView pathBarRoot;
-    private RecyclerView pathBar;
-
-    private ListView index;
-    private Button select_btn, selectAll_btn, selectNone_btn, cancel_btn;
-    private AssetListAdapter adapter;
-    private CheckBox checkBox;
-    private int checkedCount;
-    private static List<Asset> assetList;
-    private Boolean showCheckbox = false;
-
-    private Handler handler = new Handler() {
-        public void handleMessage(Message msg) {
-            if (msg.what == 1)
-                enableEditMode();
-            if (msg.what == 0)
-                quitEditMode();
-        }
-    };
-
-    private void enableEditMode() {
-        adapter = new AssetListAdapter(assetList, getApplicationContext(), true);
-        index.setAdapter(adapter);
-        showCheckbox = true;
-        selectNone_btn.setVisibility(View.VISIBLE);
-        selectAll_btn.setVisibility(View.VISIBLE);
-        cancel_btn.setVisibility(View.VISIBLE);
-//        select_btn.setVisibility(View.GONE);
-        fab.setVisibility(View.GONE);
-
-    }
-
-    private void quitEditMode() {
-        adapter = new AssetListAdapter(assetList, getApplicationContext(), false);
-        index.setAdapter(adapter);
-        showCheckbox = false;
-        selectNone_btn.setVisibility(View.GONE);
-        selectAll_btn.setVisibility(View.GONE);
-        cancel_btn.setVisibility(View.GONE);
-//        select_btn.setVisibility(View.VISIBLE);
-        fab.setVisibility(View.VISIBLE);
-    }
-
-
-    private static final String CURRENT_ASSET_ID = "CURRENT_ASSET_ID";
+    //region Activity METHODS
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,36 +85,6 @@ public class ContentsActivity extends AppCompatActivity
         presenter.start();
     }
 
-    private void initView() {
-
-        View view = LayoutInflater.from(this).inflate(R.layout.assets_layout, null);
-        checkBox = (CheckBox) view.findViewById(R.id.asset_checkbox);
-
-        // list view for index
-        index = (ListView) findViewById(R.id.index_list);
-
-        cancel_btn = (Button) findViewById(R.id.cancel_button);
-//        select_btn = (Button) findViewById(R.id.select_button);
-        selectAll_btn = (Button) findViewById(R.id.select_all_button);
-        selectNone_btn = (Button) findViewById(R.id.select_none_button);
-
-        if (showCheckbox) {
-            selectNone_btn.setVisibility(View.VISIBLE);
-            selectAll_btn.setVisibility(View.VISIBLE);
-            cancel_btn.setVisibility(View.VISIBLE);
-        }
-        else {
-            selectNone_btn.setVisibility(View.GONE);
-            selectAll_btn.setVisibility(View.GONE);
-            cancel_btn.setVisibility(View.GONE);
-        }
-
-//        select_btn.setOnClickListener(this);
-        cancel_btn.setOnClickListener(this);
-        selectAll_btn.setOnClickListener(this);
-        selectNone_btn.setOnClickListener(this);
-
-    }
    @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putString(CURRENT_ASSET_ID, presenter.getCurrentAssetId());
@@ -180,26 +100,25 @@ public class ContentsActivity extends AppCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.selection_mode_button:
+                Message message = Message.obtain();
+                message.what = 1;
+                handler.sendMessage(message);
+                break;
+            default:
+                break;
+
+        }
         if (presenter.selectOptionItem(item))
             return true;
         return super.onOptionsItemSelected(item);
     }
 
+
     //endregion
 
-    //region IContentsView methods
-
-    /**
-     * {@inheritDoc}
-     *
-     * @param presenter the presenter
-     */
-    @Override
-    public void setPresenter(IContentsPresenter presenter) {
-        this.presenter = presenter;
-    }
-
-    //region IContentsView methods
+    //region IContentsView METHODS
 
     /**
      * {@inheritDoc}
@@ -266,42 +185,91 @@ public class ContentsActivity extends AppCompatActivity
 
     //endregion
 
-    //region Private stuff
+    //region PRIVATE STUFF
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.selection_mode_button:
-                Message message = Message.obtain();
-                message.what = 1;
-                handler.sendMessage(message);
-                break;
-            default:
-                break;
 
+    private IContentsPresenter presenter;
+
+    // UI Components
+    private FloatingActionButton fab;
+
+    private Toolbar toolbar;
+    private TextView pathBarRoot;
+    private RecyclerView pathBar;
+
+    private ListView index;
+    private Button select_btn, selectAll_btn, selectNone_btn, cancel_btn;
+    private AssetListAdapter adapter;
+    private CheckBox checkBox;
+    private int checkedCount;
+    private static List<Asset> assetList;
+    private Boolean showCheckbox = false;
+
+    private Handler handler = new Handler() {
+        public void handleMessage(Message msg) {
+            if (msg.what == 1)
+                enableEditMode();
+            if (msg.what == 0)
+                quitEditMode();
         }
-        if (presenter.selectOptionItem(item))
-            return true;
-        return super.onOptionsItemSelected(item);
+    };
+
+    private void initView() {
+
+        View view = LayoutInflater.from(this).inflate(R.layout.assets_layout, null);
+        checkBox = (CheckBox) view.findViewById(R.id.asset_checkbox);
+
+        // list view for index
+        index = (ListView) findViewById(R.id.index_list);
+
+        cancel_btn = (Button) findViewById(R.id.cancel_button);
+//        select_btn = (Button) findViewById(R.id.select_button);
+        selectAll_btn = (Button) findViewById(R.id.select_all_button);
+        selectNone_btn = (Button) findViewById(R.id.select_none_button);
+
+        if (showCheckbox) {
+            selectNone_btn.setVisibility(View.VISIBLE);
+            selectAll_btn.setVisibility(View.VISIBLE);
+            cancel_btn.setVisibility(View.VISIBLE);
+        }
+        else {
+            selectNone_btn.setVisibility(View.GONE);
+            selectAll_btn.setVisibility(View.GONE);
+            cancel_btn.setVisibility(View.GONE);
+        }
+
+//        select_btn.setOnClickListener(this);
+        cancel_btn.setOnClickListener(this);
+        selectAll_btn.setOnClickListener(this);
+        selectNone_btn.setOnClickListener(this);
+
     }
 
-    @Deprecated
-    @Override
-    public void showRootAssetList() {
-        // deprecated methods
+    private void enableEditMode() {
+        adapter = new AssetListAdapter(assetList, getApplicationContext(), true);
+        index.setAdapter(adapter);
+        showCheckbox = true;
+        selectNone_btn.setVisibility(View.VISIBLE);
+        selectAll_btn.setVisibility(View.VISIBLE);
+        cancel_btn.setVisibility(View.VISIBLE);
+//        select_btn.setVisibility(View.GONE);
+        fab.setVisibility(View.GONE);
+
     }
 
-    @Deprecated
-    @Override
-    public void showContainerAsset(Asset asset) {
-        // deprecated methods
+    private void quitEditMode() {
+        adapter = new AssetListAdapter(assetList, getApplicationContext(), false);
+        index.setAdapter(adapter);
+        showCheckbox = false;
+        selectNone_btn.setVisibility(View.GONE);
+        selectAll_btn.setVisibility(View.GONE);
+        cancel_btn.setVisibility(View.GONE);
+//        select_btn.setVisibility(View.VISIBLE);
+        fab.setVisibility(View.VISIBLE);
     }
 
-    @Deprecated
-    @Override
-    public void showAssetList(String assetID) {
-        // deprecated methods
-    }
+
+    private static final String CURRENT_ASSET_ID = "CURRENT_ASSET_ID";
 
     private AlertDialog.Builder getAddAssetDialogBuilder() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -413,11 +381,6 @@ public class ContentsActivity extends AppCompatActivity
                 handler.sendMessage(message);
                 break;
 
-//            case R.id.select_button:
-//                message.what = 1;
-//                handler.sendMessage(message);
-//                break;
-
             case R.id.select_all_button:
                 selectAll();
                 Toast.makeText(this, assetList.size() + " items", Toast.LENGTH_SHORT).show();
@@ -446,6 +409,7 @@ public class ContentsActivity extends AppCompatActivity
         adapter.notifyDataSetChanged();
     }
 
+    //endregion
 }
 
 
