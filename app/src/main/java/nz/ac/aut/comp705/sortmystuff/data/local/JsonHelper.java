@@ -55,8 +55,6 @@ public class JsonHelper implements IJsonHelper {
 
         if (!this.userDir.exists())
             this.userDir.mkdirs();
-
-        rootExists = false;
     }
 
     //region IJSonHelper methods
@@ -233,12 +231,15 @@ public class JsonHelper implements IJsonHelper {
      */
     @Override
     public boolean rootExists() {
-        if (rootExists)
-            return true;
+        boolean rootExists;
 
         File rootFile = fc.createFile(
                 userDir + File.separator + ROOT_ASSET_DIR + File.separator + ASSET_FILENAME);
         rootExists = rootFile.exists();
+        if(!rootExists)
+            return false;
+
+        // check whether the file corrupt
         Asset asset = deserialiseAssetFromFile(rootFile);
         rootExists = (asset == null ? false : true);
         return rootExists;
@@ -274,8 +275,6 @@ public class JsonHelper implements IJsonHelper {
     //endregion
 
     //region Private stuff
-
-    private boolean rootExists;
 
     private File userDir;
 
