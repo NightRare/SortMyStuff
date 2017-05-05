@@ -20,13 +20,13 @@ import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.Asset;
 
 
-public class AssetsAdapter extends ArrayAdapter<Asset> {
+public class AssetsAdapterOld extends ArrayAdapter<Asset> {
 
     private int resourceId;
     private boolean isEditMode = false;
 
-    public AssetsAdapter(@NonNull Context context, @LayoutRes int textViewResourceId,
-                         @NonNull List<Asset> objects) {
+    public AssetsAdapterOld(@NonNull Context context, @LayoutRes int textViewResourceId,
+                            @NonNull List<Asset> objects) {
         super(context, textViewResourceId, objects);
         resourceId = textViewResourceId;
     }

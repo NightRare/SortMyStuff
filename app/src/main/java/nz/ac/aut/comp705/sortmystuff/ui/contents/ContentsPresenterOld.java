@@ -117,10 +117,6 @@ public class ContentsPresenterOld implements IContentsPresenter {
         return false;
     }
 
-    @Override
-    public void enableEditMode(View view) {
-
-    }
 
     public String getParentOf(String currentAssetId){
         final String[] parentID = new String[1];

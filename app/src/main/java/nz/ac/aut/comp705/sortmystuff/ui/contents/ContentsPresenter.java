@@ -32,14 +32,11 @@ public class ContentsPresenter implements IContentsPresenter {
 
     private String currentAssetId;
 
-    private boolean inEditMode;
-
     @Deprecated
     public ContentsPresenter(IDataManager dm, IContentsView view) {
         this.dm = dm;
         this.view = view;
         this.activity = (ContentsActivity) view;
-        inEditMode = false;
     }
 
     public ContentsPresenter(IDataManager dm, IContentsView view, ContentsActivity activity) {
@@ -110,8 +107,6 @@ public class ContentsPresenter implements IContentsPresenter {
             }
         });
     }
-
-
 
     @Override
     public String getCurrentAssetId() {
@@ -203,23 +198,5 @@ public class ContentsPresenter implements IContentsPresenter {
         });
     }
 
-    public boolean isInEditMode() {
-        return inEditMode;
-    }
-
-    public void setInEditMode(boolean inEditMode) {
-        this.inEditMode = inEditMode;
-    }
-
-    public void enableEditMode(View view) {
-        setCheckboxStatus(view, true);
-    }
-
-    private void setCheckboxStatus(View view, boolean checked) {
-        CheckBox checkBox = (CheckBox) view.findViewById(R.id.asset_checkbox);
-        checkBox.setVisibility(View.VISIBLE);
-        if (checkBox != null)
-            checkBox.setChecked(checked);
-    }
 
 }
