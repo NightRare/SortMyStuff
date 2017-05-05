@@ -1,16 +1,11 @@
 package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
-import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
@@ -141,34 +136,6 @@ public class ContentsPresenter implements IContentsPresenter {
             return true;
         }
         return false;
-    }
-
-    @Deprecated
-    @Override
-    public List<Asset> loadContents(String assetID) {
-        // deprecated method
-        return null;
-    }
-
-    @Deprecated
-    @Override
-    public boolean isRootCurrentAsset() {
-        // deprecated method
-        return false;
-    }
-
-    @Deprecated
-    @Override
-    public String getParentOf(String currentAssetId) {
-        // deprecated method
-        return null;
-    }
-
-    @Deprecated
-    @Override
-    public String getAssetName(String assetID) {
-        // deprecated method
-        return null;
     }
 
     private void loadCurrentAssetContents(Asset asset) {

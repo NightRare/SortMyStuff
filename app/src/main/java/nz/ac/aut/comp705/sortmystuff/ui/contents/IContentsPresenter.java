@@ -1,13 +1,8 @@
 package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
-import android.content.Context;
-import android.content.Intent;
 import android.view.MenuItem;
 import android.view.View;
 
-import java.util.List;
-
-import nz.ac.aut.comp705.sortmystuff.data.Asset;
 import nz.ac.aut.comp705.sortmystuff.ui.IPresenter;
 
 /**
@@ -15,20 +10,6 @@ import nz.ac.aut.comp705.sortmystuff.ui.IPresenter;
  */
 
 public interface IContentsPresenter extends IPresenter {
-
-    @Deprecated
-    List<Asset> loadContents(String assetID);
-
-    @Deprecated
-    boolean isRootCurrentAsset();
-
-    @Deprecated
-    String getParentOf(String currentAssetId);
-
-    @Deprecated
-    String getAssetName(String assetID);
-
-    // refactored methods
 
     void loadCurrentContents(boolean forceRefreshFromLocal);
 
