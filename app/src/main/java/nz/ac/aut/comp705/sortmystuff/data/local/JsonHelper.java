@@ -12,6 +12,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -28,16 +29,24 @@ import nz.ac.aut.comp705.sortmystuff.util.Log;
 
 public class JsonHelper implements IJsonHelper {
 
+    public static final  String ASSET_FILENAME = "asset.json";
+
+    public static final  String DETAILS_FILENAME = "details.json";
+
+    public static final String ROOT_ASSET_DIR = "root";
+
     /**
      * Initialises a JsonHelper.
-     *
-     * @param userDir the user dir file
+     * @param userDir
+     * @param gBuilder
+     * @param fc
      */
-    public JsonHelper(File userDir, GsonBuilder gBuilder) {
+    public JsonHelper(File userDir, GsonBuilder gBuilder, FileCreator fc) {
         Preconditions.checkNotNull(userDir);
 
         this.gBuilder = gBuilder;
         this.userDir = userDir;
+        this.fc = fc;
 
         this.gBuilder.serializeNulls();
         this.gBuilder.setPrettyPrinting();
@@ -123,7 +132,7 @@ public class JsonHelper implements IJsonHelper {
                 continue;
 
             final File file;
-            file = new File(dir, DETAILS_FILENAME);
+            file = fc.createFile(dir, DETAILS_FILENAME);
             if (!file.exists()) {
                 Log.e(getClass().getName(), DETAILS_FILENAME + " does not exist in " + dir);
                 return null;
@@ -171,7 +180,7 @@ public class JsonHelper implements IJsonHelper {
             assetDir = prepareAssetDir(asset.getId());
         }
 
-        file = new File(assetDir, ASSET_FILENAME);
+        file = fc.createFile(assetDir, ASSET_FILENAME);
 
         return writeJsonFile(gBuilder.create(), asset, file, Asset.class);
     }
@@ -202,14 +211,14 @@ public class JsonHelper implements IJsonHelper {
         }
 
         final File assetDir, detailFile, assetFile;
-        assetDir = new File(userDir, assetId);
-        assetFile = new File(assetDir, ASSET_FILENAME);
+        assetDir = fc.createFile(userDir, assetId);
+        assetFile = fc.createFile(assetDir, ASSET_FILENAME);
         if (!assetDir.exists() || !assetFile.exists()) {
             Log.e(getClass().getName(), "Asset \"" + assetId + "\" not exists");
             return false;
         }
 
-        detailFile = new File(assetDir, DETAILS_FILENAME);
+        detailFile = fc.createFile(assetDir, DETAILS_FILENAME);
 
         final Detail[] dArray = details.toArray(new Detail[details.size()]);
         return writeJsonFile(gBuilder.create(), dArray, detailFile, Detail[].class);
@@ -225,7 +234,7 @@ public class JsonHelper implements IJsonHelper {
         if (rootExists)
             return true;
 
-        File rootFile = new File(
+        File rootFile = fc.createFile(
                 userDir + File.separator + ROOT_ASSET_DIR + File.separator + ASSET_FILENAME);
         rootExists = rootFile.exists();
         Asset asset = deserialiseAssetFromFile(rootFile.getPath());
@@ -235,19 +244,44 @@ public class JsonHelper implements IJsonHelper {
 
     //endregion
 
+    //region Inner classes
+
+    /**
+     * A wrapper class for File constructors so that they can be mocked.
+     */
+    public static class FileCreator {
+
+        public File createFile(String pathname) {
+            return new File(pathname);
+        }
+
+
+        public File createFile(File parent, String child) {
+            return new File(parent, child);
+        }
+
+        public File createFile(String parent, String child) {
+            return new File(parent, child);
+        }
+
+
+        public File createFile(URI uri) {
+            return new File(uri);
+        }
+
+    }
+
+    //endregion
+
     //region Private stuff
-
-    private String ASSET_FILENAME = "asset.json";
-
-    private String DETAILS_FILENAME = "details.json";
-
-    private String ROOT_ASSET_DIR = "root";
 
     private boolean rootExists;
 
     private File userDir;
 
     private GsonBuilder gBuilder;
+
+    private FileCreator fc;
 
     /**
      * Deserialises asset from file according to the given file name.
@@ -256,7 +290,7 @@ public class JsonHelper implements IJsonHelper {
      * @return
      */
     private Asset deserialiseAssetFromFile(String filename) {
-        final File file = new File(filename);
+        final File file = fc.createFile(filename);
         if (!file.exists())
             return null;
 
@@ -306,11 +340,11 @@ public class JsonHelper implements IJsonHelper {
      * @return the dir File of the asset
      */
     private File prepareAssetDir(String assetFolderName) {
-        File assetDir = new File(userDir, assetFolderName);
+        File assetDir = fc.createFile(userDir, assetFolderName);
         if (!assetDir.exists())
             assetDir.mkdirs();
-        File assetFile = new File(assetDir, ASSET_FILENAME);
-        File detailsFile = new File(assetDir, DETAILS_FILENAME);
+        File assetFile = fc.createFile(assetDir, ASSET_FILENAME);
+        File detailsFile = fc.createFile(assetDir, DETAILS_FILENAME);
         try {
             if (!assetFile.exists())
                 assetFile.createNewFile();

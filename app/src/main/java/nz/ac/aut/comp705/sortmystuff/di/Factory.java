@@ -42,7 +42,7 @@ public class Factory implements IFactory {
 
         File userDir = new File(
                 app.getFilesDir().getPath() + File.separator + "default-user");
-        return new JsonHelper(userDir, new GsonBuilder());
+        return new JsonHelper(userDir, new GsonBuilder(), new JsonHelper.FileCreator());
     }
 
     private void initialise() {
