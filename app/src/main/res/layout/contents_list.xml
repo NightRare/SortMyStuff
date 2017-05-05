@@ -24,10 +24,10 @@
             android:text="Cancel"
             style="@style/action_button_style" />
 
-        <Button
-            android:id="@+id/select_button"
-            android:text="Select"
-            style="@style/action_button_style" />
+        <!--<Button-->
+            <!--android:id="@+id/select_button"-->
+            <!--android:text="Select"-->
+            <!--style="@style/action_button_style" />-->
 
         <Button
             android:id="@+id/select_all_button"

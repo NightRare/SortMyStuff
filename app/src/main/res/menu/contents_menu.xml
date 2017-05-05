@@ -6,6 +6,12 @@
         android:title="@string/action_button_detail"
         android:orderInCategory="100"
         app:showAsAction="never" />
+
+    <item android:id="@+id/selection_mode_button"
+        android:icon="@drawable/ic_action_name"
+        android:title="SelectionMode"
+        app:showAsAction="ifRoom" />
+
     <item android:id="@+id/search_button"
         android:icon="@drawable/ic_search_white_48dp"
         android:title="Search"

@@ -70,7 +70,7 @@ public class ContentsActivity extends AppCompatActivity
         selectNone_btn.setVisibility(View.VISIBLE);
         selectAll_btn.setVisibility(View.VISIBLE);
         cancel_btn.setVisibility(View.VISIBLE);
-        select_btn.setVisibility(View.GONE);
+//        select_btn.setVisibility(View.GONE);
         fab.setVisibility(View.GONE);
 
     }
@@ -82,7 +82,7 @@ public class ContentsActivity extends AppCompatActivity
         selectNone_btn.setVisibility(View.GONE);
         selectAll_btn.setVisibility(View.GONE);
         cancel_btn.setVisibility(View.GONE);
-        select_btn.setVisibility(View.VISIBLE);
+//        select_btn.setVisibility(View.VISIBLE);
         fab.setVisibility(View.VISIBLE);
     }
 
@@ -102,6 +102,7 @@ public class ContentsActivity extends AppCompatActivity
         // toolbar
         toolbar = (Toolbar) findViewById(R.id.toolbarMain);
         setSupportActionBar(toolbar);
+
         // clicking on name on toolbar
 
 
@@ -136,7 +137,7 @@ public class ContentsActivity extends AppCompatActivity
         index = (ListView) findViewById(R.id.index_list);
 
         cancel_btn = (Button) findViewById(R.id.cancel_button);
-        select_btn = (Button) findViewById(R.id.select_button);
+//        select_btn = (Button) findViewById(R.id.select_button);
         selectAll_btn = (Button) findViewById(R.id.select_all_button);
         selectNone_btn = (Button) findViewById(R.id.select_none_button);
 
@@ -151,10 +152,11 @@ public class ContentsActivity extends AppCompatActivity
             cancel_btn.setVisibility(View.GONE);
         }
 
-        select_btn.setOnClickListener(this);
+//        select_btn.setOnClickListener(this);
         cancel_btn.setOnClickListener(this);
         selectAll_btn.setOnClickListener(this);
         selectNone_btn.setOnClickListener(this);
+
     }
 
 
@@ -209,6 +211,16 @@ public class ContentsActivity extends AppCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.selection_mode_button:
+                Message message = Message.obtain();
+                message.what = 1;
+                handler.sendMessage(message);
+                break;
+            default:
+                break;
+
+        }
         if (presenter.selectOptionItem(item))
             return true;
         return super.onOptionsItemSelected(item);
@@ -337,10 +349,10 @@ public class ContentsActivity extends AppCompatActivity
                 handler.sendMessage(message);
                 break;
 
-            case R.id.select_button:
-                message.what = 1;
-                handler.sendMessage(message);
-                break;
+//            case R.id.select_button:
+//                message.what = 1;
+//                handler.sendMessage(message);
+//                break;
 
             case R.id.select_all_button:
                 selectAll();
