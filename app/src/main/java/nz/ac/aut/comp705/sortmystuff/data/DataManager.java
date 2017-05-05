@@ -22,15 +22,12 @@ import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.ROOT_ASSET_IMMUTA
 import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.UNEXPECTED_ERROR;
 
 /**
- * Created by Yuan on 2017/4/24.
+ * Implementation class of IDataManager
+ *
+ * @author Yuan
  */
 
 public class DataManager implements IDataManager {
-
-
-    //********************************************
-    // CONSTRUCTOR
-    //********************************************
 
     public DataManager(IJsonHelper jsonHelper) {
         this.jsonHelper = jsonHelper;
@@ -38,10 +35,15 @@ public class DataManager implements IDataManager {
         dirtyCachedDetails = true;
     }
 
-    //********************************************
-    // IDATAMANAGER METHODS
-    //********************************************
+    //region IDataManger methods
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param name        the name
+     * @param containerId the id of the container asset
+     * @return
+     */
     @Override
     public String createAsset(@NonNull String name, @NonNull String containerId) {
         Preconditions.checkNotNull(name);
@@ -64,6 +66,11 @@ public class DataManager implements IDataManager {
         return asset.getId();
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return
+     */
     @Override
     public String createRootAsset() {
         if (dirtyCachedAssets) {
@@ -83,6 +90,14 @@ public class DataManager implements IDataManager {
         return root.getId();
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param asset the owner
+     * @param label the title
+     * @param field the content of this detail
+     * @return
+     */
     @Override
     public String createTextDetail(@NonNull Asset asset, @NonNull String label, @NonNull String field) {
         Preconditions.checkNotNull(asset);
@@ -90,6 +105,14 @@ public class DataManager implements IDataManager {
         return createTextDetail(asset.getId(), label, field);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param assetId the id of the owner
+     * @param label   the title
+     * @param field   the content of this detail
+     * @return
+     */
     @Override
     public String createTextDetail(@NonNull final String assetId, @NonNull String label, @NonNull String field) {
         Preconditions.checkNotNull(assetId);
@@ -100,13 +123,18 @@ public class DataManager implements IDataManager {
         Preconditions.checkArgument(field.length() < AppConstraints.TEXTDETAIL_FIELD_CAP);
 
         // cannot create detail for Root asset
-        if(assetId.equals(getRootAsset().getId()))
+        if (assetId.equals(getRootAsset().getId()))
             return null;
 
         TextDetail td = addOrUpdateTextDetail(assetId, null, label, field);
         return td == null ? null : td.getId();
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return
+     */
     @Override
     public Asset getRootAsset() {
         if (dirtyCachedAssets || cachedRootAsset == null) {
@@ -119,6 +147,11 @@ public class DataManager implements IDataManager {
         return cachedRootAsset;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param callback see {@link GetAssetCallback}
+     */
     @Override
     public void getRootAssetAsync(@NonNull GetAssetCallback callback) {
         Preconditions.checkNotNull(callback);
@@ -134,6 +167,11 @@ public class DataManager implements IDataManager {
         callback.onAssetLoaded(cachedRootAsset);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param callback see {@link LoadAssetsCallback}
+     */
     @Override
     public void getAllAssetsAsync(@NonNull LoadAssetsCallback callback) {
         Preconditions.checkNotNull(callback);
@@ -150,6 +188,11 @@ public class DataManager implements IDataManager {
         callback.onAssetsLoaded(list);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param callback see {@link LoadAssetsCallback}
+     */
     @Override
     public void getRecycledAssetsAsync(@NonNull LoadAssetsCallback callback) {
         Preconditions.checkNotNull(callback);
@@ -166,6 +209,12 @@ public class DataManager implements IDataManager {
         callback.onAssetsLoaded(list);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param container the container Asset
+     * @param callback  see {@link LoadAssetsCallback}
+     */
     @Override
     public void getContentAssetsAsync(@NonNull Asset container, @NonNull LoadAssetsCallback callback) {
         Preconditions.checkNotNull(container);
@@ -173,6 +222,12 @@ public class DataManager implements IDataManager {
         getContentAssetsAsync(container.getId(), callback);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param containerId the id of the container Asset
+     * @param callback    see {@link LoadAssetsCallback}
+     */
     @Override
     public void getContentAssetsAsync(@NonNull String containerId, @NonNull LoadAssetsCallback callback) {
         Preconditions.checkNotNull(containerId);
@@ -199,6 +254,12 @@ public class DataManager implements IDataManager {
         callback.onAssetsLoaded(container.getContents());
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param asset    the asset whose parent assets are queried
+     * @param callback see {@link LoadAssetsCallback}
+     */
     @Override
     public void getParentAssetsAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback) {
         Preconditions.checkNotNull(asset);
@@ -206,6 +267,12 @@ public class DataManager implements IDataManager {
         getParentAssetsAsync(asset.getId(), callback);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param assetId  the id of the asset whose parent assets are queried
+     * @param callback see {@link LoadAssetsCallback}
+     */
     @Override
     public void getParentAssetsAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback) {
         Preconditions.checkNotNull(assetId);
@@ -225,13 +292,19 @@ public class DataManager implements IDataManager {
 
         Asset asset = cachedAssets.get(assetId);
         List<Asset> parents = new LinkedList<>();
-        while(!asset.isRoot()) {
+        while (!asset.isRoot()) {
             parents.add(asset.getContainer());
             asset = asset.getContainer();
         }
         callback.onAssetsLoaded(parents);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param asset    the asset whose parent assets are queried
+     * @param callback see {@link LoadAssetsCallback}
+     */
     @Override
     public void getParentAssetsDescAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback) {
         Preconditions.checkNotNull(asset);
@@ -239,6 +312,12 @@ public class DataManager implements IDataManager {
         getParentAssetsDescAsync(asset.getId(), callback);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param assetId  the id of the asset whose parent assets are queried
+     * @param callback see {@link LoadAssetsCallback}
+     */
     @Override
     public void getParentAssetsDescAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback) {
         Preconditions.checkNotNull(assetId);
@@ -257,7 +336,7 @@ public class DataManager implements IDataManager {
 
         Asset asset = cachedAssets.get(assetId);
         List<Asset> parents = new LinkedList<>();
-        while(!asset.isRoot()) {
+        while (!asset.isRoot()) {
             parents.add(0, asset);
             asset = asset.getContainer();
         }
@@ -266,6 +345,12 @@ public class DataManager implements IDataManager {
         callback.onAssetsLoaded(parents);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param assetId  the id
+     * @param callback see {@link GetAssetCallback}
+     */
     @Override
     public void getAssetAsync(@NonNull String assetId, @NonNull GetAssetCallback callback) {
         Preconditions.checkNotNull(assetId);
@@ -286,6 +371,12 @@ public class DataManager implements IDataManager {
         callback.onAssetLoaded(cachedAssets.get(assetId));
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param asset    the owner asset
+     * @param callback see {@link LoadDetailsCallback}
+     */
     @Override
     public void getDetailsAsync(@NonNull Asset asset, @NonNull LoadDetailsCallback callback) {
         Preconditions.checkNotNull(asset);
@@ -293,13 +384,19 @@ public class DataManager implements IDataManager {
         getDetailsAsync(asset.getId(), callback);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param assetId  the id of the owner asset
+     * @param callback see {@link LoadDetailsCallback}
+     */
     @Override
     public void getDetailsAsync(@NonNull String assetId, @NonNull LoadDetailsCallback callback) {
         Preconditions.checkNotNull(assetId);
         Preconditions.checkNotNull(callback);
 
         // if get the Details of the Root asset, always return empty list
-        if(assetId.equals(getRootAsset().getId())) {
+        if (assetId.equals(getRootAsset().getId())) {
             callback.onDetailsLoaded(new LinkedList<Detail>());
             return;
         }
@@ -316,6 +413,12 @@ public class DataManager implements IDataManager {
         callback.onDetailsLoaded(cachedDetails.get(assetId));
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param detailId the id
+     * @param callback see {@link GetDetailCallback}
+     */
     @Override
     public void getDetailAsync(@NonNull String detailId, @NonNull GetDetailCallback callback) {
         Preconditions.checkNotNull(detailId);
@@ -325,6 +428,12 @@ public class DataManager implements IDataManager {
         throw new IllegalStateException("Method not completed yet");
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param asset   the asset to be updated
+     * @param newName the new name
+     */
     @Override
     public void updateAssetName(@NonNull Asset asset, @NonNull String newName) {
         Preconditions.checkNotNull(asset);
@@ -332,6 +441,12 @@ public class DataManager implements IDataManager {
         updateAssetName(asset.getId(), newName);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param assetId the id of the asset to be updated
+     * @param newName the new name
+     */
     @Override
     public void updateAssetName(@NonNull String assetId, @NonNull final String newName) {
         Preconditions.checkNotNull(assetId);
@@ -352,6 +467,12 @@ public class DataManager implements IDataManager {
         return;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param asset          the asset
+     * @param newContainerId the id of the new container
+     */
     @Override
     public void moveAsset(@NonNull Asset asset, @NonNull String newContainerId) {
         Preconditions.checkNotNull(asset);
@@ -359,6 +480,12 @@ public class DataManager implements IDataManager {
         moveAsset(asset.getId(), newContainerId);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param assetId        the asset id
+     * @param newContainerId the id of the new container
+     */
     @Override
     public void moveAsset(@NonNull String assetId, @NonNull String newContainerId) {
         Preconditions.checkNotNull(assetId);
@@ -381,6 +508,11 @@ public class DataManager implements IDataManager {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param asset the asset to be recycled
+     */
     @Override
     public void recycleAsset(@NonNull Asset asset) {
         Preconditions.checkNotNull(asset);
@@ -388,6 +520,11 @@ public class DataManager implements IDataManager {
         recycleAsset(asset.getId());
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param assetId the id of the asset to be recycled
+     */
     @Override
     public void recycleAsset(@NonNull String assetId) {
         Preconditions.checkNotNull(assetId);
@@ -397,7 +534,7 @@ public class DataManager implements IDataManager {
             return;
         }
         Asset asset = cachedAssets.get(assetId);
-        if(asset.isRoot()) {
+        if (asset.isRoot()) {
             Log.e(getClass().getName(), "cannot recycle Root asset");
             return;
         }
@@ -409,18 +546,33 @@ public class DataManager implements IDataManager {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param asset
+     */
     @Override
     public void restoreAsset(@NonNull Asset asset) {
         // TODO restoreAsset
         throw new IllegalStateException("Method not implemented");
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param assetId
+     */
     @Override
     public void restoreAsset(@NonNull String assetId) {
         // TODO restoreAsset
         throw new IllegalStateException("Method not implemented");
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param detail the detail
+     */
     @Override
     public void removeDetail(@NonNull Detail detail) {
         Preconditions.checkNotNull(detail);
@@ -428,6 +580,12 @@ public class DataManager implements IDataManager {
         removeDetail(detail.getAssetId(), detail.getId());
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param assetId  the id of the owner asset
+     * @param detailId the id of the detail
+     */
     @Override
     public void removeDetail(@NonNull String assetId, @NonNull String detailId) {
         Preconditions.checkNotNull(assetId);
@@ -441,8 +599,8 @@ public class DataManager implements IDataManager {
 
         List<Detail> details = cachedDetails.get(assetId);
         boolean removed = false;
-        for(Detail d : details) {
-            if(d.getId().equals(detailId)) {
+        for (Detail d : details) {
+            if (d.getId().equals(detailId)) {
                 details.remove(d);
                 removed = true;
                 break;
@@ -450,7 +608,7 @@ public class DataManager implements IDataManager {
         }
 
         // if nothing removed, do nothing
-        if(!removed)
+        if (!removed)
             return;
 
         cachedAssets.get(assetId).updateTimeStamp();
@@ -463,6 +621,13 @@ public class DataManager implements IDataManager {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param detail the detail
+     * @param label  the new label
+     * @param field  the new field
+     */
     @Override
     public void updateTextDetail(@NonNull TextDetail detail,
                                  @NonNull String label, @NonNull String field) {
@@ -471,6 +636,14 @@ public class DataManager implements IDataManager {
         updateTextDetail(detail.getAssetId(), detail.getId(), label, field);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param assetId  the id of the owner asset
+     * @param detailId the id of the detail
+     * @param label    the new label
+     * @param field    the new field
+     */
     @Override
     public void updateTextDetail(@NonNull String assetId, @NonNull String detailId,
                                  @NonNull String label, @NonNull String field) {
@@ -485,20 +658,26 @@ public class DataManager implements IDataManager {
         addOrUpdateTextDetail(assetId, detailId, label, field);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void refreshFromLocal() {
         dirtyCachedAssets = true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void clearRecycledAsset() {
         // TODO clearRecycledAsset
         throw new IllegalStateException("Method not implemented");
     }
 
-    //********************************************
-    // PRIVATE
-    //********************************************
+    //endregion
+
+    //region Private stuff
 
     private IJsonHelper jsonHelper;
 
@@ -514,9 +693,8 @@ public class DataManager implements IDataManager {
 
     private boolean dirtyCachedDetails;
 
-
     private synchronized int loadCachedAssetsFromLocal() {
-        if(!jsonHelper.rootExists())
+        if (!jsonHelper.rootExists())
             return NO_ROOT_ASSET;
 
         cachedAssets = new HashMap<>();
@@ -524,11 +702,10 @@ public class DataManager implements IDataManager {
         List<Asset> allAssets = jsonHelper.deserialiseAllAssets();
 
         // assign each asset to corresponding cache
-        for(Asset asset : allAssets) {
+        for (Asset asset : allAssets) {
             if (asset.isRecycled()) {
                 cachedRecycledAssets.put(asset.getId(), asset);
-            }
-            else {
+            } else {
                 if (asset.isRoot()) {
                     cachedRootAsset = asset;
                 }
@@ -537,9 +714,9 @@ public class DataManager implements IDataManager {
         }
 
         // form the tree structure in user assets
-        for(Asset asset : cachedAssets.values()) {
+        for (Asset asset : cachedAssets.values()) {
             // root does not need to attach to the tree
-            if(asset.isRoot()) continue;
+            if (asset.isRoot()) continue;
 
             asset.attachToTree(cachedAssets.get(asset.getContainerId()));
         }
@@ -549,20 +726,20 @@ public class DataManager implements IDataManager {
     }
 
     private synchronized int loadCachedDetailsFromLocal(String assetId) {
-        if(!jsonHelper.rootExists())
+        if (!jsonHelper.rootExists())
             return NO_ROOT_ASSET;
-        if(!assetExists(assetId)) {
+        if (!assetExists(assetId)) {
             return ASSET_NOT_EXISTS;
         }
-        if(dirtyCachedDetails || cachedDetails == null) {
+        if (dirtyCachedDetails || cachedDetails == null) {
             cachedDetails = new HashMap<>();
         }
-        if(cachedDetails.containsKey(assetId)) {
+        if (cachedDetails.containsKey(assetId)) {
             return OK;
         }
         releaseOneCachedDetails();
         List<Detail> details = jsonHelper.deserialiseDetails(assetId);
-        if(details == null) {
+        if (details == null) {
             return LOCAL_DATA_CORRUPT;
         }
         cachedDetails.put(assetId, details);
@@ -594,7 +771,6 @@ public class DataManager implements IDataManager {
     }
 
     /**
-     *
      * @param assetId
      * @param detailId null if add, id if update
      * @param label
@@ -610,21 +786,20 @@ public class DataManager implements IDataManager {
         }
 
         TextDetail td = null;
-        if(detailId == null) {
+        if (detailId == null) {
             td = TextDetail.create(assetId, label, field);
             cachedDetails.get(assetId).add(td);
-        }
-        else {
+        } else {
             boolean updated = false;
-            for(Detail detail : cachedDetails.get(assetId)) {
-                if(detail.getId().equals(detailId)) {
+            for (Detail detail : cachedDetails.get(assetId)) {
+                if (detail.getId().equals(detailId)) {
                     updated = true;
                     td = (TextDetail) detail;
                     td.setLabel(label);
                     td.setField(field);
                 }
             }
-            if(!updated)
+            if (!updated)
                 return td;
         }
 
@@ -658,4 +833,6 @@ public class DataManager implements IDataManager {
 
         return true;
     }
+
+    //endregion
 }

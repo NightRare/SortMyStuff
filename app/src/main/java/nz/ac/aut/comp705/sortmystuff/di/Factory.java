@@ -3,13 +3,17 @@ package nz.ac.aut.comp705.sortmystuff.di;
 import android.app.Application;
 import android.content.Context;
 
+import com.google.gson.GsonBuilder;
+
 import nz.ac.aut.comp705.sortmystuff.data.DataManager;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.local.IJsonHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.JsonHelper;
 
 /**
- * Created by Vince on 2017/4/25.
+ * An implementation of {@link IFactory}.
+ *
+ * @author Yuan
  */
 
 public class Factory implements IFactory {
@@ -38,7 +42,7 @@ public class Factory implements IFactory {
         if(jsonHelper != null)
             return jsonHelper;
 
-        return new JsonHelper(app, "default-user");
+        return new JsonHelper(app, "default-user", new GsonBuilder());
     }
 
     private void initialise() {

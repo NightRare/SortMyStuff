@@ -21,15 +21,20 @@ import nz.ac.aut.comp705.sortmystuff.util.DetailAdapter;
 import nz.ac.aut.comp705.sortmystuff.util.Log;
 
 /**
- * Created by Yuan on 2017/4/25.
+ * An implementation class of {@link IJsonHelper}.
+ *
+ * @author Yuan
  */
 
 public class JsonHelper implements IJsonHelper {
 
-    //********************************************
-    // CONSTRUCTOR
-    //********************************************
-    public JsonHelper(Application app, String userId) {
+    /**
+     * Initialises a JsonHelper.
+     *
+     * @param app    the Application in which this JsonHelper is going to work
+     * @param userId the user id; this is required for locating the Json files for the user
+     */
+    public JsonHelper(Application app, String userId, GsonBuilder gBuilder) {
         Preconditions.checkNotNull(app);
         Preconditions.checkNotNull(userId);
         if (userId.isEmpty())
@@ -37,11 +42,11 @@ public class JsonHelper implements IJsonHelper {
 
         this.app = app;
         this.userId = userId;
+        this.gBuilder = gBuilder;
 
-        gBuilder = new GsonBuilder();
-        gBuilder.serializeNulls();
-        gBuilder.setPrettyPrinting();
-        gBuilder.registerTypeAdapter(Detail.class, new DetailAdapter());
+        this.gBuilder.serializeNulls();
+        this.gBuilder.setPrettyPrinting();
+        this.gBuilder.registerTypeAdapter(Detail.class, new DetailAdapter());
 
         userDir = new File(app.getFilesDir().getPath() + File.separator + userId);
         if (!userDir.exists())
@@ -50,10 +55,14 @@ public class JsonHelper implements IJsonHelper {
         rootExists = false;
     }
 
-    //********************************************
-    // IJsonHelper METHODS
-    //********************************************
+    //region IJSonHelper methods
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param assetId the id of the asset
+     * @return
+     */
     @Override
     public Asset deserialiseAsset(final String assetId) {
         Preconditions.checkNotNull(assetId);
@@ -67,12 +76,22 @@ public class JsonHelper implements IJsonHelper {
                 userDir + File.separator + assetId + File.separator + ASSET_FILENAME);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return
+     */
     @Override
     public Asset deserialiseRootAsset() {
         return deserialiseAssetFromFile(
                 userDir + File.separator + ROOT_ASSET_DIR + File.separator + ASSET_FILENAME);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return
+     */
     @Override
     public List<Asset> deserialiseAllAssets() {
         List<Asset> assets = new LinkedList<>();
@@ -94,6 +113,12 @@ public class JsonHelper implements IJsonHelper {
         return assets;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param assetId the id of the owner asset
+     * @return
+     */
     @Override
     public List<Detail> deserialiseDetails(String assetId) {
         Preconditions.checkNotNull(assetId);
@@ -113,9 +138,9 @@ public class JsonHelper implements IJsonHelper {
             Detail[] details = readJsonFile(gBuilder.create(), file, Detail[].class);
 
             List<Detail> list = new LinkedList();
-            if(details != null) {
+            if (details != null) {
                 for (Detail d : details) {
-                    if(d != null && !list.contains(d))
+                    if (d != null && !list.contains(d))
                         list.add(d);
                 }
             }
@@ -126,13 +151,19 @@ public class JsonHelper implements IJsonHelper {
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param asset the asset to be serialised
+     * @return
+     */
     @Override
     public boolean serialiseAsset(final Asset asset) {
         Preconditions.checkNotNull(asset);
 
         final File assetDir, file;
         if (asset.isRoot()) {
-            if(rootExists()) {
+            if (rootExists()) {
                 Log.e(getClass().getName(), "Already have a Root asset.");
                 return false;
             }
@@ -151,6 +182,12 @@ public class JsonHelper implements IJsonHelper {
         return writeJsonFile(gBuilder.create(), asset, file, Asset.class);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param details the list of details to be serialised
+     * @return
+     */
     @Override
     public boolean serialiseDetails(final List<Detail> details) {
         Preconditions.checkNotNull(details);
@@ -184,6 +221,11 @@ public class JsonHelper implements IJsonHelper {
         return writeJsonFile(gBuilder.create(), dArray, detailFile, Detail[].class);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return
+     */
     @Override
     public boolean rootExists() {
         if (rootExists)
@@ -196,9 +238,10 @@ public class JsonHelper implements IJsonHelper {
         rootExists = (asset == null ? false : true);
         return rootExists;
     }
-    //********************************************
-    // PRIVATE
-    //********************************************
+
+    //endregion
+
+    //region Private stuff
 
     private String ASSET_FILENAME = "asset.json";
 
@@ -216,10 +259,12 @@ public class JsonHelper implements IJsonHelper {
 
     private Application app;
 
-    private Writer writer;
-
-    private Reader reader;
-
+    /**
+     * Deserialises asset from file according to the given file name.
+     *
+     * @param filename
+     * @return
+     */
     private Asset deserialiseAssetFromFile(String filename) {
         final File file = new File(filename);
         if (!file.exists())
@@ -229,26 +274,47 @@ public class JsonHelper implements IJsonHelper {
         return asset;
     }
 
+    /**
+     * Checks if the dir is a valid asset folder.
+     *
+     * @param dir
+     * @return
+     */
     private boolean isValidAssetDir(File dir) {
         String msg = "User dir data damaged: " + dir.getName();
-        if (!dir.isDirectory())
+        if (!dir.isDirectory()) {
+            Log.e(Log.LOCAL_FILE_CORRUPT, msg);
             return false;
+        }
 
         File[] files = dir.listFiles();
-        if (files.length != 2)
+        if (files.length != 2) {
+            Log.e(Log.LOCAL_FILE_CORRUPT, msg);
             return false;
+        }
+
         for (File file : files) {
-            if (!file.isFile())
+            if (!file.isFile()) {
+                Log.e(Log.LOCAL_FILE_CORRUPT, msg);
                 return false;
+            }
 
             boolean nameIsLegal = file.getName().equals(ASSET_FILENAME)
                     || file.getName().equals(DETAILS_FILENAME);
-            if (!nameIsLegal)
+            if (!nameIsLegal) {
+                Log.e(Log.LOCAL_FILE_CORRUPT, msg);
                 return false;
+            }
         }
         return true;
     }
 
+    /**
+     * Prepare the asset dir, including an empty asset file and empty details file.
+     *
+     * @param assetFolderName
+     * @return the dir File of the asset
+     */
     private File prepareAssetDir(String assetFolderName) {
         File assetDir = new File(userDir, assetFolderName);
         if (!assetDir.exists())
@@ -266,6 +332,16 @@ public class JsonHelper implements IJsonHelper {
         return assetDir;
     }
 
+    /**
+     * Serialise an object to a json String and write it to a json file on local storage.
+     *
+     * @param gson
+     * @param srcObj the object to be written
+     * @param file   the json file
+     * @param klass  the class of the object
+     * @param <T>    the type of the object
+     * @return true if write successfully
+     */
     private static <T> boolean writeJsonFile(Gson gson, T srcObj, File file, Class<T> klass) {
         Writer writer = null;
         try {
@@ -286,6 +362,15 @@ public class JsonHelper implements IJsonHelper {
         }
     }
 
+    /**
+     * Deserialise an object from a json file on local storage.
+     *
+     * @param gson
+     * @param file  the json file
+     * @param klass the class of the object
+     * @param <T>   the type of the object
+     * @return the object
+     */
     private static <T> T readJsonFile(Gson gson, File file, Class<T> klass) {
         Reader reader = null;
         try {
@@ -304,4 +389,6 @@ public class JsonHelper implements IJsonHelper {
             }
         }
     }
+
+    //endregion
 }

@@ -27,25 +27,16 @@ import nz.ac.aut.comp705.sortmystuff.data.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 
 /**
- * Created by Yuan on 2017/4/28.
+ * The Activity class for "Contents View" (a.k.a. Index Page) where the contained assets of the
+ * container asset will be displayed and ready for interactions. It is also the implementation class
+ * of {@link IContentsView}.
+ *
+ * @author Yuan
  */
 
 public class ContentsActivity extends AppCompatActivity implements IContentsView {
 
-    private IContentsPresenter presenter;
-
-    // UI Components
-    private FloatingActionButton fab;
-    private ListView index;
-    private Toolbar toolbar;
-    private TextView pathBarRoot;
-    private RecyclerView pathBar;
-    private AssetsAdapter arrayAdapter;
-    private LinearLayout assetListView;
-    private Button cancel_button;
-
-
-    private static final String CURRENT_ASSET_ID = "CURRENT_ASSET_ID";
+    //region Activity methods
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,40 +79,6 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     }
 
     @Override
-    public void setPresenter(IContentsPresenter presenter) {
-        this.presenter = presenter;
-    }
-
-
-    @Override
-    public void showAssetTitle(String name) {
-        setTitle(name);
-    }
-
-    @Override
-    public void showAssetContents(List<Asset> assets) {
-        arrayAdapter = new AssetsAdapter(
-                this, R.layout.assets_layout, assets);
-        index.setAdapter(arrayAdapter);
-    }
-
-    @Override
-    public void showAddDialog() {
-        getAddAssetDialogBuilder().create().show();
-    }
-
-    @Override
-    public void showMessageOnScreen(String message) {
-        Toast.makeText(this,message,Toast.LENGTH_LONG);
-    }
-
-    @Override
-    public void showPath(List<Asset> assets) {
-        PathBarAdapter pba = new PathBarAdapter(this, assets, presenter);
-        pathBar.setAdapter(pba);
-    }
-
-    @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putString(CURRENT_ASSET_ID, presenter.getCurrentAssetId());
         super.onSaveInstanceState(outState);
@@ -136,11 +93,100 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if(presenter.selectOptionItem(item))
+        if (presenter.selectOptionItem(item))
             return true;
         return super.onOptionsItemSelected(item);
     }
 
+    //endregion
+
+    //region IContentsView methods
+
+    /**
+     * {@inheritDoc}
+     *
+     * @param presenter the presenter
+     */
+    @Override
+    public void setPresenter(IContentsPresenter presenter) {
+        this.presenter = presenter;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @param name the name of the asset
+     */
+    @Override
+    public void showAssetTitle(String name) {
+        setTitle(name);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @param assets the assets
+     */
+    @Override
+    public void showAssetContents(List<Asset> assets) {
+        arrayAdapter = new AssetsAdapter(
+                this, R.layout.assets_layout, assets);
+        index.setAdapter(arrayAdapter);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void showAddDialog() {
+        getAddAssetDialogBuilder().create().show();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @param message the message
+     */
+    @Override
+    public void showMessageOnScreen(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @param assets the list of parent assets, excluding Root asset.
+     */
+    @Override
+    public void showPath(List<Asset> assets) {
+        PathBarAdapter pba = new PathBarAdapter(this, assets, presenter);
+        pathBar.setAdapter(pba);
+    }
+
+    //endregion
+
+    //region Private stuff
+
+    private static final String CURRENT_ASSET_ID = "CURRENT_ASSET_ID";
+
+    private IContentsPresenter presenter;
+
+    //region UI Components
+    private FloatingActionButton fab;
+    private ListView index;
+    private Toolbar toolbar;
+    private TextView pathBarRoot;
+    private RecyclerView pathBar;
+    private AssetsAdapter arrayAdapter;
+    private LinearLayout assetListView;
+    private Button cancel_button;
+    //endregion
+
+    /**
+     * Gets the DialogBuilder of "add asset dialog".
+     *
+     * @return
+     */
     private AlertDialog.Builder getAddAssetDialogBuilder() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Add Asset");
@@ -168,6 +214,9 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         return builder;
     }
 
+    /**
+     * Initialises path bar.
+     */
     private void initPathBar() {
         pathBarRoot = (TextView) findViewById(R.id.pathbar_root);
         pathBar = (RecyclerView) findViewById(R.id.pathbar_pathview);
@@ -177,8 +226,10 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         pathBar.setLayoutManager(llm);
     }
 
+    /**
+     * Registers the listeners to UI components.
+     */
     private void registerListeners() {
-
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -235,7 +286,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         });
     }
 
-
+    //endregion
 }
 
 

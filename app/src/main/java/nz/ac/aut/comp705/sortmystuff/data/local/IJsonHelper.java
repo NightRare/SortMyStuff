@@ -6,7 +6,10 @@ import nz.ac.aut.comp705.sortmystuff.data.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.Detail;
 
 /**
- * Created by Yuan on 2017/4/25.
+ * IJsonHelper is responsible for serialising/deserialising objects to/from json files stored in
+ * local storage.
+ *
+ * @author Yuan
  */
 
 public interface IJsonHelper {
