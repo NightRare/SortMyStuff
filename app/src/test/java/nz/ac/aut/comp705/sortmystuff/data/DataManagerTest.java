@@ -18,6 +18,7 @@ import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 import nz.ac.aut.comp705.sortmystuff.util.AppStatusCode;
 import nz.ac.aut.comp705.sortmystuff.util.exceptions.UpdateLocalStorageFailedException;
 
+
 import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.ASSET_NOT_EXISTS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -26,6 +27,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static nz.ac.aut.comp705.sortmystuff.testutils.TestUtil.areIdenticalAssets;
+import static nz.ac.aut.comp705.sortmystuff.testutils.TestUtil.areIdenticalDetails;
 
 /**
  * Created by Yuan on 2017/4/29.
@@ -33,36 +36,6 @@ import static org.mockito.Mockito.when;
 
 
 public class DataManagerTest {
-
-    private static final String ROOT_ASSET_NAME = "Root";
-    private static final String ASSET_NAME1 = "Asset_1";
-    private static final String ASSET_NAME2 = "Asset_2";
-    private static final String ASSET_NAME3 = "Asset_3";
-    private static final String TEXTDETAIL_LABEL1 = "TextDetail_1";
-    private static final String TEXTDETAIL_FIELD1 = "TextDetail_Field_1";
-    private static final String TEXTDETAIL_LABEL2 = "TextDetail_2";
-    private static final String TEXTDETAIL_FIELD2 = "TextDetail_Field_2";
-
-    private IDataManager dataManager;
-
-    private List<Asset> mockAssets;
-
-    private List<Detail> mockDetails;
-
-    @Mock
-    private IJsonHelper mockJsonHelper;
-
-    @Mock
-    private IDataManager.LoadAssetsCallback mockLoadAssetsCallback;
-
-    @Mock
-    private IDataManager.GetAssetCallback mockGetAssetCallback;
-
-    @Mock
-    private IDataManager.LoadDetailsCallback mockLoadDetailsCallback;
-
-    @Mock
-    private IDataManager.GetDetailCallback mockGetDetailsCallback;
 
     @Before
     public void setup() {
@@ -1419,115 +1392,41 @@ public class DataManagerTest {
 
     //region Private stuff
 
+    private static final String ROOT_ASSET_NAME = "Root";
+    private static final String ASSET_NAME1 = "Asset_1";
+    private static final String ASSET_NAME2 = "Asset_2";
+    private static final String ASSET_NAME3 = "Asset_3";
+    private static final String TEXTDETAIL_LABEL1 = "TextDetail_1";
+    private static final String TEXTDETAIL_FIELD1 = "TextDetail_Field_1";
+    private static final String TEXTDETAIL_LABEL2 = "TextDetail_2";
+    private static final String TEXTDETAIL_FIELD2 = "TextDetail_Field_2";
+
+    private IDataManager dataManager;
+
+    private List<Asset> mockAssets;
+
+    private List<Detail> mockDetails;
+
+    @Mock
+    private IJsonHelper mockJsonHelper;
+
+    @Mock
+    private IDataManager.LoadAssetsCallback mockLoadAssetsCallback;
+
+    @Mock
+    private IDataManager.GetAssetCallback mockGetAssetCallback;
+
+    @Mock
+    private IDataManager.LoadDetailsCallback mockLoadDetailsCallback;
+
+    @Mock
+    private IDataManager.GetDetailCallback mockGetDetailsCallback;
+
     private Asset prepareRootAsset() {
         Asset root = Asset.createRoot();
         mockAssets.add(root);
         when(mockJsonHelper.rootExists()).thenReturn(true);
         return root;
-    }
-
-    private boolean areIdenticalAssets(Asset asset1, Asset asset2) {
-        return areIdenticalAssets(asset1, asset2.getId(), asset2.getName(), asset2.getContainerId(),
-                asset2.getCreateTimestamp(), asset2.getModifyTimestamp());
-    }
-
-    private boolean areIdenticalAssets(Asset asset, String id, String name,
-                                       String containerId, Long createTS, Long modifyTS) {
-        if (id != null) {
-            if (!asset.getId().equals(id))
-                return false;
-        }
-
-        if (name != null) {
-            if (!asset.getName().equals(name))
-                return false;
-        }
-
-        if (containerId != null) {
-            if (!asset.getContainerId().equals(containerId))
-                return false;
-        }
-
-        if (createTS != null) {
-            if (!asset.getCreateTimestamp().equals(createTS))
-                return false;
-        }
-
-        if (modifyTS != null) {
-            if (!asset.getModifyTimestamp().equals(modifyTS))
-                return false;
-        }
-
-        return true;
-    }
-
-    private boolean areIdenticalAssets(List<Asset> list1, List<Asset> list2) {
-        if (list1.size() != list2.size())
-            return false;
-
-        for (Asset a1 : list1) {
-            boolean included = false;
-            for (Asset a2 : list2) {
-                if (areIdenticalAssets(a1, a2))
-                    included = true;
-            }
-            // if a1 is not included in a2
-            if (!included)
-                return false;
-        }
-        return true;
-    }
-
-    private boolean areIdenticalDetails(Detail detail1, Detail detail2) {
-        return areIdenticalDetails(detail1, detail2.getId(), detail2.getAssetId(),
-                detail2.getType(), detail2.getLabel(), detail2.getField());
-    }
-
-    private boolean areIdenticalDetails(Detail detail, String id, String assetId,
-                                        DetailType type, String label, Object field) {
-        if (id != null) {
-            if (!detail.getId().equals(id))
-                return false;
-        }
-
-        if (assetId != null) {
-            if (!detail.getAssetId().equals(assetId))
-                return false;
-        }
-
-        if (type != null) {
-            if (!detail.getType().equals(type))
-                return false;
-        }
-
-        if (label != null) {
-            if (!detail.getLabel().equals(label))
-                return false;
-        }
-
-        if (field != null) {
-            if (!detail.getField().equals(field))
-                return false;
-        }
-
-        return true;
-    }
-
-    private boolean areIdenticalDetails(List<Detail> list1, List<Detail> list2) {
-        if (list1.size() != list2.size())
-            return false;
-
-        for (Detail d1 : list1) {
-            boolean included = false;
-            for (Detail d2 : list2) {
-                if (areIdenticalDetails(d1, d2))
-                    included = true;
-            }
-            // if a1 is not included in a2
-            if (!included)
-                return false;
-        }
-        return true;
     }
 
     private String getStringWithLength(int length) {

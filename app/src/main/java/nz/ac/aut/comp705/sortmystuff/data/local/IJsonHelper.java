@@ -49,7 +49,8 @@ public interface IJsonHelper {
     List<Detail> deserialiseDetails(final String assetId);
 
     /**
-     * Serialised an asset and write the data to the corresponding json file
+     * Serialised an asset and write the data to the corresponding json file. If Root asset does
+     * not exist, the asset won't be serialised.
      *
      * @param asset the asset to be serialised
      * @return true if asset is serialised successfully
@@ -59,7 +60,8 @@ public interface IJsonHelper {
 
     /**
      * Serialised a list of details and write the data to the corresponding json file.
-     * Details inside this list must belong to the same asset.
+     * Details inside this list must belong to the same asset. It returns false in
+     * the case that empty details list is given.
      *
      * @param details the list of details to be serialised
      * @return true if asset is serialised successfully

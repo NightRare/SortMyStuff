@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -75,8 +76,8 @@ public class JsonHelper implements IJsonHelper {
             return null;
         }
 
-        return deserialiseAssetFromFile(
-                userDir + File.separator + assetId + File.separator + ASSET_FILENAME);
+        return deserialiseAssetFromFile(fc.createFile(
+                userDir + File.separator + assetId + File.separator + ASSET_FILENAME));
     }
 
     /**
@@ -86,8 +87,8 @@ public class JsonHelper implements IJsonHelper {
      */
     @Override
     public Asset deserialiseRootAsset() {
-        return deserialiseAssetFromFile(
-                userDir + File.separator + ROOT_ASSET_DIR + File.separator + ASSET_FILENAME);
+        return deserialiseAssetFromFile(fc.createFile(
+                userDir + File.separator + ROOT_ASSET_DIR + File.separator + ASSET_FILENAME));
     }
 
     /**
@@ -108,7 +109,8 @@ public class JsonHelper implements IJsonHelper {
             if (!isValidAssetDir(dir))
                 continue;
 
-            Asset asset = deserialiseAssetFromFile(dir + File.separator + ASSET_FILENAME);
+            Asset asset = deserialiseAssetFromFile(fc.createFile(
+                    dir + File.separator + ASSET_FILENAME));
             if (asset != null && !assets.contains(asset)) {
                 assets.add(asset);
             }
@@ -138,7 +140,7 @@ public class JsonHelper implements IJsonHelper {
                 return null;
             }
 
-            Detail[] details = readJsonFile(gBuilder.create(), file, Detail[].class);
+            Detail[] details = readJsonFile(file, Detail[].class);
 
             List<Detail> list = new LinkedList();
             if (details != null) {
@@ -182,7 +184,7 @@ public class JsonHelper implements IJsonHelper {
 
         file = fc.createFile(assetDir, ASSET_FILENAME);
 
-        return writeJsonFile(gBuilder.create(), asset, file, Asset.class);
+        return writeJsonFile(asset, file, Asset.class);
     }
 
     /**
@@ -221,7 +223,7 @@ public class JsonHelper implements IJsonHelper {
         detailFile = fc.createFile(assetDir, DETAILS_FILENAME);
 
         final Detail[] dArray = details.toArray(new Detail[details.size()]);
-        return writeJsonFile(gBuilder.create(), dArray, detailFile, Detail[].class);
+        return writeJsonFile(dArray, detailFile, Detail[].class);
     }
 
     /**
@@ -237,7 +239,7 @@ public class JsonHelper implements IJsonHelper {
         File rootFile = fc.createFile(
                 userDir + File.separator + ROOT_ASSET_DIR + File.separator + ASSET_FILENAME);
         rootExists = rootFile.exists();
-        Asset asset = deserialiseAssetFromFile(rootFile.getPath());
+        Asset asset = deserialiseAssetFromFile(rootFile);
         rootExists = (asset == null ? false : true);
         return rootExists;
     }
@@ -269,6 +271,13 @@ public class JsonHelper implements IJsonHelper {
             return new File(uri);
         }
 
+        public FileReader createFileReader(File file) throws FileNotFoundException {
+            return new FileReader(file);
+        }
+
+        public FileWriter createFileWriter(File file) throws IOException {
+            return new FileWriter(file);
+        }
     }
 
     //endregion
@@ -286,15 +295,14 @@ public class JsonHelper implements IJsonHelper {
     /**
      * Deserialises asset from file according to the given file name.
      *
-     * @param filename
+     * @param file
      * @return
      */
-    private Asset deserialiseAssetFromFile(String filename) {
-        final File file = fc.createFile(filename);
+    private Asset deserialiseAssetFromFile(final File file) {
         if (!file.exists())
             return null;
 
-        Asset asset = readJsonFile(gBuilder.create(), file, Asset.class);
+        Asset asset = readJsonFile(file, Asset.class);
         return asset;
     }
 
@@ -359,18 +367,17 @@ public class JsonHelper implements IJsonHelper {
     /**
      * Serialise an object to a json String and write it to a json file on local storage.
      *
-     * @param gson
      * @param srcObj the object to be written
      * @param file   the json file
      * @param klass  the class of the object
      * @param <T>    the type of the object
      * @return true if write successfully
      */
-    private static <T> boolean writeJsonFile(Gson gson, T srcObj, File file, Class<T> klass) {
+    private <T> boolean writeJsonFile(T srcObj, File file, Class<T> klass) {
         Writer writer = null;
         try {
-            writer = new FileWriter(file);
-            gson.toJson(srcObj, klass, writer);
+            writer = fc.createFileWriter(file);
+            gBuilder.create().toJson(srcObj, klass, writer);
             return true;
         } catch (IOException e) {
             Log.e(JsonHelper.class.getName(), "IOException", e);
@@ -389,17 +396,16 @@ public class JsonHelper implements IJsonHelper {
     /**
      * Deserialise an object from a json file on local storage.
      *
-     * @param gson
      * @param file  the json file
      * @param klass the class of the object
      * @param <T>   the type of the object
      * @return the object
      */
-    private static <T> T readJsonFile(Gson gson, File file, Class<T> klass) {
+    private <T> T readJsonFile(File file, Class<T> klass) {
         Reader reader = null;
         try {
-            reader = new FileReader(file);
-            return gson.fromJson(reader, klass);
+            reader = fc.createFileReader(file);
+            return gBuilder.create().fromJson(reader, klass);
         } catch (IOException e) {
             Log.e(JsonHelper.class.getName(), "IOException", e);
             return null;
