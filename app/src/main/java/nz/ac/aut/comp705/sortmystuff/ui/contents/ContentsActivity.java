@@ -35,7 +35,7 @@ import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
  */
 
 public class ContentsActivity extends AppCompatActivity
-        implements IContentsView, View.OnClickListener, AdapterView.OnItemClickListener {
+        implements IContentsView, View.OnClickListener {
 
     private IContentsPresenter presenter;
 
@@ -131,6 +131,7 @@ public class ContentsActivity extends AppCompatActivity
 
         View view = LayoutInflater.from(this).inflate(R.layout.assets_layout, null);
         checkBox = (CheckBox) view.findViewById(R.id.asset_checkbox);
+
         // list view for index
         index = (ListView) findViewById(R.id.index_list);
 
@@ -154,8 +155,6 @@ public class ContentsActivity extends AppCompatActivity
         cancel_btn.setOnClickListener(this);
         selectAll_btn.setOnClickListener(this);
         selectNone_btn.setOnClickListener(this);
-        index.setOnItemClickListener(this);
-
     }
 
 
@@ -246,7 +245,7 @@ public class ContentsActivity extends AppCompatActivity
             public void onClick(DialogInterface dialog, int which) {
                 // get user input and add input as asset
                 presenter.addAsset(input.getText().toString());
-                //enableEditMode a success message
+                // show a success message
                 showMessageOnScreen("Successfully added " + input.getText().toString());
             }
         });
@@ -290,11 +289,20 @@ public class ContentsActivity extends AppCompatActivity
         index.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                //fetches the selected asset in the list
-                Asset a = (Asset) parent.getItemAtPosition(position);
-                //sets the selected asset's ID as the current asset (to be viewed)
-                presenter.setCurrentAssetId(a.getId());
-                presenter.loadCurrentContents(false);
+
+                if (showCheckbox) {
+                    AssetListAdapter.ViewHolder holder = (AssetListAdapter.ViewHolder) view.getTag();
+                    holder.checkbox.toggle();
+                    AssetListAdapter.getSelectStatusMap().put(position, holder.checkbox.isChecked());
+                }
+                else {
+                    //fetches the selected asset in the list
+                    Asset a = (Asset) parent.getItemAtPosition(position);
+                    //sets the selected asset's ID as the current asset (to be viewed)
+                    presenter.setCurrentAssetId(a.getId());
+                    presenter.loadCurrentContents(false);
+                }
+
             }
         });
 
@@ -362,12 +370,6 @@ public class ContentsActivity extends AppCompatActivity
         adapter.notifyDataSetChanged();
     }
 
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        AssetListAdapter.ViewHolder holder = (AssetListAdapter.ViewHolder) view.getTag();
-        holder.checkbox.toggle();
-        AssetListAdapter.getSelectStatusMap().put(position, holder.checkbox.isChecked());
-    }
 }
 
 
