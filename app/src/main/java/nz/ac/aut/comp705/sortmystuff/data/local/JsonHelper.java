@@ -262,15 +262,6 @@ public class JsonHelper implements IJsonHelper {
             return new File(parent, child);
         }
 
-        public File createFile(String parent, String child) {
-            return new File(parent, child);
-        }
-
-
-        public File createFile(URI uri) {
-            return new File(uri);
-        }
-
         public FileReader createFileReader(File file) throws FileNotFoundException {
             return new FileReader(file);
         }

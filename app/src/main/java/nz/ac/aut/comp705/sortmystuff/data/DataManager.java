@@ -35,7 +35,7 @@ public class DataManager implements IDataManager {
         dirtyCachedDetails = true;
     }
 
-    //region IDataManger methods
+    //region IDataManger METHODS
 
     /**
      * {@inheritDoc}
@@ -677,7 +677,7 @@ public class DataManager implements IDataManager {
 
     //endregion
 
-    //region Private stuff
+    //region PRIVATE STUFF
 
     private IJsonHelper jsonHelper;
 
