@@ -12,17 +12,13 @@ import java.util.UUID;
 import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 
 /**
- * An Asset class which stores formatted information
- * relevant to an asset
  *
  * @author Yuan
  */
 
 public final class Asset {
 
-    //********************************************
-    // DATA FIELDS
-    // *******************************************
+    //region DATA FIELDS
 
     // the identifier of the asset
     @NonNull
@@ -48,9 +44,9 @@ public final class Asset {
 
     private boolean isRecycled;
 
-    //********************************************
-    // STATIC FACTORIES
-    //********************************************
+    //endregion
+
+    //region STATIC FACTORIES
 
     /**
      * @param name
@@ -60,14 +56,13 @@ public final class Asset {
         checkIllegalName(name);
 
         String id = UUID.randomUUID().toString();
-        List<Detail> details = new LinkedList<>();
         Long ct = System.currentTimeMillis();
         Long mt = System.currentTimeMillis();
         List<Asset> content = new LinkedList<>();
 
-        Asset asset = new Asset(id, name, container.id, container, false, content, details, ct, mt, false);
+        Asset asset = new Asset(id, name, container.id, container, false, content, ct, mt, false);
         if (container != null) {
-            if(container.contents == null) {
+            if (container.contents == null) {
                 container.contents = new LinkedList<>();
             }
             container.contents.add(asset);
@@ -80,14 +75,13 @@ public final class Asset {
     public static Asset createRoot() {
         return new Asset(UUID.randomUUID().toString(),
                 "Root", "", null, true, new LinkedList<Asset>(),
-                new LinkedList<Detail>(), System.currentTimeMillis(),
+                System.currentTimeMillis(),
                 System.currentTimeMillis(), false);
     }
 
+    //endregion
 
-    //********************************************
-    // ACCESSORS
-    //********************************************
+    //region ACCESSORS
 
     public String getId() {
         return id;
@@ -105,14 +99,16 @@ public final class Asset {
         return isRecycled;
     }
 
-    public boolean isRoot() { return isRoot; }
+    public boolean isRoot() {
+        return isRoot;
+    }
 
     Asset getContainer() {
         return container;
     }
 
     List<Asset> getContents() {
-        if(contents != null)
+        if (contents != null)
             return new LinkedList<>(contents);
         return null;
     }
@@ -127,13 +123,13 @@ public final class Asset {
         return modifyTimestamp;
     }
 
-    //********************************************
-    // MUTATORS
-    //********************************************
+    //endregion
+
+    //region MODIFIERS
 
     void setName(@NonNull String name) {
         checkIllegalName(name);
-        if(isRoot())
+        if (isRoot())
             return;
 
         this.name = name;
@@ -147,14 +143,14 @@ public final class Asset {
             return false;
 
         // cannot move to its children asset
-        if  (isParentOf(containerObj)) {
+        if (isParentOf(containerObj)) {
             return false;
         }
 
         if (container.contents.remove(this)) {
             container = containerObj;
             containerId = containerObj.id;
-            if(container.contents.contains(this))
+            if (container.contents.contains(this))
                 return true;
             else
                 return container.contents.add(this);
@@ -165,73 +161,41 @@ public final class Asset {
     boolean attachToTree(@NonNull Asset containerObj) {
         Preconditions.checkNotNull(containerObj);
 
-        if(contents == null) {
+        if (contents == null) {
             contents = new LinkedList<>();
         }
-        if(isRoot()) {
+        if (isRoot()) {
             return true;
         }
-        if(!containerObj.getId().equals(containerId)) {
+        if (!containerObj.getId().equals(containerId)) {
             return false;
         }
         container = containerObj;
-        if(container.contents == null)
+        if (container.contents == null)
             container.contents = new LinkedList<>();
-        if(container.contents.contains(this))
+        if (container.contents.contains(this))
             return true;
         return container.contents.add(this);
     }
 
-    // TODO delete addDetail
-    @Deprecated
-    boolean addDetail(Detail detail) {
-        Preconditions.checkNotNull(detail);
-        if (!detail.getAssetId().equals(id))
-            return false;
-
-        if (details == null)
-            details = new LinkedList<>();
-
-        if (details.contains(detail))
-            return false;
-
-        if (details.add(detail)) {
-            updateTimeStamp();
-            return true;
-        }
-        return false;
-    }
-
-    // TODO delete removeDetail
-    @Deprecated
-    boolean removeDetail(Detail detail) {
-        Preconditions.checkNotNull(detail);
-        if (details.remove(detail)) {
-            updateTimeStamp();
-            return true;
-        }
-        return false;
-    }
-
     void updateTimeStamp() {
-        if(isRoot()) return;
+        if (isRoot()) return;
         modifyTimestamp = System.currentTimeMillis();
     }
 
     void recycle() {
-        if(isRoot()) return;
+        if (isRoot()) return;
         isRecycled = true;
     }
 
     void restore() {
-        if(isRoot()) return;
+        if (isRoot()) return;
         isRecycled = false;
     }
 
+    //endregion
 
-    //********************************************
-    // OBJECT METHODS OVERRIDING
-    //********************************************
+    //region OBJECT METHODS OVERRIDING
 
     @Override
     public boolean equals(Object o) {
@@ -253,10 +217,9 @@ public final class Asset {
         return name;
     }
 
+    //endregion
 
-    //********************************************
-    // PRIVATE
-    //********************************************
+    //region PRIVATE STUFF
 
     @Nullable
     // the container asset of the asset
@@ -267,23 +230,18 @@ public final class Asset {
     // just for convenience
     private transient List<Asset> contents;
 
-    @NonNull
-    // list of this asset's extended details
-    // for convenience
-    private transient List<Detail> details;
-
     private boolean isParentOf(Asset asset) {
-        if(asset.container == null || asset.id.equals(id)) {
+        if (asset.container == null || asset.id.equals(id)) {
             return false;
         }
-        if(asset.containerId.equals(id)) {
+        if (asset.containerId.equals(id)) {
             return true;
         }
         return isParentOf(asset.container);
     }
 
-    private Asset(@NonNull String id, @NonNull String name, @NonNull String containerId, Asset container,
-                  boolean isRoot, @NonNull List<Asset> contents, @NonNull List<Detail> details,
+    private Asset(@NonNull String id, @NonNull String name, @NonNull String containerId,
+                  Asset container, boolean isRoot, @NonNull List<Asset> contents,
                   @NonNull Long createdTimestamp, @NonNull Long modifiedTimestamp,
                   boolean isRecycled) {
         this.id = id;
@@ -292,7 +250,6 @@ public final class Asset {
         this.container = container;
         this.isRoot = isRoot;
         this.contents = contents;
-        this.details = details;
         this.createTimestamp = createdTimestamp;
         this.modifyTimestamp = modifiedTimestamp;
         this.isRecycled = isRecycled;
@@ -307,4 +264,5 @@ public final class Asset {
             throw new IllegalArgumentException("string length exceeds cap");
     }
 
+    //endregion
 }

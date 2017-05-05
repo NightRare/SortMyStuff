@@ -1,16 +1,11 @@
 package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
-import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
@@ -19,32 +14,31 @@ import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.ui.detail.DetailActivity;
 
 /**
- * Created by Yuan on 2017/4/28.
+ * The implementation class of {@link IContentsPresenter}.
+ *
+ * @author Yuan
  */
 
 public class ContentsPresenter implements IContentsPresenter {
 
-    private ContentsActivity activity;
-
-    private IContentsView view;
-
-    private IDataManager dm;
-
-    private String currentAssetId;
-
-    @Deprecated
-    public ContentsPresenter(IDataManager dm, IContentsView view) {
-        this.dm = dm;
-        this.view = view;
-        this.activity = (ContentsActivity) view;
-    }
-
+    /**
+     * Initialises a ContentsPresenter.
+     *
+     * @param dm       the IDataManager instance
+     * @param view     the IContentsView instance
+     * @param activity the ContentsActivity instance
+     */
     public ContentsPresenter(IDataManager dm, IContentsView view, ContentsActivity activity) {
         this.dm = dm;
         this.view = view;
         this.activity = activity;
     }
 
+    //region IContentsPresenter methods
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void start() {
         // if the app just launched, display Root Asset
@@ -60,6 +54,11 @@ public class ContentsPresenter implements IContentsPresenter {
         loadCurrentContents(false);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param forceRefreshFromLocal true if want to force reload the contents from local storage
+     */
     @Override
     public void loadCurrentContents(boolean forceRefreshFromLocal) {
         if (forceRefreshFromLocal)
@@ -69,7 +68,7 @@ public class ContentsPresenter implements IContentsPresenter {
             @Override
             public void onAssetLoaded(Asset asset) {
                 view.showAssetTitle(asset.getName());
-                loadCurrentAssetContents(asset);
+                loadContents(asset);
                 loadPathBar(asset);
             }
 
@@ -80,19 +79,33 @@ public class ContentsPresenter implements IContentsPresenter {
         });
     }
 
-
+    /**
+     * {@inheritDoc}
+     *
+     * @param assetId the asset id
+     */
     @Override
     public void setCurrentAssetId(String assetId) {
         currentAssetId = assetId;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setCurrentAssetIdToRoot() {
         currentAssetId = dm.getRootAsset().getId();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setCurrentAssetIdToContainer() {
+        // does nothing if the current asset is Root asset
+        if (currentAssetId.equals(dm.getRootAsset().getId()))
+            return;
+
         dm.getParentAssetsAsync(currentAssetId, new IDataManager.LoadAssetsCallback() {
             @Override
             public void onAssetsLoaded(List<Asset> assets) {
@@ -108,17 +121,32 @@ public class ContentsPresenter implements IContentsPresenter {
         });
     }
 
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getCurrentAssetId() {
         return currentAssetId;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param assetName the name of the new asset.
+     */
     @Override
     public void addAsset(String assetName) {
         dm.createAsset(assetName, currentAssetId);
         loadCurrentContents(false);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param item the menu item
+     * @return
+     */
     @Override
     public boolean selectOptionItem(MenuItem item) {
         int id = item.getItemId();
@@ -138,35 +166,25 @@ public class ContentsPresenter implements IContentsPresenter {
         return false;
     }
 
-    @Deprecated
-    @Override
-    public List<Asset> loadContents(String assetID) {
-        // deprecated method
-        return null;
-    }
+    //endregion
 
-    @Deprecated
-    @Override
-    public boolean isRootCurrentAsset() {
-        // deprecated method
-        return false;
-    }
+    //region Private stuff
 
-    @Deprecated
-    @Override
-    public String getParentOf(String currentAssetId) {
-        // deprecated method
-        return null;
-    }
+    private ContentsActivity activity;
 
-    @Deprecated
-    @Override
-    public String getAssetName(String assetID) {
-        // deprecated method
-        return null;
-    }
+    private IContentsView view;
 
-    private void loadCurrentAssetContents(Asset asset) {
+    private IDataManager dm;
+
+    private String currentAssetId;
+
+
+    /**
+     * Loads the contents of the asset.
+     *
+     * @param asset
+     */
+    private void loadContents(Asset asset) {
         dm.getContentAssetsAsync(asset, new IDataManager.LoadAssetsCallback() {
             @Override
             public void onAssetsLoaded(List<Asset> assets) {
@@ -180,12 +198,17 @@ public class ContentsPresenter implements IContentsPresenter {
         });
     }
 
+    /**
+     * Loads the path bar for the given asset.
+     *
+     * @param asset
+     */
     private void loadPathBar(final Asset asset) {
         dm.getParentAssetsDescAsync(asset, new IDataManager.LoadAssetsCallback() {
             @Override
             public void onAssetsLoaded(List<Asset> assets) {
                 // remove the Root
-                if(!assets.isEmpty())
+                if (!assets.isEmpty())
                     assets.remove(0);
 
                 view.showPath(assets);
@@ -198,5 +221,14 @@ public class ContentsPresenter implements IContentsPresenter {
         });
     }
 
+
+    private void setCheckboxStatus(View view, boolean checked) {
+        CheckBox checkBox = (CheckBox) view.findViewById(R.id.asset_checkbox);
+        checkBox.setVisibility(View.VISIBLE);
+        if (checkBox != null)
+            checkBox.setChecked(checked);
+    }
+
+    //endregion
 
 }
