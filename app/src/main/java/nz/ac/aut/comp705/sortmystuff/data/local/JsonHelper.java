@@ -17,7 +17,7 @@ import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.Detail;
-import nz.ac.aut.comp705.sortmystuff.util.DetailAdapter;
+import nz.ac.aut.comp705.sortmystuff.util.JsonDetailAdapter;
 import nz.ac.aut.comp705.sortmystuff.util.Log;
 
 /**
@@ -31,26 +31,20 @@ public class JsonHelper implements IJsonHelper {
     /**
      * Initialises a JsonHelper.
      *
-     * @param app    the Application in which this JsonHelper is going to work
-     * @param userId the user id; this is required for locating the Json files for the user
+     * @param userDir the user dir file
      */
-    public JsonHelper(Application app, String userId, GsonBuilder gBuilder) {
-        Preconditions.checkNotNull(app);
-        Preconditions.checkNotNull(userId);
-        if (userId.isEmpty())
-            throw new IllegalArgumentException("The userId cannot be empty.");
+    public JsonHelper(File userDir, GsonBuilder gBuilder) {
+        Preconditions.checkNotNull(userDir);
 
-        this.app = app;
-        this.userId = userId;
         this.gBuilder = gBuilder;
+        this.userDir = userDir;
 
         this.gBuilder.serializeNulls();
         this.gBuilder.setPrettyPrinting();
-        this.gBuilder.registerTypeAdapter(Detail.class, new DetailAdapter());
+        this.gBuilder.registerTypeAdapter(Detail.class, new JsonDetailAdapter());
 
-        userDir = new File(app.getFilesDir().getPath() + File.separator + userId);
-        if (!userDir.exists())
-            userDir.mkdirs();
+        if (!this.userDir.exists())
+            this.userDir.mkdirs();
 
         rootExists = false;
     }
@@ -254,10 +248,6 @@ public class JsonHelper implements IJsonHelper {
     private File userDir;
 
     private GsonBuilder gBuilder;
-
-    private String userId;
-
-    private Application app;
 
     /**
      * Deserialises asset from file according to the given file name.

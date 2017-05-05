@@ -5,6 +5,8 @@ import android.content.Context;
 
 import com.google.gson.GsonBuilder;
 
+import java.io.File;
+
 import nz.ac.aut.comp705.sortmystuff.data.DataManager;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.local.IJsonHelper;
@@ -17,10 +19,6 @@ import nz.ac.aut.comp705.sortmystuff.data.local.JsonHelper;
  */
 
 public class Factory implements IFactory {
-
-    //********************************************
-    // PRIVATE
-    //********************************************
 
     public Factory (Application app) {
         this.app = app;
@@ -42,7 +40,9 @@ public class Factory implements IFactory {
         if(jsonHelper != null)
             return jsonHelper;
 
-        return new JsonHelper(app, "default-user", new GsonBuilder());
+        File userDir = new File(
+                app.getFilesDir().getPath() + File.separator + "default-user");
+        return new JsonHelper(userDir, new GsonBuilder());
     }
 
     private void initialise() {
@@ -50,10 +50,8 @@ public class Factory implements IFactory {
         getDataManager();
     }
 
+    //region Private stuff
 
-    //********************************************
-    // PRIVATE
-    //********************************************
     private Application app;
 
     private IDataManager dataManager;
@@ -61,4 +59,6 @@ public class Factory implements IFactory {
     private IJsonHelper jsonHelper;
 
     private Factory() { }
+
+    //endregion
 }

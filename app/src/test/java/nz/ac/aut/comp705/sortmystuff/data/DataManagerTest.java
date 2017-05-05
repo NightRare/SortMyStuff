@@ -42,8 +42,6 @@ public class DataManagerTest {
     private static final String TEXTDETAIL_FIELD1 = "TextDetail_Field_1";
     private static final String TEXTDETAIL_LABEL2 = "TextDetail_2";
     private static final String TEXTDETAIL_FIELD2 = "TextDetail_Field_2";
-    private static final String TEXTDETAIL_LABEL3 = "TextDetail_3";
-    private static final String TEXTDETAIL_FIELD3 = "TextDetail_Field_3";
 
     private IDataManager dataManager;
 
@@ -99,6 +97,8 @@ public class DataManagerTest {
         mockLoadDetailsCallback = null;
         mockGetDetailsCallback = null;
     }
+
+    //region Tests
 
     @Test
     public void createRootAsset_rootAssetCreatedAndSaveToJsonFile() {
@@ -1415,9 +1415,9 @@ public class DataManagerTest {
         // TODO clearRecycledAsset not implemented yet
     }
 
-    //********************************************
-    // PRIVATE
-    //********************************************
+    //endregion
+
+    //region Private stuff
 
     private Asset prepareRootAsset() {
         Asset root = Asset.createRoot();
@@ -1537,5 +1537,7 @@ public class DataManagerTest {
         }
         return sb.toString();
     }
+
+    //endregion
 
 }
