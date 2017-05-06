@@ -284,7 +284,7 @@ public class ContentsActivity extends AppCompatActivity
             public void onClick(DialogInterface dialog, int which) {
                 // get user input and add input as asset
                 presenter.addAsset(input.getText().toString());
-                // show a success message
+                // show success message
                 showMessageOnScreen("Successfully added " + input.getText().toString());
             }
         });
