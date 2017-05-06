@@ -12,8 +12,22 @@ import nz.ac.aut.comp705.sortmystuff.ui.IView;
  */
 
 public interface IDetailView extends IView<IDetailPresenter> {
+
+    /**
+     * Set the presenter as given
+     * @param presenter the presenter
+     */
     void setPresenter(IDetailPresenter presenter);
+
+    /**
+     * Show list of details
+     * @param detailList
+     */
     void showDetails(List<Detail> detailList);
-    void showAddDetailDialog(View view);
+
+    /**
+     * Show message on screen
+     * @param message
+     */
     void showMessage(String message);
 }
