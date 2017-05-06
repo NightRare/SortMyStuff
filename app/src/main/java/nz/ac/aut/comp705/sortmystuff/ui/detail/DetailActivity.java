@@ -34,11 +34,7 @@ public class DetailActivity extends AppCompatActivity implements IDetailView{
 
         details = (ListView) findViewById(R.id.detail_list);
 
-        // Create the presenter
-        dataManager = ((SortMyStuffApp) getApplication()).getFactory().getDataManager();
-        presenter = new DetailPresenter(dataManager, this, this);
-        setPresenter(presenter);
-        presenter.start();
+        startPresenter();
 
         addDetilButton = (FloatingActionButton) findViewById(R.id.fab);
         addDetilButton.setOnClickListener(new View.OnClickListener() {
@@ -84,6 +80,16 @@ public class DetailActivity extends AppCompatActivity implements IDetailView{
     private IDetailPresenter presenter;
     private ListView details;
     private FloatingActionButton addDetilButton;
+
+    /**
+     * Creates and starts the presenter
+     */
+    private void startPresenter(){
+        dataManager = ((SortMyStuffApp) getApplication()).getFactory().getDataManager();
+        presenter = new DetailPresenter(dataManager, this, this);
+        setPresenter(presenter);
+        presenter.start();
+    }
 
     /**
      * Inner class to create an Array Adapter
