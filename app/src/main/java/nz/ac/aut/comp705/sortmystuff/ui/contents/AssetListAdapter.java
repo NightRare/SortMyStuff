@@ -16,7 +16,8 @@ import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.Asset;
 
 /**
- * Created by tommy on 5/05/17.
+ * The Adapter class for the list view of assets list.
+ * Created by Jing on 5/05/17.
  */
 
 public class AssetListAdapter extends BaseAdapter {

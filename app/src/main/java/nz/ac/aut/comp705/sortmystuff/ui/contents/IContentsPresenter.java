@@ -64,7 +64,14 @@ public interface IContentsPresenter extends IPresenter {
      */
     boolean selectOptionItem(MenuItem item);
 
-    void quitEditMode();
-
+    /**
+     * Active selection mode (namely edit mode) where each asset can be selected/deselected
+     * and then be modified.
+     */
     void enableEditMode();
+
+    /**
+     * Quit selection mode (namely edit mode) where each asset can not be selected or modified.
+     */
+    void quitEditMode();
 }
