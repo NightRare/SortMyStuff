@@ -31,9 +31,13 @@ import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.action.ViewActions.longClick;
 import static android.support.test.espresso.action.ViewActions.replaceText;
+import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.matcher.ViewMatchers.isChecked;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static android.support.test.espresso.matcher.ViewMatchers.isNotChecked;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
@@ -41,6 +45,7 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 
 /**
  * Created by Yuan on 2017/5/6.
@@ -79,7 +84,7 @@ public class ContentsActivityTest {
 
     @Rule
     public ActivityTestRule<ContentsActivity> contentsActivityActivityTestRule
-            = new ActivityTestRule<ContentsActivity>(ContentsActivity.class);
+            = new ActivityTestRule<>(ContentsActivity.class);
 
     @Test
     public void onLaunch_displayRootAssetTitle() {
@@ -131,6 +136,114 @@ public class ContentsActivityTest {
     }
 
 
+    @Test
+    public void selectionMode_enterModeByClickingButton() {
+        //add 3 assets
+        addAsset(ASSET1_NAME);
+        addAsset(ASSET2_NAME);
+        addAsset(ASSET3_NAME);
+
+        //enter the selection mode
+        onView(withId(R.id.selection_mode_button)).check(matches(isDisplayed()));
+        onView(withId(R.id.selection_mode_button)).perform(click());
+
+        //now all the checkbox should display
+        for (int i = 0; i < 3; i++) {
+            onData(anything()).inAdapterView(withId(R.id.index_list))
+                    .atPosition(i).onChildView(withId(R.id.asset_checkbox))
+                    .check(matches(isDisplayed()));
+        }
+    }
+
+
+    @Test
+    public void selectionMode_enterModeByLongClickingAnAsset() {
+        //add 3 assets
+        addAsset(ASSET1_NAME);
+        addAsset(ASSET2_NAME);
+        addAsset(ASSET3_NAME);
+
+        //enter the selection mode
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(0).perform(longClick());
+
+        //now all the checkbox should display
+        for (int i = 0; i < 3; i++) {
+            onData(anything()).inAdapterView(withId(R.id.index_list))
+                    .atPosition(i).onChildView(withId(R.id.asset_checkbox))
+                    .check(matches(isDisplayed()));
+        }
+    }
+
+
+    @Test
+    public void selectionMode_tickTheCheckbox() {
+        //add 3 assets
+        addAsset(ASSET1_NAME);
+        addAsset(ASSET2_NAME);
+        addAsset(ASSET3_NAME);
+
+        //enter the selection mode
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(0).perform(longClick());
+
+        //tick the first asset's checkbox
+        onData(anything()).inAdapterView(withId(R.id.index_list))
+                .atPosition(0).perform(click());
+        //now the first asset should be ticked
+        onData(anything()).inAdapterView(withId(R.id.index_list))
+                .atPosition(0).onChildView(withId(R.id.asset_checkbox))
+                .check(matches(isChecked()));
+    }
+
+    @Test
+    public void selectionMode_untickTheCheckbox() {
+        //add 3 assets
+        addAsset(ASSET1_NAME);
+        addAsset(ASSET2_NAME);
+        addAsset(ASSET3_NAME);
+
+        //enter the selection mode
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(0).perform(longClick());
+        //click the item twice to tick and then untick the checkbox
+        onData(anything()).inAdapterView(withId(R.id.index_list))
+                .atPosition(0).perform(click(), click());
+        //now the checkbox should not be checked
+        onData(anything()).inAdapterView(withId(R.id.index_list))
+                .atPosition(0).onChildView(withId(R.id.asset_checkbox))
+                .check(matches(isNotChecked()));
+    }
+
+
+    @Test
+    public void selectionMode_quitMode() {
+        //add 3 assets
+        addAsset(ASSET1_NAME);
+        addAsset(ASSET2_NAME);
+        addAsset(ASSET3_NAME);
+
+        //enter the selection mode
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(0).perform(longClick());
+
+        //quit the selection mode by clicking the CANCEL button
+        onView(withId(R.id.cancel_button)).check(matches(isDisplayed()));
+        onView(withId(R.id.cancel_button)).perform(click());
+
+        //now the CANCEL button and all the checkbox should disappear
+        onView(withId(R.id.cancel_button)).check(matches(not(isDisplayed())));
+        for (int i = 0; i < 3; i++) {
+            onData(anything()).inAdapterView(withId(R.id.index_list))
+                    .atPosition(i).onChildView(withId(R.id.asset_checkbox))
+                    .check(matches(not(isDisplayed())));
+        }
+    }
+
+
+
+
+
     //region PRIVATE STUFF
 
     private Context context;
@@ -144,6 +257,7 @@ public class ContentsActivityTest {
     private static final String ROOT_ASSET_NAME = "Root";
     private static final String ASSET1_NAME = "ASSET1_NAME";
     private static final String ASSET2_NAME = "ASSET2_NAME";
+    private static final String ASSET3_NAME = "ASSET3_NAME";
     private static final String PATH_BAR_0_PREFIX = "  ";
     private static final String PATH_BAR_PREFIX = " >  ";
 
