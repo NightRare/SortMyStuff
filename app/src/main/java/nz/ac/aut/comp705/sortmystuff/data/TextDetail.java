@@ -10,35 +10,22 @@ import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 
 public final class TextDetail extends Detail {
 
-    //********************************************
-    // DATA FIELDS
-    //********************************************
+    //region DATA FIELDS
 
     private String field;
 
+    //endregion
 
-    //********************************************
-    // STATIC FACTORIES
-    //********************************************
+    //region STATIC FACTORIES
 
     public static TextDetail create(String assetId, String label, String field) {
         checkIllegalField(field);
         return new TextDetail(assetId, DetailType.Text, label, field);
     }
 
-    // TODO delete createForAsset
-    @Deprecated
-    public static TextDetail createForAsset(Asset asset, String label, String field) {
-        Preconditions.checkNotNull(asset);
-        TextDetail td = create(asset.getId(), label, field);
-        asset.addDetail(td);
-        return td;
-    }
+    //endregion
 
-
-    //********************************************
-    // ACCESSORS
-    //********************************************
+    //region ACCESSORS
 
     public String getTextField() {
         return field;
@@ -49,18 +36,18 @@ public final class TextDetail extends Detail {
         return getTextField();
     }
 
-    //********************************************
-    // MUTATORS
-    //********************************************
+    //endregion
+
+    //region MUTATORS
 
     void setField(String field) {
         checkIllegalField(field);
         this.field = field;
     }
 
-    //********************************************
-    // OBJECT METHODS OVERRIDING
-    //********************************************
+    //endregion
+
+    //region OBJECT METHODS OVERRIDING
 
     @Override
     public boolean equals(Object o) {
@@ -70,10 +57,9 @@ public final class TextDetail extends Detail {
         return false;
     }
 
+    //endregion
 
-    //********************************************
-    // PRIVATE
-    //********************************************
+    //region PRIVATE
 
     private TextDetail(String assetId, DetailType type, String label, String field) {
         super(assetId, type, label);
@@ -87,4 +73,6 @@ public final class TextDetail extends Detail {
         if(field.length() > AppConstraints.TEXTDETAIL_FIELD_CAP)
             throw new IllegalArgumentException("string length exceeds cap");
     }
+
+    //endregion
 }

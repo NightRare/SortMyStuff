@@ -19,14 +19,18 @@
             android:layout_gravity="center_vertical"
             android:layout_marginLeft="10dp"
             android:layout_marginTop="5dp"
-            android:textSize="20sp" />
+            android:textSize="20sp"
+            android:textColor="@color/dark_grey"/>
 
         <CheckBox
             android:id="@+id/asset_checkbox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end|center_vertical"
-            android:checked="false"
-            android:visibility="gone"/>
+            android:clickable="false"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:buttonTint="@color/colorAccent"/>
+
 
 </LinearLayout>

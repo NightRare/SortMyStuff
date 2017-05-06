@@ -22,7 +22,7 @@ import nz.ac.aut.comp705.sortmystuff.data.TextDetail;
  */
 
 
-public class DetailAdapter implements JsonSerializer<Detail>, JsonDeserializer<Detail> {
+public class JsonDetailAdapter implements JsonSerializer<Detail>, JsonDeserializer<Detail> {
 
     private static final String TYPE = "type";
     private static final Map<String, Class<?>> classes = mapClasses();

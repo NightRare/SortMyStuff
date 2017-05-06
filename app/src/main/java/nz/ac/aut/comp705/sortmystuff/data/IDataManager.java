@@ -7,14 +7,15 @@ import java.util.List;
 import nz.ac.aut.comp705.sortmystuff.util.exceptions.*;
 
 /**
- * Created by Yuan on 2017/4/24.
+ * IDataManager is responsible for providing data for Presenters, as well as updating or deleting
+ * data according to Presenter's requests. It basically includes CRUD and other related methods.
+ *
+ * @author Yuan
  */
 
 public interface IDataManager {
 
-    //********************************************
-    // CREATE DATA
-    //********************************************
+    //region Create data methods
 
     /**
      * Create an asset and save it to the local storage.
@@ -66,9 +67,9 @@ public interface IDataManager {
      */
     String createTextDetail(@NonNull String assetId, @NonNull String label, @NonNull String field);
 
-    //********************************************
-    // READ DATA
-    //********************************************
+    //endregion
+
+    //region Read data methods
 
     /**
      * Get the Root asset from the local data source.
@@ -205,10 +206,9 @@ public interface IDataManager {
      */
     void getDetailAsync(@NonNull String detailId, @NonNull GetDetailCallback callback);
 
+    //endregion
 
-    //********************************************
-    // UPDATE/DELETE DATA
-    //********************************************
+    //region Update and Delete data methods
 
     /**
      * Update the name of the asset in memory and local storage.
@@ -328,20 +328,23 @@ public interface IDataManager {
     void updateTextDetail(@NonNull String assetId, @NonNull String detailId,
                           @NonNull String label, @NonNull String field);
 
+    //endregion
 
-    //********************************************
-    // UTIL
-    //********************************************
+    //region Other methods
 
+    /**
+     * Force reload data from local storage.
+     */
     void refreshFromLocal();
 
+    /**
+     * Clear all the data of recycled assets from local storage.
+     */
     void clearRecycledAsset();
 
+    //endregion
 
-
-    //********************************************
-    // CALLBACKS
-    //********************************************
+    //region Callback interfaces
 
     /**
      * A callback interface for asynchronised loading methods.
@@ -395,4 +398,6 @@ public interface IDataManager {
          */
         void onDetailsLoaded(Detail detail);
     }
+
+    //endregion
 }

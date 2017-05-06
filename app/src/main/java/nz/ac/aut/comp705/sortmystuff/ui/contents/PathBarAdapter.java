@@ -13,21 +13,28 @@ import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.Asset;
 
 /**
- * Created by Yuan on 2017/5/4.
+ * The Adapter class for the recycler view of path bar.
+ *
+ * @author Yuan
  */
 
 public class PathBarAdapter extends
         RecyclerView.Adapter<PathBarAdapter.ViewHolder> {
 
-    private LayoutInflater inflater;
-    private List<Asset> assets;
-    private IContentsPresenter presenter;
-
+    /**
+     * Initialises a new PathBarAdapter.
+     *
+     * @param context the context, normally the Application
+     * @param assets the list of assets to be showed in View
+     * @param presenter the IContentsPresenter
+     */
     public PathBarAdapter(Context context, List<Asset> assets, IContentsPresenter presenter) {
         this.inflater = LayoutInflater.from(context);
         this.assets = assets;
         this.presenter = presenter;
     }
+
+    //region RecyclerView.Adapter methods
 
     @Override
     public PathBarAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -65,6 +72,13 @@ public class PathBarAdapter extends
         return assets.size();
     }
 
+    //endregion
+
+    //region Inner class ViewHolder
+
+    /**
+     * A ViewHolder class for {@link PathBarAdapter}.
+     */
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
         private TextView nameView;
@@ -73,5 +87,19 @@ public class PathBarAdapter extends
             super(itemView);
             nameView = (TextView) itemView.findViewById(R.id.pathbar_asset_name);
         }
+
+        public TextView getNameView() {
+            return nameView;
+        }
     }
+
+    //endregion
+
+    //region Private stuff
+
+    private LayoutInflater inflater;
+    private List<Asset> assets;
+    private IContentsPresenter presenter;
+
+    //endregion
 }

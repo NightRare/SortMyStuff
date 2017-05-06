@@ -9,16 +9,13 @@ import java.util.UUID;
 import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 
 /**
- * @author Yuan
  *
- * An Extended Detail class used to format an asset's details
+ * @author Yuan
  */
 
 public abstract class Detail {
 
-    //********************************************
-    // DATA FIELDS
-    //********************************************
+    //region DATA FIELDS
 
     @NonNull
     private final String id;
@@ -31,10 +28,10 @@ public abstract class Detail {
     @NonNull
     private String label;
 
+    //endregion
 
-    //********************************************
-    // CONSTRUCTOR
-    //********************************************
+    //region STATIC FACTORIES
+
     protected Detail(String assetId, DetailType type, String label) {
         checkIllegalAssetId(assetId);
         checkIllegalLabel(label);
@@ -45,10 +42,9 @@ public abstract class Detail {
         this.label = label;
     }
 
+    //endregion
 
-    //********************************************
-    // ACCESSORS
-    //********************************************
+    //region ACCESSORS
 
     @NonNull
     public String getId() {
@@ -71,19 +67,18 @@ public abstract class Detail {
 
     public abstract Object getField();
 
+    //endregion
 
-    //********************************************
-    // MUTATORS
-    //********************************************
+    //region MODIFIERS
 
     protected void setLabel(@NonNull String label) {
         checkIllegalLabel(label);
         this.label = label;
     }
 
-    //********************************************
-    // OBJECT METHODS OVERRIDING
-    //********************************************
+    //endregion
+
+    //region OBJECT METHODS OVERRIDING
 
     @Override
     public boolean equals(Object o) {
@@ -105,9 +100,9 @@ public abstract class Detail {
         return label;
     }
 
-    //********************************************
-    // PRIVATE
-    //********************************************
+    //endregion
+
+    //region PRIVATE STUFF
 
     private static void checkIllegalLabel(String label) {
         Preconditions.checkNotNull(label);
@@ -122,4 +117,6 @@ public abstract class Detail {
         if(assetId.isEmpty())
             throw new IllegalArgumentException("cannot be empty");
     }
+
+    //endregion
 }

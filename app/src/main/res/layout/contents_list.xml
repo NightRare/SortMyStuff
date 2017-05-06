@@ -9,34 +9,34 @@
         android:id="@+id/index_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/pathbar_layout" />
+        android:layout_below="@id/pathbar_layout"
+        android:layout_above="@+id/action_buttons"/>
 
     <LinearLayout
-        android:id="@+id/action_buttons"
+        android:id="@id/action_buttons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_alignParentBottom="true"
-        android:visibility="gone">
-
-        <Button
-            android:id="@+id/move_button"
-            android:text="MOVE"
-            style="@style/action_button_style" />
-
-        <Button
-            android:id="@+id/copy_button"
-            android:text="COPY"
-            style="@style/action_button_style" />
-
-        <Button
-            android:id="@+id/delete_button"
-            android:text="DELETE"
-            style="@style/action_button_style" />
+        android:layout_alignParentBottom="true">
 
         <Button
             android:id="@+id/cancel_button"
-            android:text="CANCEL"
+            android:text="Cancel"
+            style="@style/action_button_style" />
+
+        <!--<Button-->
+            <!--android:id="@+id/select_button"-->
+            <!--android:text="Select"-->
+            <!--style="@style/action_button_style" />-->
+
+        <Button
+            android:id="@+id/select_all_button"
+            android:text="ALL"
+            style="@style/action_button_style" />
+
+        <Button
+            android:id="@+id/select_none_button"
+            android:text="NONE"
             style="@style/action_button_style" />
 
     </LinearLayout>

@@ -6,6 +6,12 @@ package nz.ac.aut.comp705.sortmystuff.util;
 
 public class Log {
 
+    //region TAGS
+
+    public static final String LOCAL_FILE_CORRUPT = "LOCAL_FILE_CORRUPT";
+
+    //endregion
+
     private static final boolean DEBUG = false;
 
     public static void i(String tag, String msg) {

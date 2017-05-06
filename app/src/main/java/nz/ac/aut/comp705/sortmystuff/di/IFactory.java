@@ -4,7 +4,9 @@ import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.local.IJsonHelper;
 
 /**
- * Created by Yuan on 2017/4/25.
+ * A factory for dependency injection.
+ *
+ * @author Yuan
  */
 
 public interface IFactory {
