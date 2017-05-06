@@ -271,6 +271,12 @@ public class ContentsActivity extends AppCompatActivity
 
     private static final String CURRENT_ASSET_ID = "CURRENT_ASSET_ID";
 
+    /**
+     * Build a dialog box format for adding assets
+     * that enables a single line input
+     * and has a functional save and cancel button
+     * @return builder the dialog box format
+     */
     private AlertDialog.Builder getAddAssetDialogBuilder() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Add Asset");
