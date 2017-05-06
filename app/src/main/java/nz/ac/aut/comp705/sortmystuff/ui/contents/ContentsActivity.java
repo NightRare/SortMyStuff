@@ -2,10 +2,7 @@ package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -16,16 +13,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
@@ -41,8 +35,7 @@ import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
  * @author Yuan
  */
 
-public class ContentsActivity extends AppCompatActivity
-        implements IContentsView, View.OnClickListener {
+public class ContentsActivity extends AppCompatActivity implements IContentsView {
 
     //region Activity METHODS
 
@@ -51,19 +44,15 @@ public class ContentsActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.contents_act);
 
-        // register Floating ActionButton
+        // init UI components
         fab = (FloatingActionButton) findViewById(R.id.addAssetButton);
 
-        initView();
+        assetListView = (ListView) findViewById(R.id.index_list);
 
-        // toolbar
+        initEditModeButtons();
+
         toolbar = (Toolbar) findViewById(R.id.toolbarMain);
         setSupportActionBar(toolbar);
-
-        // clicking on name on toolbar
-
-
-        // clicking on an asset in the list
 
         initPathBar();
 
@@ -102,9 +91,7 @@ public class ContentsActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.selection_mode_button:
-                Message message = Message.obtain();
-                message.what = 1;
-                handler.sendMessage(message);
+                presenter.enableEditMode();
                 break;
             default:
                 break;
@@ -146,12 +133,14 @@ public class ContentsActivity extends AppCompatActivity
      * @param assets the assets
      */
     @Override
-    public void showAssetContents(List<Asset> assets) {
+    public void showAssetContents(List<Asset> assets, boolean enableEditMode) {
         adapter = new AssetListAdapter(assets, getApplicationContext(), false);
-        showCheckbox = false;
-        index.setAdapter(adapter);
-        assetList = new ArrayList<>();
-        assetList = assets;
+        assetListView.setAdapter(adapter);
+
+        if(enableEditMode)
+            displayInEditMode(assets);
+        else
+            displayWithoutEditMode(assets);
     }
 
     /**
@@ -187,89 +176,41 @@ public class ContentsActivity extends AppCompatActivity
 
     //region PRIVATE STUFF
 
+    private static final String CURRENT_ASSET_ID = "CURRENT_ASSET_ID";
 
     private IContentsPresenter presenter;
 
-    // UI Components
+    //region UI Components
+
     private FloatingActionButton fab;
 
     private Toolbar toolbar;
     private TextView pathBarRoot;
     private RecyclerView pathBar;
 
-    private ListView index;
-    private Button select_btn, selectAll_btn, selectNone_btn, cancel_btn;
+    private ListView assetListView;
+    private Button selectAll_btn, selectNone_btn, cancel_btn;
     private AssetListAdapter adapter;
-    private CheckBox checkBox;
-    private int checkedCount;
-    private static List<Asset> assetList;
-    private Boolean showCheckbox = false;
 
-    private Handler handler = new Handler() {
-        public void handleMessage(Message msg) {
-            if (msg.what == 1)
-                enableEditMode();
-            if (msg.what == 0)
-                quitEditMode();
-        }
-    };
+    //endregion
 
-    private void initView() {
-
-        View view = LayoutInflater.from(this).inflate(R.layout.assets_layout, null);
-        checkBox = (CheckBox) view.findViewById(R.id.asset_checkbox);
-
-        // list view for index
-        index = (ListView) findViewById(R.id.index_list);
-
-        cancel_btn = (Button) findViewById(R.id.cancel_button);
-//        select_btn = (Button) findViewById(R.id.select_button);
-        selectAll_btn = (Button) findViewById(R.id.select_all_button);
-        selectNone_btn = (Button) findViewById(R.id.select_none_button);
-
-        if (showCheckbox) {
-            selectNone_btn.setVisibility(View.VISIBLE);
-            selectAll_btn.setVisibility(View.VISIBLE);
-            cancel_btn.setVisibility(View.VISIBLE);
-        }
-        else {
-            selectNone_btn.setVisibility(View.GONE);
-            selectAll_btn.setVisibility(View.GONE);
-            cancel_btn.setVisibility(View.GONE);
-        }
-
-//        select_btn.setOnClickListener(this);
-        cancel_btn.setOnClickListener(this);
-        selectAll_btn.setOnClickListener(this);
-        selectNone_btn.setOnClickListener(this);
-
-    }
-
-    private void enableEditMode() {
-        adapter = new AssetListAdapter(assetList, getApplicationContext(), true);
-        index.setAdapter(adapter);
-        showCheckbox = true;
+    private void displayInEditMode(List<Asset> assets) {
+        adapter = new AssetListAdapter(assets, getApplicationContext(), true);
+        assetListView.setAdapter(adapter);
         selectNone_btn.setVisibility(View.VISIBLE);
         selectAll_btn.setVisibility(View.VISIBLE);
         cancel_btn.setVisibility(View.VISIBLE);
-//        select_btn.setVisibility(View.GONE);
         fab.setVisibility(View.GONE);
-
     }
 
-    private void quitEditMode() {
-        adapter = new AssetListAdapter(assetList, getApplicationContext(), false);
-        index.setAdapter(adapter);
-        showCheckbox = false;
+    private void displayWithoutEditMode(List<Asset> assets) {
+        adapter = new AssetListAdapter(assets, getApplicationContext(), false);
+        assetListView.setAdapter(adapter);
         selectNone_btn.setVisibility(View.GONE);
         selectAll_btn.setVisibility(View.GONE);
         cancel_btn.setVisibility(View.GONE);
-//        select_btn.setVisibility(View.VISIBLE);
         fab.setVisibility(View.VISIBLE);
     }
-
-
-    private static final String CURRENT_ASSET_ID = "CURRENT_ASSET_ID";
 
     private AlertDialog.Builder getAddAssetDialogBuilder() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -310,6 +251,16 @@ public class ContentsActivity extends AppCompatActivity
         pathBar.setLayoutManager(llm);
     }
 
+    private void initEditModeButtons() {
+        cancel_btn = (Button) findViewById(R.id.cancel_button);
+        selectAll_btn = (Button) findViewById(R.id.select_all_button);
+        selectNone_btn = (Button) findViewById(R.id.select_none_button);
+
+        selectNone_btn.setVisibility(View.GONE);
+        selectAll_btn.setVisibility(View.GONE);
+        cancel_btn.setVisibility(View.GONE);
+    }
+
     /**
      * Registers the listeners to UI components.
      */
@@ -330,11 +281,12 @@ public class ContentsActivity extends AppCompatActivity
             }
         });
 
-        index.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        assetListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                AssetListAdapter adapter = (AssetListAdapter) parent.getAdapter();
 
-                if (showCheckbox) {
+                if (adapter.isCheckboxShowed()) {
                     AssetListAdapter.ViewHolder holder = (AssetListAdapter.ViewHolder) view.getTag();
                     holder.checkbox.toggle();
                     AssetListAdapter.getSelectStatusMap().put(position, holder.checkbox.isChecked());
@@ -350,12 +302,10 @@ public class ContentsActivity extends AppCompatActivity
             }
         });
 
-        index.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+        assetListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                Message message = Message.obtain();
-                message.what = 1;
-                handler.sendMessage(message);
+                presenter.enableEditMode();
                 return true;
             }
         });
@@ -367,45 +317,48 @@ public class ContentsActivity extends AppCompatActivity
                 presenter.loadCurrentContents(false);
             }
         });
-    }
 
+        View.OnClickListener selectionModeListener = new View.OnClickListener() {
 
-    @Override
-    public void onClick(View v) {
-        int btn_id = v.getId();
-        Message message = Message.obtain();
+            @Override
+            public void onClick(View v) {
+                int btn_id = v.getId();
 
-        switch (btn_id) {
-            case R.id.cancel_button:
-                message.what = 0;
-                handler.sendMessage(message);
-                break;
+                switch (btn_id) {
+                    case R.id.cancel_button:
+                        presenter.quitEditMode();
+                        break;
 
-            case R.id.select_all_button:
-                selectAll();
-                Toast.makeText(this, assetList.size() + " items", Toast.LENGTH_SHORT).show();
-                break;
+                    case R.id.select_all_button:
+                        selectAll();
+                        Toast.makeText(ContentsActivity.this, adapter.getCount()
+                                + " items selected", Toast.LENGTH_SHORT).show();
+                        break;
 
-            case R.id.select_none_button:
-                selectNone();
-                Toast.makeText(this, "0 items", Toast.LENGTH_SHORT).show();
-                break;
-        }
+                    case R.id.select_none_button:
+                        selectNone();
+                        Toast.makeText(ContentsActivity.this, "0 items selected", Toast.LENGTH_SHORT).show();
+                        break;
+                }
+            }
+        };
+
+        cancel_btn.setOnClickListener(selectionModeListener);
+        selectAll_btn.setOnClickListener(selectionModeListener);
+        selectNone_btn.setOnClickListener(selectionModeListener);
     }
 
     private void selectAll() {
-        for (int i = 0; i < assetList.size(); i++) {
+        for (int i = 0; i < adapter.getCount(); i++) {
             AssetListAdapter.getSelectStatusMap().put(i, true);
         }
-        checkedCount = assetList.size();
         adapter.notifyDataSetChanged();
     }
 
     private void selectNone() {
-        for (int i = 0; i < assetList.size(); i++) {
+        for (int i = 0; i < adapter.getCount(); i++) {
             AssetListAdapter.getSelectStatusMap().put(i, false);
         }
-        checkedCount = assetList.size();
         adapter.notifyDataSetChanged();
     }
 

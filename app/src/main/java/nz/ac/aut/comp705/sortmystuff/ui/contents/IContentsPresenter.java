@@ -64,4 +64,7 @@ public interface IContentsPresenter extends IPresenter {
      */
     boolean selectOptionItem(MenuItem item);
 
+    void quitEditMode();
+
+    void enableEditMode();
 }

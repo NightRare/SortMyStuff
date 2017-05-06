@@ -90,6 +90,10 @@ public class AssetListAdapter extends BaseAdapter {
         return convertView;
     }
 
+    public boolean isCheckboxShowed() {
+        return showCheckbox;
+    }
+
     public class ViewHolder {
         ImageView imageView;
         TextView textView;

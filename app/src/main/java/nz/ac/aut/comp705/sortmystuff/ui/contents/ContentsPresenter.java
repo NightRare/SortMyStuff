@@ -32,6 +32,7 @@ public class ContentsPresenter implements IContentsPresenter {
         this.dm = dm;
         this.view = view;
         this.activity = activity;
+        editModeEnabled = false;
     }
 
     //region IContentsPresenter methods
@@ -166,6 +167,18 @@ public class ContentsPresenter implements IContentsPresenter {
         return false;
     }
 
+    @Override
+    public void quitEditMode() {
+        editModeEnabled = false;
+        loadCurrentContents(false);
+    }
+
+    @Override
+    public void enableEditMode() {
+        editModeEnabled = true;
+        loadCurrentContents(false);
+    }
+
     //endregion
 
     //region Private stuff
@@ -178,7 +191,7 @@ public class ContentsPresenter implements IContentsPresenter {
 
     private String currentAssetId;
 
-
+    private boolean editModeEnabled;
     /**
      * Loads the contents of the asset.
      *
@@ -188,7 +201,7 @@ public class ContentsPresenter implements IContentsPresenter {
         dm.getContentAssetsAsync(asset, new IDataManager.LoadAssetsCallback() {
             @Override
             public void onAssetsLoaded(List<Asset> assets) {
-                view.showAssetContents(assets);
+                view.showAssetContents(assets, editModeEnabled);
             }
 
             @Override
