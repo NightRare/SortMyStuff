@@ -1,5 +1,13 @@
 package nz.ac.aut.comp705.sortmystuff.ui.detail;
 
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.support.v7.app.AlertDialog;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,27 +24,58 @@ public class DetailPresenter implements IDetailPresenter {
 
     IDataManager dm;
     IDetailView view;
+    DetailActivity activity;
     String currentAsset;
 
-    public DetailPresenter(IDataManager dm, IDetailView view) {
+    /**
+     * Initialises the detail presenter
+     *
+     * @param dm       the IDataManager instance
+     * @param view     the IContentsView instance
+     * @param activity the ContentsActivity instance
+     */
+    public DetailPresenter(IDataManager dm, IDetailView view, DetailActivity activity) {
         this.dm = dm;
         this.view = view;
-    }
-    @Override
-    public void start() {
-        addBasicDetail();
+        this.activity = activity;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void start() {
+        Intent intent = activity.getIntent();
+        setCurrentAsset(intent.getStringExtra("AssetID"));
+        setTitleOnToolbar();
+        view.showDetails(loadDetails());
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @param assetID
+     */
     @Override
     public void setCurrentAsset(String assetID) {
         currentAsset = assetID;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return
+     */
     @Override
     public String getCurrentAssetID() {
         return currentAsset;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return assetName
+     */
     @Override
     public String getCurrentAssetName() {
         final String[] name = new String[1];
@@ -54,38 +93,116 @@ public class DetailPresenter implements IDetailPresenter {
         return name[0];
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return detailList
+     */
     @Override
     public List<Detail> loadDetails() {
         final ArrayList detailList = new ArrayList();
         dm.getDetailsAsync(getCurrentAssetID(), new IDataManager.LoadDetailsCallback() {
             @Override
             public void onDetailsLoaded(List<Detail> details) {
-                if(details.isEmpty()){
-                    addBasicDetail();
-                }
-                for(Detail d: details){
-                    detailList.add(d);
-                }
+                if(details.isEmpty()){ addBasicDetail(); }
+                for(Detail d: details){ detailList.add(d); }
             }
 
             @Override
             public void dataNotAvailable(int errorCode) {
-                addBasicDetail();
-
             }
         });
         return  detailList;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param view
+     */
     @Override
-    public void addDetail(String label, String field) {
+    public void showDialogBox(View view){
+        getAddDetailDialogBox(view).create().show();
+    }
+
+    /**
+     * Add detail to current asset
+     * @param label
+     * @param field
+     */
+    private void addDetail(String label, String field) {
         dm.createTextDetail(getCurrentAssetID(), label, field);
     }
 
-    @Override
-    public void addBasicDetail() {
+    /**
+     * Setup the dialog box for adding details
+     * that enables two single line inputs for
+     * detail label and field, and has a
+     * functional save and cancel button
+     * @param view
+     * @return dialog
+     */
+    private AlertDialog.Builder getAddDetailDialogBox(View view){
+        AlertDialog.Builder dialog = new AlertDialog.Builder(view.getContext());
+        dialog.setTitle("Add Detail for "+ getCurrentAssetName());
+        //dialog box setup
+        Context context = view.getContext();
+        LinearLayout layout = new LinearLayout(context);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        //label text configuration
+        final EditText labelText = createEditText("Label",context,layout);
+        //field text configuration
+        final EditText fieldText = createEditText("Field",context,layout);
+        //button setup
+        dialog.setView(layout)
+                .setPositiveButton("Save", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        addDetail(labelText.getText().toString(),fieldText.getText().toString());
+                        activity.showDetails(loadDetails());
+                        activity.showMessage("Added " + labelText.getText().toString() + "detail");
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) { dialog.cancel();
+                    }
+                });
+        return dialog;
+    }
+
+    /**
+     * Creates an editable text area for the dialog box
+     * @param description
+     * @param context
+     * @param layout
+     * @return editText
+     */
+    private EditText createEditText(String description, Context context, LinearLayout layout){
+        final EditText editText = new EditText(context);
+        editText.setSingleLine();
+        editText.setHint("Label");
+        layout.addView(editText);
+        return editText;
+    }
+
+    /**
+     * Add basic details to the current asset as
+     * with the label of "Name" and the current
+     * asset name as the field
+     */
+    private void addBasicDetail() {
         addDetail("Name",getCurrentAssetName());
     }
+
+    /**
+     * Set toolbar title
+     */
+    private void setTitleOnToolbar(){
+        activity.setTitle(getCurrentAssetName());
+    }
+
+
 
 
 }

@@ -1,5 +1,8 @@
 package nz.ac.aut.comp705.sortmystuff.ui.detail;
 
+import android.support.v7.app.AlertDialog;
+import android.view.View;
+
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.Detail;
@@ -11,18 +14,41 @@ import nz.ac.aut.comp705.sortmystuff.ui.IPresenter;
 
 public interface IDetailPresenter extends IPresenter {
 
+    /**
+     * {@inheritDoc}
+     */
     void start();
 
+    /**
+     * Set the current asset associated with the given ID
+     * @param assetID
+     */
     void setCurrentAsset(String assetID);
 
+    /**
+     * Retrieve the current asset's ID
+     * @return AssetID
+     */
     String getCurrentAssetID();
 
+    /**
+     * Retrieve the current asset's name
+     * @return AssetName
+     */
     String getCurrentAssetName();
 
+    /**
+     * Load the details associated with the current asset
+     * @return DetailList
+     */
     List<Detail> loadDetails();
 
-    void addDetail(String label, String field);
+    /**
+     * Show the dialog box associated
+     * with adding details
+     * @param view
+     */
+    void showDialogBox(View view);
 
-    void addBasicDetail();
 
 }

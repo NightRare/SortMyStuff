@@ -126,6 +126,39 @@ public class ContentsActivityTest {
                 .check(matches(withText(ASSET1_NAME)));
     }
 
+    @Test
+    public void addAsset_cancelDialogBox(){
+        onView(withId(R.id.addAssetButton)).perform(click());
+        //type asset name into text area in dialog box
+        onView(allOf(withClassName(endsWith("EditText")), withText(is("")))).perform(replaceText(ASSET1_NAME));
+        //click on cancel button in dialog box
+        onView(withText("Cancel")).perform(click());
+        //asset should not be added
+        Assert.assertFalse(onData(anything()).inAdapterView(withId(R.id.index_list)).atPosition(0).equals(ASSET1_NAME));
+    }
+
+    @Test
+    public void onClickAssetFromList_displayAssetNameOnToolbar(){
+        addAsset(ASSET1_NAME);
+        clickAsset(0);
+        onView(withId(R.id.toolbarMain)).check(matches(isDisplayed()));
+        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.toolbarMain);
+        //check that the name on the toolbar is the name of the selected asset
+        Assert.assertTrue(toolbar.getTitle().toString().equals(ASSET1_NAME));
+    }
+
+    @Test
+    public void onClickAssetFromList_addChildAsset(){
+        addAsset(ASSET1_NAME);
+        clickAsset(0);
+        addAsset(ASSET2_NAME);
+        onView(withId(R.id.index_list)).check(matches(isDisplayed()));
+        //check that assets can added into child assets
+        onData(anything()).inAdapterView(withId(R.id.index_list))
+                .atPosition(0).onChildView(withId(R.id.asset_name))
+                .check(matches(withText(ASSET2_NAME)));
+    }
+
 
   @Test
     public void displayPathbar_lengthWithinScreen() {

@@ -212,6 +212,13 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         fab.setVisibility(View.VISIBLE);
     }
 
+
+    /**
+     * Build a dialog box format for adding assets
+     * that enables a single line input
+     * and has a functional save and cancel button
+     * @return builder the dialog box format
+     */
     private AlertDialog.Builder getAddAssetDialogBuilder() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Add Asset");
@@ -225,7 +232,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
             public void onClick(DialogInterface dialog, int which) {
                 // get user input and add input as asset
                 presenter.addAsset(input.getText().toString());
-                // show a success message
+                // show success message
                 showMessageOnScreen("Successfully added " + input.getText().toString());
             }
         });
