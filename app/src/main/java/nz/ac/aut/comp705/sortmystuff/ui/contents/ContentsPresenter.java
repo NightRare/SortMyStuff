@@ -150,27 +150,53 @@ public class ContentsPresenter implements IContentsPresenter {
      */
     @Override
     public boolean selectOptionItem(MenuItem item) {
-        int id = item.getItemId();
+        switch (item.getItemId()) {
 
-        //action button stuff
-        if (id == R.id.action_view_details) {
-            // if it's Root Asset, do not show details
-            if (currentAssetId.equals(dm.getRootAsset().getId())) {
-                Toast.makeText(activity, "Root has no detail", Toast.LENGTH_LONG).show();
+            case R.id.action_view_details:
+                // if it's Root Asset, do not show details
+                if (currentAssetId.equals(dm.getRootAsset().getId())) {
+                    Toast.makeText(activity, "Root has no detail", Toast.LENGTH_LONG).show();
+                    return false;
+                }
+                Intent intent = new Intent(activity, DetailActivity.class);
+                intent.putExtra("AssetID", currentAssetId);
+                activity.startActivity(intent);
+                return true;
+
+            case R.id.selection_mode_button:
+                enableEditMode();
+                return true;
+
+            case R.id.delete_asset_button:
+                if (currentAssetId.equals(dm.getRootAsset().getId())) {
+                    Toast.makeText(activity, "Cannot delete Root", Toast.LENGTH_LONG).show();
+                    return false;
+                }
+                view.showDeleteDialog(false);
+                return true;
+
+            default:
                 return false;
-            }
-            Intent intent = new Intent(activity, DetailActivity.class);
-            intent.putExtra("AssetID", currentAssetId);
-            activity.startActivity(intent);
-            return true;
         }
-        return false;
     }
 
     @Override
     public void quitEditMode() {
         editModeEnabled = false;
         loadCurrentContents(false);
+    }
+
+    @Override
+    public void recycleCurrentAssetRecursively() {
+        String deleteAssetId = currentAssetId;
+        setCurrentAssetIdToContainer();
+        dm.recycleAssetRecursively(deleteAssetId);
+        loadCurrentContents(true);
+    }
+
+    @Override
+    public void recycleAssetsRecursively(List<String> assetIds) {
+        // TODO recycleAssetsRecursively to be implemented
     }
 
     @Override
@@ -192,6 +218,7 @@ public class ContentsPresenter implements IContentsPresenter {
     private String currentAssetId;
 
     private boolean editModeEnabled;
+
     /**
      * Loads the contents of the asset.
      *

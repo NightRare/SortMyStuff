@@ -274,6 +274,24 @@ public interface IDataManager {
      */
     void recycleAsset(@NonNull String assetId);
 
+    /**
+     * Recycle the asset with given id and all its children assets.
+     *
+     * @param assetId the id of the asset to be recycled
+     * @throws NullPointerException              if any argument is {@code null}
+     * @throws UpdateLocalStorageFailedException if update local storage failed
+     */
+    void recycleAssetRecursively(@NonNull String assetId);
+
+    /**
+     * Recycle the asset with given id and all its children assets.
+     *
+     * @param asset the asset to be recycled
+     * @throws NullPointerException              if any argument is {@code null}
+     * @throws UpdateLocalStorageFailedException if update local storage failed
+     */
+    void recycleAssetRecursively(@NonNull Asset asset);
+
     // Not Implemented yet
     void restoreAsset(@NonNull Asset asset);
 

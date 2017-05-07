@@ -549,6 +549,45 @@ public class DataManager implements IDataManager {
     /**
      * {@inheritDoc}
      *
+     * @param assetId the id of the asset to be recycled
+     */
+    @Override
+    public void recycleAssetRecursively(@NonNull String assetId) {
+        Preconditions.checkNotNull(assetId);
+
+        if (!assetExists(assetId)) {
+            Log.e(getClass().getName(), "asset not exists, failed to recycle, asset id: " + assetId);
+            return;
+        }
+        Asset asset = cachedAssets.get(assetId);
+        if (asset.isRoot()) {
+            Log.e(getClass().getName(), "cannot recycle Root asset");
+            return;
+        }
+
+        if(!asset.getContents().isEmpty()) {
+            for(Asset a : asset.getContents()) {
+                recycleAssetRecursively(a.getId());
+            }
+        }
+        recycleAsset(assetId);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @param asset the asset to be recycled
+     */
+    @Override
+    public void recycleAssetRecursively(@NonNull Asset asset) {
+        Preconditions.checkNotNull(asset);
+
+        recycleAsset(asset.getId());
+    }
+
+    /**
+     * {@inheritDoc}
+     *
      * @param asset
      */
     @Override

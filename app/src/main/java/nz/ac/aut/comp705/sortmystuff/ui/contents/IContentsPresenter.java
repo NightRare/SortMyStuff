@@ -3,6 +3,9 @@ package nz.ac.aut.comp705.sortmystuff.ui.contents;
 import android.view.MenuItem;
 import android.view.View;
 
+import java.util.List;
+
+import nz.ac.aut.comp705.sortmystuff.data.Asset;
 import nz.ac.aut.comp705.sortmystuff.ui.IPresenter;
 
 /**
@@ -74,4 +77,16 @@ public interface IContentsPresenter extends IPresenter {
      * Quit selection mode (namely edit mode) where each asset can not be selected or modified.
      */
     void quitEditMode();
+
+    /**
+     * Recycle the current asset and all its contained assets.
+     */
+    void recycleCurrentAssetRecursively();
+
+    /**
+     * Recycle the selected assets and all their contained assets.
+     *
+     * @param assetIds the list of ids of the assets to be recycled
+     */
+    void recycleAssetsRecursively(List<String> assetIds);
 }

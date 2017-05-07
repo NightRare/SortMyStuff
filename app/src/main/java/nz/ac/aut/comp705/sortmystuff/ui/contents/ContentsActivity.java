@@ -8,18 +8,17 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
@@ -59,6 +58,8 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         // register all the listeners
         registerListeners();
 
+        selectedAssetIds = new ArrayList<>();
+
         // Create the presenter
         IDataManager dm = ((SortMyStuffApp) getApplication()).getFactory().getDataManager();
         IContentsPresenter p = new ContentsPresenter(dm, this, this);
@@ -89,14 +90,6 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.selection_mode_button:
-                presenter.enableEditMode();
-                break;
-            default:
-                break;
-
-        }
         if (presenter.selectOptionItem(item))
             return true;
         return super.onOptionsItemSelected(item);
@@ -172,6 +165,20 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         pathBar.setAdapter(pba);
     }
 
+    @Override
+    public void showDeleteDialog(boolean deletingCurrentAsset) {
+        String message;
+        if(deletingCurrentAsset) {
+            message = "Deleting \'" + getTitle().toString() + "\'\n" +
+                    "and its children assets.";
+        }
+        else {
+            message = "Deleting selected assets\n" +
+                    "and their children assets.";
+        }
+        getConfirmDeleteDialogBuilder(deletingCurrentAsset, message).create().show();
+    }
+
     //endregion
 
     //region PRIVATE STUFF
@@ -179,6 +186,8 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     private static final String CURRENT_ASSET_ID = "CURRENT_ASSET_ID";
 
     private IContentsPresenter presenter;
+
+    private List<String> selectedAssetIds;
 
     //region UI Components
 
@@ -234,6 +243,30 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
                 presenter.addAsset(input.getText().toString());
                 // show success message
                 showMessageOnScreen("Successfully added " + input.getText().toString());
+            }
+        });
+        //creates the Cancel button and what happens when clicked
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                dialog.cancel();
+            }
+        });
+
+        return builder;
+    }
+
+    private AlertDialog.Builder getConfirmDeleteDialogBuilder(final boolean deletingCurrentAsset,
+                                                              String message) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(message);
+
+        builder.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if(deletingCurrentAsset)
+                    presenter.recycleCurrentAssetRecursively();
+                else
+                    presenter.recycleAssetsRecursively(selectedAssetIds);
             }
         });
         //creates the Cancel button and what happens when clicked
