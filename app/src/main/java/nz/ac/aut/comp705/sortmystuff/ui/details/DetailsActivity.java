@@ -1,4 +1,4 @@
-package nz.ac.aut.comp705.sortmystuff.ui.detail;
+package nz.ac.aut.comp705.sortmystuff.ui.details;
 
 import android.app.Activity;
 import android.content.Context;
@@ -21,7 +21,7 @@ import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 
-public class DetailActivity extends AppCompatActivity implements IDetailView{
+public class DetailsActivity extends AppCompatActivity implements IDetailsView {
 
 
     @Override
@@ -50,7 +50,7 @@ public class DetailActivity extends AppCompatActivity implements IDetailView{
      * @param presenter the presenter
      */
     @Override
-    public void setPresenter(IDetailPresenter presenter) {
+    public void setPresenter(IDetailsPresenter presenter) {
         this.presenter = presenter;
     }
 
@@ -77,7 +77,7 @@ public class DetailActivity extends AppCompatActivity implements IDetailView{
 
     //*****PRIVATE STUFF*****//
     private IDataManager dataManager;
-    private IDetailPresenter presenter;
+    private IDetailsPresenter presenter;
     private ListView details;
     private FloatingActionButton addDetilButton;
 
@@ -86,7 +86,7 @@ public class DetailActivity extends AppCompatActivity implements IDetailView{
      */
     private void startPresenter(){
         dataManager = ((SortMyStuffApp) getApplication()).getFactory().getDataManager();
-        presenter = new DetailPresenter(dataManager, this, this);
+        presenter = new DetailsPresenter(dataManager, this, this);
         setPresenter(presenter);
         presenter.start();
     }

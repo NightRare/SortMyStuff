@@ -1,6 +1,5 @@
-package nz.ac.aut.comp705.sortmystuff.ui.detail;
+package nz.ac.aut.comp705.sortmystuff.ui.details;
 
-import android.support.v7.app.AlertDialog;
 import android.view.View;
 
 import java.util.List;
@@ -12,7 +11,7 @@ import nz.ac.aut.comp705.sortmystuff.ui.IPresenter;
  * Created by DonnaCello on 30 Apr 2017.
  */
 
-public interface IDetailPresenter extends IPresenter {
+public interface IDetailsPresenter extends IPresenter {
 
     /**
      * {@inheritDoc}

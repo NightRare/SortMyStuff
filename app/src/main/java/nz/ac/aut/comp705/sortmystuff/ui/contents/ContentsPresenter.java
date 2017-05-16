@@ -11,7 +11,7 @@ import java.util.List;
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
-import nz.ac.aut.comp705.sortmystuff.ui.detail.DetailActivity;
+import nz.ac.aut.comp705.sortmystuff.ui.details.DetailsActivity;
 
 /**
  * The implementation class of {@link IContentsPresenter}.
@@ -159,7 +159,7 @@ public class ContentsPresenter implements IContentsPresenter {
                 Toast.makeText(activity, "Root has no detail", Toast.LENGTH_LONG).show();
                 return false;
             }
-            Intent intent = new Intent(activity, DetailActivity.class);
+            Intent intent = new Intent(activity, DetailsActivity.class);
             intent.putExtra("AssetID", currentAssetId);
             activity.startActivity(intent);
             return true;

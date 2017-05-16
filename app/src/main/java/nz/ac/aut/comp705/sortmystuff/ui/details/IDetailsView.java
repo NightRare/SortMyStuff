@@ -1,6 +1,4 @@
-package nz.ac.aut.comp705.sortmystuff.ui.detail;
-
-import android.view.View;
+package nz.ac.aut.comp705.sortmystuff.ui.details;
 
 import java.util.List;
 
@@ -11,13 +9,13 @@ import nz.ac.aut.comp705.sortmystuff.ui.IView;
  * Created by DonnaCello on 30 Apr 2017.
  */
 
-public interface IDetailView extends IView<IDetailPresenter> {
+public interface IDetailsView extends IView<IDetailsPresenter> {
 
     /**
      * Set the presenter as given
      * @param presenter the presenter
      */
-    void setPresenter(IDetailPresenter presenter);
+    void setPresenter(IDetailsPresenter presenter);
 
     /**
      * Show list of details

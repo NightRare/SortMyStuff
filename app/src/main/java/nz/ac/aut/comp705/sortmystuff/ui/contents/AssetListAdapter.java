@@ -66,7 +66,7 @@ public class AssetListAdapter extends BaseAdapter {
 
         if (convertView == null) {
             holder = new ViewHolder();
-            convertView = inflater.inflate(R.layout.assets_layout, null);
+            convertView = inflater.inflate(R.layout.contents_assets_layout, null);
 
             holder.imageView = (ImageView) convertView.findViewById(R.id.asset_image);
             holder.textView = (TextView) convertView.findViewById(R.id.asset_name);
