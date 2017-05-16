@@ -18,7 +18,6 @@ import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.ASSET_NOT_EXISTS;
 import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.LOCAL_DATA_CORRUPT;
 import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.NO_ROOT_ASSET;
 import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.OK;
-import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.ROOT_ASSET_IMMUTABLE;
 import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.UNEXPECTED_ERROR;
 
 /**
@@ -787,7 +786,7 @@ public class DataManager implements IDataManager {
 
         TextDetail td = null;
         if (detailId == null) {
-            td = TextDetail.create(assetId, label, field);
+            td = TextDetail.createTextDetail(assetId, label, field);
             cachedDetails.get(assetId).add(td);
         } else {
             boolean updated = false;

@@ -140,8 +140,8 @@ public class JsonHelperTest {
         Asset asset1 = Asset.create(ASSET_NAME1, root);
 
         List<Detail> details = new ArrayList<>();
-        Detail detail1 = TextDetail.create(asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
-        Detail detail2 = TextDetail.create(asset1.getId(), TEXTDETAIL_LABEL2, TEXTDETAIL_FIELD2);
+        Detail detail1 = TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
+        Detail detail2 = TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL2, TEXTDETAIL_FIELD2);
         Collections.addAll(details, detail1, detail2);
 
         jh.serialiseAsset(asset1);
@@ -157,8 +157,8 @@ public class JsonHelperTest {
         Asset asset1 = Asset.create(ASSET_NAME1, root);
 
         List<Detail> details = new ArrayList<>();
-        Detail detail1 = TextDetail.create(asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
-        Detail detail2 = TextDetail.create(asset1.getId(), TEXTDETAIL_LABEL2, TEXTDETAIL_FIELD2);
+        Detail detail1 = TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
+        Detail detail2 = TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL2, TEXTDETAIL_FIELD2);
         Collections.addAll(details, detail1, detail2);
 
         // asset1 is not serialised
@@ -215,8 +215,8 @@ public class JsonHelperTest {
         Asset asset1 = Asset.create(ASSET_NAME1, root);
 
         List<Detail> details = new ArrayList<>();
-        details.add(TextDetail.create(asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1));
-        details.add(TextDetail.create(asset1.getId(), TEXTDETAIL_LABEL2, TEXTDETAIL_FIELD2));
+        details.add(TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1));
+        details.add(TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL2, TEXTDETAIL_FIELD2));
 
         assertTrue(jh.serialiseAsset(root));
         assertTrue(jh.serialiseAsset(asset1));
@@ -239,8 +239,8 @@ public class JsonHelperTest {
 
         // detail1 and detail2 have different asset ids
         List<Detail> details = new ArrayList<>();
-        details.add(TextDetail.create(asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1));
-        details.add(TextDetail.create(asset2.getId(), TEXTDETAIL_LABEL2, TEXTDETAIL_FIELD2));
+        details.add(TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1));
+        details.add(TextDetail.createTextDetail(asset2.getId(), TEXTDETAIL_LABEL2, TEXTDETAIL_FIELD2));
 
         assertTrue(jh.serialiseAsset(root));
         assertTrue(jh.serialiseAsset(asset1));

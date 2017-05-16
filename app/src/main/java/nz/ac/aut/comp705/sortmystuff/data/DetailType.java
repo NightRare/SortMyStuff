@@ -6,5 +6,6 @@ package nz.ac.aut.comp705.sortmystuff.data;
 
 public enum DetailType {
     Text,
+    Date,
     Image
 }

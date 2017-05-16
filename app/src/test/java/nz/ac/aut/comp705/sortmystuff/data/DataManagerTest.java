@@ -604,7 +604,7 @@ public class DataManagerTest {
         final Asset root = prepareRootAsset();
         final Asset asset1 = Asset.create(ASSET_NAME1, root);
         mockAssets.add(asset1);
-        TextDetail td1 = TextDetail.create(
+        TextDetail td1 = TextDetail.createTextDetail(
                 asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
@@ -622,7 +622,7 @@ public class DataManagerTest {
     public void getDetailsAsync_getDetailsOfRootAsset() {
         final Asset root = prepareRootAsset();
 
-        TextDetail td1 = TextDetail.create(
+        TextDetail td1 = TextDetail.createTextDetail(
                 root.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
@@ -641,7 +641,7 @@ public class DataManagerTest {
     public void getDetailsAsync_assetNotExists() {
         prepareRootAsset();
 
-        TextDetail td1 = TextDetail.create(
+        TextDetail td1 = TextDetail.createTextDetail(
                 "NoSuchAssetId", TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
@@ -655,7 +655,7 @@ public class DataManagerTest {
         final Asset root = prepareRootAsset();
         final Asset asset1 = Asset.create(ASSET_NAME1, root);
         mockAssets.add(asset1);
-        TextDetail td1 = TextDetail.create(
+        TextDetail td1 = TextDetail.createTextDetail(
                 asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
@@ -1069,9 +1069,9 @@ public class DataManagerTest {
         mockAssets.add(asset1);
 
         // td1 and td2 belong to asset1
-        final TextDetail td1 = TextDetail.create(asset1.getId(),
+        final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
                 TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
-        final TextDetail td2 = TextDetail.create(asset1.getId(),
+        final TextDetail td2 = TextDetail.createTextDetail(asset1.getId(),
                 TEXTDETAIL_LABEL2, TEXTDETAIL_FIELD2);
         mockDetails.add(td1);
         mockDetails.add(td2);
@@ -1119,7 +1119,7 @@ public class DataManagerTest {
         mockAssets.add(asset2);
 
 
-        final TextDetail td1 = TextDetail.create(asset1.getId(),
+        final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
                 TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
@@ -1145,7 +1145,7 @@ public class DataManagerTest {
         final Asset asset1 = Asset.create(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
-        final TextDetail td1 = TextDetail.create(asset1.getId(),
+        final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
                 TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
@@ -1172,7 +1172,7 @@ public class DataManagerTest {
         final Asset asset1 = Asset.create(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
-        final TextDetail td1 = TextDetail.create(asset1.getId(),
+        final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
                 TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
@@ -1198,7 +1198,7 @@ public class DataManagerTest {
         mockAssets.add(asset1);
 
         // td1 and td2 belong to asset1
-        final TextDetail td1 = TextDetail.create(asset1.getId(),
+        final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
                 TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
@@ -1246,7 +1246,7 @@ public class DataManagerTest {
         mockAssets.add(asset1);
         mockAssets.add(asset2);
 
-        final TextDetail td1 = TextDetail.create(asset1.getId(),
+        final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
                 TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
@@ -1273,7 +1273,7 @@ public class DataManagerTest {
         final Asset asset1 = Asset.create(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
-        final TextDetail td1 = TextDetail.create(asset1.getId(),
+        final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
                 TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
@@ -1300,7 +1300,7 @@ public class DataManagerTest {
         final Asset asset1 = Asset.create(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
-        final TextDetail td1 = TextDetail.create(asset1.getId(),
+        final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
                 TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
@@ -1348,7 +1348,7 @@ public class DataManagerTest {
         final Asset asset1 = Asset.create(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
-        final TextDetail td1 = TextDetail.create(asset1.getId(),
+        final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
                 TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 

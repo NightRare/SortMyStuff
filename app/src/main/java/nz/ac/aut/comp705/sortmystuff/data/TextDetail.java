@@ -18,9 +18,14 @@ public final class TextDetail extends Detail {
 
     //region STATIC FACTORIES
 
-    public static TextDetail create(String assetId, String label, String field) {
+    public static TextDetail createTextDetail(String assetId, String label, String field) {
         checkIllegalField(field);
         return new TextDetail(assetId, DetailType.Text, label, field);
+    }
+
+    public static TextDetail createDateDetail(String assetId, String label, String field) {
+        checkIllegalField(field);
+        return new TextDetail(assetId, DetailType.Date, label, field);
     }
 
     //endregion
@@ -52,7 +57,9 @@ public final class TextDetail extends Detail {
     @Override
     public boolean equals(Object o) {
         if(o instanceof TextDetail) {
-            return super.equals(o);
+            TextDetail td = (TextDetail) o;
+            if(td.getType().equals(getType()))
+                return super.equals(o);
         }
         return false;
     }
