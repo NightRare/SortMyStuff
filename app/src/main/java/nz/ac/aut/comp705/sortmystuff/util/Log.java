@@ -9,6 +9,10 @@ public class Log {
     //region TAGS
 
     public static final String LOCAL_FILE_CORRUPT = "LOCAL_FILE_CORRUPT";
+    public static final String GSON_WRITE_FAILED = "GSON_WRITE_FAILED";
+    public static final String GSON_READ_FAILED = "GSON_READ_FAILED";
+    public static final String BITMAP_WRITE_FAILED = "BITMAP_WRITE_FAILED";
+    public static final String CLOSING_STREAM_FAILED = "CLOSING_STREAM_FAILED";
 
     //endregion
 

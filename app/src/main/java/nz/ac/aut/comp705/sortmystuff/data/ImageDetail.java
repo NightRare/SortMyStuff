@@ -4,11 +4,13 @@ import android.graphics.Bitmap;
 
 import com.google.common.base.Preconditions;
 
+import static nz.ac.aut.comp705.sortmystuff.util.AppConstraints.IMAGE_DETAIL_FORMAT;
+
 /**
  * Created by Yuan on 2017/5/16.
  */
 
-public class ImageDetail extends Detail {
+public class ImageDetail extends Detail<Bitmap> {
 
     //region DATA FIELDS
 
@@ -27,13 +29,12 @@ public class ImageDetail extends Detail {
 
     //region ACCESSORS
 
-    public Bitmap getImageField() {
-        return field;
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public Object getField() {
-        return getImageField();
+    public Bitmap getField() {
+        return field;
     }
 
     public String getImageFileName() {
@@ -47,10 +48,6 @@ public class ImageDetail extends Detail {
     void setField(Bitmap field) {
         Preconditions.checkNotNull(field);
         this.field = field;
-    }
-
-    void setImageFileName(String imageFileName) {
-        this.imageFileName = imageFileName;
     }
 
     //endregion
@@ -74,6 +71,7 @@ public class ImageDetail extends Detail {
     private ImageDetail(String assetId, DetailType type, String label, Bitmap field) {
         super(assetId, type, label);
         this.field = field;
+        this.imageFileName = getId() + IMAGE_DETAIL_FORMAT;
     }
 
     //endregion

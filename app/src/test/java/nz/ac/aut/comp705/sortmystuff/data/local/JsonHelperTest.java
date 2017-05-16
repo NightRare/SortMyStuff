@@ -1,5 +1,8 @@
 package nz.ac.aut.comp705.sortmystuff.data.local;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -8,8 +11,14 @@ import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.Shadows;
+import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowBitmap;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -17,8 +26,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import nz.ac.aut.comp705.sortmystuff.BuildConfig;
 import nz.ac.aut.comp705.sortmystuff.data.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.data.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.util.JsonDetailAdapter;
 
@@ -31,7 +42,8 @@ import static org.junit.Assert.assertTrue;
 /**
  * Created by Yuan on 2017/5/5.
  */
-
+@RunWith(RobolectricTestRunner.class)
+@Config(constants = BuildConfig.class)
 public class JsonHelperTest {
 
     @Before
@@ -278,6 +290,37 @@ public class JsonHelperTest {
     }
 
     @Test
+    public void serialiseDetails_imageUpdated() throws IOException {
+        Asset root = Asset.createRoot();
+        Asset asset1 = Asset.create(ASSET_NAME1, root);
+
+        FileInputStream fis = new FileInputStream(TEST_IMAGE_1);
+        Bitmap image = BitmapFactory.decodeStream(fis);
+        ShadowBitmap sb = Shadows.shadowOf(image);
+        fis.close();
+
+        ImageDetail imageDetail = ImageDetail.create(asset1.getId(), IMAGEDETAIL_LABEL1, image);
+
+        List<Detail> details = new ArrayList<>();
+        details.add(TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1));
+        details.add(imageDetail);
+
+        assertTrue(jh.serialiseAsset(root));
+        assertTrue(jh.serialiseAsset(asset1));
+        assertTrue(jh.serialiseDetails(details, true));
+
+        File file = new File(TEST_USER_DIR + File.separator
+                + asset1.getId() + File.separator + imageDetail.getImageFileName());
+        assertTrue(file.exists());
+        assertTrue(file.length() > 0);
+
+//        fis = new FileInputStream(TEST_USER_DIR + File.separator
+//                + asset1.getId() + File.separator + imageDetail.getImageFileName());
+//        Bitmap actualImage = BitmapFactory.decodeStream(fis);
+//        assertTrue(image.sameAs(actualImage));
+    }
+
+    @Test
     public void rootExists_rootExists() {
         prepareRootAsset();
         assertTrue(jh.rootExists());
@@ -299,7 +342,10 @@ public class JsonHelperTest {
     private static final String TEXTDETAIL_FIELD1 = "TextDetail_Field_1";
     private static final String TEXTDETAIL_LABEL2 = "TextDetail_2";
     private static final String TEXTDETAIL_FIELD2 = "TextDetail_Field_2";
+    private static final String IMAGEDETAIL_LABEL1 = "ImageDetail_1";
+
     private static final String TEST_USER_DIR = "testdata";
+    private static final String TEST_IMAGE_1 = "testimages/1.png";
     private static final String ROOT_ASSET_FILE = TEST_USER_DIR + File.separator +
             JsonHelper.ROOT_ASSET_DIR + File.separator + JsonHelper.ASSET_FILENAME;
 

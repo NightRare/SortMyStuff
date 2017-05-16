@@ -21,6 +21,8 @@ public class AppConstraints {
 
     public final static int TEXTDETAIL_FIELD_CAP = 400;
 
+    public final static String IMAGE_DETAIL_FORMAT = ".png";
+
 
     //********************************************
     // IDataManager

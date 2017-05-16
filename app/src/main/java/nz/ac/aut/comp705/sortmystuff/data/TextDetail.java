@@ -8,7 +8,7 @@ import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
  * Created by Yuan on 2017/4/24.
  */
 
-public final class TextDetail extends Detail {
+public final class TextDetail extends Detail<String> {
 
     //region DATA FIELDS
 
@@ -32,13 +32,9 @@ public final class TextDetail extends Detail {
 
     //region ACCESSORS
 
-    public String getTextField() {
-        return field;
-    }
-
     @Override
-    public Object getField() {
-        return getTextField();
+    public String getField() {
+        return field;
     }
 
     //endregion

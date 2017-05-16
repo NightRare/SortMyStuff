@@ -13,7 +13,7 @@ import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
  * @author Yuan
  */
 
-public abstract class Detail {
+public abstract class Detail<T> {
 
     //region DATA FIELDS
 
@@ -65,7 +65,7 @@ public abstract class Detail {
         return type;
     }
 
-    public abstract Object getField();
+    public abstract T getField();
 
     //endregion
 

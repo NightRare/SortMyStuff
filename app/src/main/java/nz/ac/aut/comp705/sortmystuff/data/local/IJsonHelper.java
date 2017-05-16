@@ -67,7 +67,26 @@ public interface IJsonHelper {
      * @return true if asset is serialised successfully
      * @throws NullPointerException if asset is {@code null}
      */
+    @Deprecated
     boolean serialiseDetails(final List<Detail> details);
+
+    /**
+     * Serialised a list of details and write the data to the corresponding json file
+     * and image files.
+     * <p>
+     * If imageUpdated is set to false, then only the details json file will be updated while
+     * the linked image files will not be updated.
+     * <p>
+     * Details inside this list must belong to the same asset.
+     * <p>
+     * It returns false in the case that empty details list is given.
+     *
+     * @param details      the list of details to be serialised
+     * @param imageUpdated true if the field of any ImageDetail has been updated
+     * @return true if asset is serialised successfully
+     * @throws NullPointerException if asset is {@code null}
+     */
+    boolean serialiseDetails(final List<Detail> details, boolean imageUpdated);
 
     /**
      * Checks if Root asset exists.
