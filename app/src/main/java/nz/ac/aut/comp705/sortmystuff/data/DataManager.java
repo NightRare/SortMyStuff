@@ -12,6 +12,11 @@ import java.util.Map;
 
 import nz.ac.aut.comp705.sortmystuff.data.local.IFileHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
+import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
+import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 import nz.ac.aut.comp705.sortmystuff.util.AppStatusCode;
 import nz.ac.aut.comp705.sortmystuff.util.BuiltInDetails;
@@ -662,8 +667,9 @@ public class DataManager implements IDataManager {
 
         // form the tree structure in user assets
         for (Asset asset : cachedAssets.values()) {
-            // root does not need to attach to the tree
-            if (asset.isRoot()) continue;
+            if (asset.isRoot()) {
+                asset.attachToTree(null);
+            }
 
             asset.attachToTree(cachedAssets.get(asset.getContainerId()));
         }

@@ -2,7 +2,7 @@ package nz.ac.aut.comp705.sortmystuff.ui.details;
 
 import java.util.List;
 
-import nz.ac.aut.comp705.sortmystuff.data.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.ui.IView;
 
 /**

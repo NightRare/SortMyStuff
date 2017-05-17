@@ -10,7 +10,7 @@ import android.widget.TextView;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
-import nz.ac.aut.comp705.sortmystuff.data.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 
 /**
  * The Adapter class for the recycler view of path bar.

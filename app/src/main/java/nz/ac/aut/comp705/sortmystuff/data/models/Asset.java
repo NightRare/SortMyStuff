@@ -1,4 +1,4 @@
-package nz.ac.aut.comp705.sortmystuff.data;
+package nz.ac.aut.comp705.sortmystuff.data.models;
 
 import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -13,7 +14,6 @@ import java.util.UUID;
 import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 
 /**
- *
  * @author Yuan
  */
 
@@ -59,12 +59,12 @@ public final class Asset {
         String id = UUID.randomUUID().toString();
         Long ct = System.currentTimeMillis();
         Long mt = System.currentTimeMillis();
-        List<Asset> content = new LinkedList<>();
+        List<Asset> contents = new ArrayList<>();
 
-        Asset asset = new Asset(id, name, container.id, container, false, content, ct, mt, false, null);
+        Asset asset = new Asset(id, name, container.id, container, false, contents, ct, mt, false, null);
         if (container != null) {
             if (container.contents == null) {
-                container.contents = new LinkedList<>();
+                container.contents = new ArrayList<>();
             }
             container.contents.add(asset);
         }
@@ -74,8 +74,9 @@ public final class Asset {
 
 
     public static Asset createRoot() {
-        return new Asset(UUID.randomUUID().toString(),
-                "Root", "", null, true, new LinkedList<Asset>(),
+        String id = UUID.randomUUID().toString();
+
+        return new Asset(id, "Root", "", null, true, new ArrayList<Asset>(),
                 System.currentTimeMillis(),
                 System.currentTimeMillis(), false, null);
     }
@@ -104,14 +105,25 @@ public final class Asset {
         return isRoot;
     }
 
-    Asset getContainer() {
+    /**
+     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p>
+     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     */
+    @Deprecated
+    @Nullable
+    public Asset getContainer() {
         return container;
     }
 
-    List<Asset> getContents() {
-        if (contents != null)
-            return new LinkedList<>(contents);
-        return null;
+    /**
+     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p>
+     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     */
+    @Deprecated
+    public List<Asset> getContents() {
+        return new ArrayList<>(contents);
     }
 
     @NonNull
@@ -132,7 +144,13 @@ public final class Asset {
 
     //region MODIFIERS
 
-    void setName(@NonNull String name) {
+    /**
+     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p>
+     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     */
+    @Deprecated
+    public void setName(@NonNull String name) {
         checkIllegalName(name);
         if (isRoot())
             return;
@@ -141,7 +159,13 @@ public final class Asset {
         updateTimeStamp();
     }
 
-    boolean moveTo(@NonNull Asset containerObj) {
+    /**
+     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p>
+     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     */
+    @Deprecated
+    public boolean moveTo(@NonNull Asset containerObj) {
         Preconditions.checkNotNull(containerObj);
         // cannot move Root asset
         if (isRoot())
@@ -163,42 +187,74 @@ public final class Asset {
         return false;
     }
 
-    boolean attachToTree(@NonNull Asset containerObj) {
-        Preconditions.checkNotNull(containerObj);
+    /**
+     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p>
+     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     */
+    @Deprecated
+    public boolean attachToTree(@Nullable Asset containerObj) {
+        if(containerObj == null) {
+            if(isRoot()) {
+                if (contents == null) {
+                    contents = new ArrayList<>();
+                }
+                return true;
+            }
+            else return false;
+        }
 
-        if (contents == null) {
-            contents = new LinkedList<>();
-        }
-        if (isRoot()) {
-            return true;
-        }
         if (!containerObj.getId().equals(containerId)) {
             return false;
         }
         container = containerObj;
         if (container.contents == null)
-            container.contents = new LinkedList<>();
+            container.contents = new ArrayList<>();
         if (container.contents.contains(this))
             return true;
         return container.contents.add(this);
     }
 
-    void updateTimeStamp() {
+    /**
+     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p>
+     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     */
+    @Deprecated
+    public void updateTimeStamp() {
         if (isRoot()) return;
         modifyTimestamp = System.currentTimeMillis();
     }
 
-    void recycle() {
+    /**
+     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p>
+     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     */
+    @Deprecated
+    public void recycle() {
         if (isRoot()) return;
         isRecycled = true;
     }
 
-    void restore() {
+    /**
+     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p>
+     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     */
+    @Deprecated
+    public void restore() {
         if (isRoot()) return;
         isRecycled = false;
     }
 
-    void setPhoto(Bitmap photo) {
+    /**
+     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p>
+     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     */
+    @Deprecated
+    public void setPhoto(Bitmap photo) {
         this.photo = photo;
     }
 
@@ -253,9 +309,9 @@ public final class Asset {
     }
 
     private Asset(@NonNull String id, @NonNull String name, @NonNull String containerId,
-                  Asset container, boolean isRoot, @NonNull List<Asset> contents,
+                  @Nullable Asset container, boolean isRoot, @NonNull List<Asset> contents,
                   @NonNull Long createdTimestamp, @NonNull Long modifiedTimestamp,
-                  boolean isRecycled, Bitmap photo) {
+                  boolean isRecycled, @Nullable Bitmap photo) {
         this.id = id;
         this.name = name;
         this.containerId = containerId;

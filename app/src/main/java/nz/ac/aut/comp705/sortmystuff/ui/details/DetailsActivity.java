@@ -18,7 +18,7 @@ import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
-import nz.ac.aut.comp705.sortmystuff.data.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 
 public class DetailsActivity extends AppCompatActivity implements IDetailsView {

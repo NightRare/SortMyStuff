@@ -13,12 +13,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
-import org.robolectric.shadows.ShadowBitmap;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,10 +27,10 @@ import java.util.Collections;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.BuildConfig;
-import nz.ac.aut.comp705.sortmystuff.data.Asset;
-import nz.ac.aut.comp705.sortmystuff.data.Detail;
-import nz.ac.aut.comp705.sortmystuff.data.ImageDetail;
-import nz.ac.aut.comp705.sortmystuff.data.TextDetail;
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
+import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.testutils.TestUtil;
 import nz.ac.aut.comp705.sortmystuff.util.JsonDetailAdapter;
 

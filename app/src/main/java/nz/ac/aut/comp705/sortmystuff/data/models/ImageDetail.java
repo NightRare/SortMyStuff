@@ -1,4 +1,4 @@
-package nz.ac.aut.comp705.sortmystuff.data;
+package nz.ac.aut.comp705.sortmystuff.data.models;
 
 import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
@@ -40,8 +40,14 @@ public class ImageDetail extends Detail<Bitmap> {
 
     //region MUTATORS
 
+    /**
+     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p>
+     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     */
+    @Deprecated
     @Override
-    protected void setField(@NonNull Bitmap field) {
+    public void setField(@NonNull Bitmap field) {
         Preconditions.checkNotNull(field);
 
         this.field = field;

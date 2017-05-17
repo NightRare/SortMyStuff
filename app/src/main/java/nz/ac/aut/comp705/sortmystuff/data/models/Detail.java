@@ -1,4 +1,4 @@
-package nz.ac.aut.comp705.sortmystuff.data;
+package nz.ac.aut.comp705.sortmystuff.data.models;
 
 import android.support.annotation.NonNull;
 
@@ -71,12 +71,24 @@ public abstract class Detail<T> {
 
     //region MODIFIERS
 
-    protected void setLabel(@NonNull String label) {
+    /**
+     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p>
+     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     */
+    @Deprecated
+    public void setLabel(@NonNull String label) {
         checkIllegalLabel(label);
         this.label = label;
     }
 
-    protected abstract void setField(@NonNull T field);
+    /**
+     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p>
+     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     */
+    @Deprecated
+    public abstract void setField(@NonNull T field);
 
     //endregion
 

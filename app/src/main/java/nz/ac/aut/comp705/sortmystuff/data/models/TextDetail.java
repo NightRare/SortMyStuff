@@ -1,4 +1,4 @@
-package nz.ac.aut.comp705.sortmystuff.data;
+package nz.ac.aut.comp705.sortmystuff.data.models;
 
 import android.support.annotation.NonNull;
 
@@ -43,8 +43,14 @@ public final class TextDetail extends Detail<String> {
 
     //region MUTATORS
 
+    /**
+     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p>
+     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     */
+    @Deprecated
     @Override
-    protected void setField(@NonNull String field) {
+    public void setField(@NonNull String field) {
         checkIllegalField(field);
         this.field = field;
     }

@@ -1,11 +1,13 @@
 package nz.ac.aut.comp705.sortmystuff.data.local;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.GsonBuilder;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -17,9 +19,9 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import nz.ac.aut.comp705.sortmystuff.data.Asset;
-import nz.ac.aut.comp705.sortmystuff.data.Detail;
-import nz.ac.aut.comp705.sortmystuff.data.ImageDetail;
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.util.JsonDetailAdapter;
 import nz.ac.aut.comp705.sortmystuff.util.Log;
 
@@ -150,7 +152,7 @@ public class FileHelper implements IFileHelper {
             }
         }
 
-        return list;
+        return deserialiseImageFiles(list);
     }
 
     /**
@@ -213,7 +215,7 @@ public class FileHelper implements IFileHelper {
 
         if(imageUpdated) {
             // if serialising image files fails
-            if(!serialiseImageFiles(details, assetDir)) {
+            if(!serialiseImageFiles(details)) {
                 return false;
             }
         }
@@ -443,7 +445,30 @@ public class FileHelper implements IFileHelper {
         }
     }
 
-    private boolean serialiseImageFiles(List<Detail> details, File assetDir) {
+    private Bitmap readFromImageFile(File file) {
+        if(!file.exists()) {
+            return null;
+        }
+
+        FileInputStream fis = null;
+        try{
+            fis = new FileInputStream(file);
+            return BitmapFactory.decodeStream(fis);
+        } catch (IOException e) {
+            Log.e(Log.BITMAP_WRITE_FAILED, "IOException", e);
+            return null;
+        } finally {
+            if(fis != null) {
+                try {
+                    fis.close();
+                } catch (Exception e) {
+                    Log.e(Log.CLOSING_STREAM_FAILED, "Unexpected error", e);
+                }
+            }
+        }
+    }
+
+    private boolean serialiseImageFiles(List<Detail> details) {
         for (Detail d : details) {
             if (!(d instanceof ImageDetail))
                 continue;
@@ -464,6 +489,28 @@ public class FileHelper implements IFileHelper {
             }
         }
         return true;
+    }
+
+    private List<Detail> deserialiseImageFiles(List<Detail> details) {
+        for (Detail d : details) {
+            if (!(d instanceof ImageDetail))
+                continue;
+
+            ImageDetail imageDetail = (ImageDetail) d;
+            File imageFile = imageFile(d.getAssetId(), d.getId());
+
+            Bitmap image = null;
+
+            // if there is not customised image file, then set to the default file
+            if(imageFile.exists()) {
+                image = readFromImageFile(imageFile);
+            }
+            if(image == null) {
+                image = resLoader.getDefaultPhoto();
+            }
+            imageDetail.setField(image);
+        }
+        return details;
     }
 
     private File assetJsonFile(String assetId) {

@@ -11,8 +11,8 @@ import android.widget.LinearLayout;
 import java.util.ArrayList;
 import java.util.List;
 
-import nz.ac.aut.comp705.sortmystuff.data.Asset;
-import nz.ac.aut.comp705.sortmystuff.data.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.util.Log;
 
