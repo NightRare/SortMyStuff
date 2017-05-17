@@ -14,6 +14,7 @@ import nz.ac.aut.comp705.sortmystuff.data.local.IFileHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
 import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 import nz.ac.aut.comp705.sortmystuff.util.AppStatusCode;
+import nz.ac.aut.comp705.sortmystuff.util.BuiltInDetails;
 import nz.ac.aut.comp705.sortmystuff.util.Log;
 import nz.ac.aut.comp705.sortmystuff.util.exceptions.UpdateLocalStorageFailedException;
 
@@ -650,10 +651,12 @@ public class DataManager implements IDataManager {
             if (asset.isRecycled()) {
                 cachedRecycledAssets.put(asset.getId(), asset);
             } else {
+                cachedAssets.put(asset.getId(), asset);
                 if (asset.isRoot()) {
                     cachedRootAsset = asset;
+                } else {
+                    asset.setPhoto(loadPhoto(asset.getId()));
                 }
-                cachedAssets.put(asset.getId(), asset);
             }
         }
 
@@ -690,6 +693,20 @@ public class DataManager implements IDataManager {
 
         dirtyCachedDetails = false;
         return OK;
+    }
+
+    private synchronized Bitmap loadPhoto(String assetId) {
+        Bitmap photo = null;
+        List<Detail> detailList = fileHelper.deserialiseDetails(assetId);
+        for (Detail detail : detailList) {
+            if (detail.getType().equals(DetailType.Image)
+                    && detail.getLabel().equals(BuiltInDetails.PHOTO))
+                photo = (Bitmap) detail.getField();
+        }
+        if (photo == null) {
+            photo = resLoader.getDefaultPhoto();
+        }
+        return photo;
     }
 
 

@@ -34,6 +34,7 @@ import nz.ac.aut.comp705.sortmystuff.data.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.data.TextDetail;
+import nz.ac.aut.comp705.sortmystuff.testutils.TestUtil;
 import nz.ac.aut.comp705.sortmystuff.util.JsonDetailAdapter;
 
 import static nz.ac.aut.comp705.sortmystuff.testutils.TestUtil.areIdenticalAssets;
@@ -55,7 +56,7 @@ public class FileHelperTest {
         MockitoAnnotations.initMocks(this);
 
         // setup default photo
-        FileInputStream fis = new FileInputStream(TEST_DEFAULT_PHOTO);
+        FileInputStream fis = new FileInputStream(TestUtil.TEST_DEFAULT_PHOTO);
         Bitmap defaultPhoto = BitmapFactory.decodeStream(fis);
         fis.close();
         when(mockResLoader.getDefaultPhoto()).thenReturn(defaultPhoto);
@@ -359,7 +360,6 @@ public class FileHelperTest {
 
     private static final String TEST_USER_DIR = "testdata";
     private static final String TEST_IMAGE_1 = "testimages/1.png";
-    private static final String TEST_DEFAULT_PHOTO = "testimages/default.png";
     private static final String ROOT_ASSET_FILE = TEST_USER_DIR + File.separator +
             FileHelper.ROOT_ASSET_DIR + File.separator + FileHelper.ASSET_FILENAME;
 

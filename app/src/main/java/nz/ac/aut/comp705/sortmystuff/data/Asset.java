@@ -1,5 +1,6 @@
 package nz.ac.aut.comp705.sortmystuff.data;
 
+import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -60,7 +61,7 @@ public final class Asset {
         Long mt = System.currentTimeMillis();
         List<Asset> content = new LinkedList<>();
 
-        Asset asset = new Asset(id, name, container.id, container, false, content, ct, mt, false);
+        Asset asset = new Asset(id, name, container.id, container, false, content, ct, mt, false, null);
         if (container != null) {
             if (container.contents == null) {
                 container.contents = new LinkedList<>();
@@ -76,7 +77,7 @@ public final class Asset {
         return new Asset(UUID.randomUUID().toString(),
                 "Root", "", null, true, new LinkedList<Asset>(),
                 System.currentTimeMillis(),
-                System.currentTimeMillis(), false);
+                System.currentTimeMillis(), false, null);
     }
 
     //endregion
@@ -121,6 +122,10 @@ public final class Asset {
     @NonNull
     public Long getModifyTimestamp() {
         return modifyTimestamp;
+    }
+
+    public Bitmap getPhoto() {
+        return photo;
     }
 
     //endregion
@@ -193,6 +198,10 @@ public final class Asset {
         isRecycled = false;
     }
 
+    void setPhoto(Bitmap photo) {
+        this.photo = photo;
+    }
+
     //endregion
 
     //region OBJECT METHODS OVERRIDING
@@ -230,6 +239,9 @@ public final class Asset {
     // just for convenience
     private transient List<Asset> contents;
 
+    @Nullable
+    private transient Bitmap photo;
+
     private boolean isParentOf(Asset asset) {
         if (asset.container == null || asset.id.equals(id)) {
             return false;
@@ -243,7 +255,7 @@ public final class Asset {
     private Asset(@NonNull String id, @NonNull String name, @NonNull String containerId,
                   Asset container, boolean isRoot, @NonNull List<Asset> contents,
                   @NonNull Long createdTimestamp, @NonNull Long modifiedTimestamp,
-                  boolean isRecycled) {
+                  boolean isRecycled, Bitmap photo) {
         this.id = id;
         this.name = name;
         this.containerId = containerId;
@@ -253,6 +265,7 @@ public final class Asset {
         this.createTimestamp = createdTimestamp;
         this.modifyTimestamp = modifiedTimestamp;
         this.isRecycled = isRecycled;
+        this.photo = photo;
     }
 
 
