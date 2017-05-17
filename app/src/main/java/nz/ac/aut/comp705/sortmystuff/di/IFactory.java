@@ -1,7 +1,8 @@
 package nz.ac.aut.comp705.sortmystuff.di;
 
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
-import nz.ac.aut.comp705.sortmystuff.data.local.IJsonHelper;
+import nz.ac.aut.comp705.sortmystuff.data.local.IFileHelper;
+import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
 
 /**
  * A factory for dependency injection.
@@ -13,5 +14,7 @@ public interface IFactory {
 
     IDataManager getDataManager();
 
-    IJsonHelper getJsonHelper();
+    IFileHelper getFileHelper();
+
+    LocalResourceLoader getLocalResourceLoader();
 }

@@ -13,6 +13,8 @@ public class Log {
     public static final String GSON_READ_FAILED = "GSON_READ_FAILED";
     public static final String BITMAP_WRITE_FAILED = "BITMAP_WRITE_FAILED";
     public static final String CLOSING_STREAM_FAILED = "CLOSING_STREAM_FAILED";
+    public static final String FILE_NOT_EXISTS = "FILE_NOT_EXISTS";
+    public static final String UNEXPECTED_ERROR = "UNEXPECTED_ERROR";
 
     //endregion
 

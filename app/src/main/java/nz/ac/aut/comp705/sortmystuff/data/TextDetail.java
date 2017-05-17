@@ -1,5 +1,7 @@
 package nz.ac.aut.comp705.sortmystuff.data;
 
+import android.support.annotation.NonNull;
+
 import com.google.common.base.Preconditions;
 
 import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
@@ -41,7 +43,8 @@ public final class TextDetail extends Detail<String> {
 
     //region MUTATORS
 
-    void setField(String field) {
+    @Override
+    protected void setField(@NonNull String field) {
         checkIllegalField(field);
         this.field = field;
     }

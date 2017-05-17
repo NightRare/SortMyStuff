@@ -76,6 +76,8 @@ public abstract class Detail<T> {
         this.label = label;
     }
 
+    protected abstract void setField(@NonNull T field);
+
     //endregion
 
     //region OBJECT METHODS OVERRIDING

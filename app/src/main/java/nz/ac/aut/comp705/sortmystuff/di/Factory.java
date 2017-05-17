@@ -1,7 +1,6 @@
 package nz.ac.aut.comp705.sortmystuff.di;
 
 import android.app.Application;
-import android.content.Context;
 
 import com.google.gson.GsonBuilder;
 
@@ -9,8 +8,9 @@ import java.io.File;
 
 import nz.ac.aut.comp705.sortmystuff.data.DataManager;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
-import nz.ac.aut.comp705.sortmystuff.data.local.IJsonHelper;
-import nz.ac.aut.comp705.sortmystuff.data.local.JsonHelper;
+import nz.ac.aut.comp705.sortmystuff.data.local.FileHelper;
+import nz.ac.aut.comp705.sortmystuff.data.local.IFileHelper;
+import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
 
 /**
  * An implementation of {@link IFactory}.
@@ -31,22 +31,32 @@ public class Factory implements IFactory {
         if(dataManager != null)
             return dataManager;
 
-        jsonHelper = getJsonHelper();
-        return new DataManager(jsonHelper);
+        dataManager = new DataManager(getFileHelper(), getLocalResourceLoader());
+        return dataManager;
     }
 
-    @Override
-    public synchronized IJsonHelper getJsonHelper() {
-        if(jsonHelper != null)
-            return jsonHelper;
+    public synchronized IFileHelper getFileHelper() {
+        if(fileHelper != null)
+            return fileHelper;
 
         File userDir = new File(
                 app.getFilesDir().getPath() + File.separator + "default-user");
-        return new JsonHelper(userDir, new GsonBuilder(), new JsonHelper.FileCreator());
+
+        fileHelper = new FileHelper(getLocalResourceLoader(), userDir, new GsonBuilder(), new FileHelper.FileCreator());
+        return fileHelper;
+    }
+
+    @Override
+    public LocalResourceLoader getLocalResourceLoader() {
+        if(resLoader != null)
+            return resLoader;
+
+        resLoader = new LocalResourceLoader(app.getAssets());
+        return resLoader;
     }
 
     private void initialise() {
-        getJsonHelper();
+        getFileHelper();
         getDataManager();
     }
 
@@ -56,7 +66,9 @@ public class Factory implements IFactory {
 
     private IDataManager dataManager;
 
-    private IJsonHelper jsonHelper;
+    private IFileHelper fileHelper;
+
+    private LocalResourceLoader resLoader;
 
     private Factory() { }
 

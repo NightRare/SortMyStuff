@@ -44,13 +44,7 @@ public class ContentsPresenter implements IContentsPresenter {
     public void start() {
         // if the app just launched, display Root Asset
         if (currentAssetId == null) {
-            Asset root = dm.getRootAsset();
-            if (root != null) {
-                currentAssetId = dm.getRootAsset().getId();
-            } else {
-                dm.createRootAsset();
-                currentAssetId = dm.getRootAsset().getId();
-            }
+            currentAssetId = dm.getRootAsset().getId();
         }
         loadCurrentContents(false);
     }

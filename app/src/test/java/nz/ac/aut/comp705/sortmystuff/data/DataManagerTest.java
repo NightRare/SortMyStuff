@@ -13,7 +13,7 @@ import org.mockito.MockitoAnnotations;
 import java.util.LinkedList;
 import java.util.List;
 
-import nz.ac.aut.comp705.sortmystuff.data.local.IJsonHelper;
+import nz.ac.aut.comp705.sortmystuff.data.local.IFileHelper;
 import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 import nz.ac.aut.comp705.sortmystuff.util.AppStatusCode;
 import nz.ac.aut.comp705.sortmystuff.util.exceptions.UpdateLocalStorageFailedException;
@@ -21,6 +21,7 @@ import nz.ac.aut.comp705.sortmystuff.util.exceptions.UpdateLocalStorageFailedExc
 
 import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.ASSET_NOT_EXISTS;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
@@ -47,7 +48,7 @@ public class DataManagerTest {
 
         // mocking the behaviours of jsonHelper
         when(mockJsonHelper.serialiseAsset(any(Asset.class))).thenReturn(true);
-        when(mockJsonHelper.serialiseDetails(ArgumentMatchers.<Detail>anyList())).thenReturn(true);
+        when(mockJsonHelper.serialiseDetails(ArgumentMatchers.<Detail>anyList(), anyBoolean())).thenReturn(true);
         when(mockJsonHelper.deserialiseAllAssets()).thenReturn(mockAssets);
         when(mockJsonHelper.deserialiseDetails(argThat(new ArgumentMatcher<String>() {
             @Override
@@ -72,41 +73,6 @@ public class DataManagerTest {
     }
 
     //region Tests
-
-    @Test
-    public void createRootAsset_rootAssetCreatedAndSaveToJsonFile() {
-        final String rootId = dataManager.createRootAsset();
-        verify(mockJsonHelper).serialiseAsset(argThat(new ArgumentMatcher<Asset>() {
-            @Override
-            public boolean matches(Asset argument) {
-                return areIdenticalAssets(argument, rootId, ROOT_ASSET_NAME, null, null, null);
-            }
-        }));
-    }
-
-    @Test
-    public void createRootAsset_ifRootAssetAlreadyExists() {
-        // "create" a root asset
-        prepareRootAsset();
-
-        // if a root asset exists, serialiseAsset should not be called
-        verify(mockJsonHelper, never()).serialiseAsset(any(Asset.class));
-    }
-
-
-    @Test
-    public void createRootAsset_updateLocalStorageFailed() {
-        // mocking serialise failed
-        when(mockJsonHelper.serialiseAsset(any(Asset.class))).thenReturn(false);
-
-        try {
-            dataManager.createRootAsset();
-        } catch (UpdateLocalStorageFailedException e) {
-            // pass test
-            return;
-        }
-        Assert.fail();
-    }
 
     @Test
     public void createAsset_assetCreatedAndSaveToJsonFile() {
@@ -162,7 +128,6 @@ public class DataManagerTest {
         Assert.fail();
     }
 
-
     @Test
     public void createTextDetail_textDetailCreatedAndSaveToJsonFile() {
         // prepare an asset
@@ -171,7 +136,7 @@ public class DataManagerTest {
         mockAssets.add(asset);
 
         final String detailId = dataManager.createTextDetail(asset, TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
-        verify(mockJsonHelper, times(1)).serialiseDetails(argThat(new ArgumentMatcher<List<Detail>>() {
+        verify(mockJsonHelper).serialiseDetails(argThat(new ArgumentMatcher<List<Detail>>() {
             @Override
             public boolean matches(List<Detail> argument) {
                 if (argument.size() != 1)
@@ -179,7 +144,7 @@ public class DataManagerTest {
                 return areIdenticalDetails(argument.get(0), detailId, asset.getId(), DetailType.Text,
                         TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
             }
-        }));
+        }), anyBoolean());
     }
 
     @Test
@@ -189,7 +154,7 @@ public class DataManagerTest {
 
         final String detailId = dataManager.createTextDetail(
                 "noSuchAssetId", TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
-        verify(mockJsonHelper, never()).serialiseDetails(ArgumentMatchers.<Detail>anyList());
+        verify(mockJsonHelper, never()).serialiseDetails(ArgumentMatchers.<Detail>anyList(), anyBoolean());
         Assert.assertTrue(detailId == null);
     }
 
@@ -265,7 +230,7 @@ public class DataManagerTest {
 
         final String detailId = dataManager.createTextDetail(
                 root, TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
-        verify(mockJsonHelper, never()).serialiseDetails(ArgumentMatchers.<Detail>anyList());
+        verify(mockJsonHelper, never()).serialiseDetails(ArgumentMatchers.<Detail>anyList(), anyBoolean());
         Assert.assertTrue(detailId == null);
     }
 
@@ -277,9 +242,14 @@ public class DataManagerTest {
     }
 
     @Test
-    public void getRootAsset_rootAssetNotExists() {
-        Asset asset = dataManager.getRootAsset();
-        Assert.assertTrue(asset == null);
+    public void getRootAsset_createRootAssetAndSaveToJsonFileWhenRootAssetNotExists() {
+        final String rootId = dataManager.getRootAsset().getId();
+        verify(mockJsonHelper).serialiseAsset(argThat(new ArgumentMatcher<Asset>() {
+            @Override
+            public boolean matches(Asset argument) {
+                return areIdenticalAssets(argument, rootId, ROOT_ASSET_NAME, null, null, null);
+            }
+        }));
     }
 
     @Test
@@ -294,6 +264,20 @@ public class DataManagerTest {
         // second time do not load from local file
         dataManager.getRootAsset();
         verify(mockJsonHelper, times(1)).deserialiseAllAssets();
+    }
+
+    @Test
+    public void getRootAsset_updateLocalStorageFailed() {
+        // mocking serialise failed
+        when(mockJsonHelper.serialiseAsset(any(Asset.class))).thenReturn(false);
+
+        try {
+            dataManager.getRootAsset();
+        } catch (UpdateLocalStorageFailedException e) {
+            // pass test
+            return;
+        }
+        Assert.fail();
     }
 
     @Test
@@ -1103,7 +1087,7 @@ public class DataManagerTest {
 
         // check whether serialised
         verify(mockJsonHelper).serialiseAsset(argThat(matchAsset));
-        verify(mockJsonHelper).serialiseDetails(argThat(matchDetailsList));
+        verify(mockJsonHelper).serialiseDetails(argThat(matchDetailsList), anyBoolean());
 
         // check with the details list from dataManager
         dataManager.getDetailsAsync(asset1, mockLoadDetailsCallback);
@@ -1127,7 +1111,7 @@ public class DataManagerTest {
 
         // check whether been serialised
         verify(mockJsonHelper, never()).serialiseAsset(any(Asset.class));
-        verify(mockJsonHelper, never()).serialiseDetails(ArgumentMatchers.<Detail>anyList());
+        verify(mockJsonHelper, never()).serialiseDetails(ArgumentMatchers.<Detail>anyList(), anyBoolean());
 
         // check with the details list from dataManager
         dataManager.getDetailsAsync(asset1, mockLoadDetailsCallback);
@@ -1153,7 +1137,7 @@ public class DataManagerTest {
 
         // check whether been serialised
         verify(mockJsonHelper, never()).serialiseAsset(any(Asset.class));
-        verify(mockJsonHelper, never()).serialiseDetails(ArgumentMatchers.<Detail>anyList());
+        verify(mockJsonHelper, never()).serialiseDetails(ArgumentMatchers.<Detail>anyList(), anyBoolean());
 
         // check with the details list from dataManager
         dataManager.getDetailsAsync(asset1, mockLoadDetailsCallback);
@@ -1231,7 +1215,7 @@ public class DataManagerTest {
 
         // check whether serialised
         verify(mockJsonHelper).serialiseAsset(argThat(matchAsset));
-        verify(mockJsonHelper).serialiseDetails(argThat(matchDetailsList));
+        verify(mockJsonHelper).serialiseDetails(argThat(matchDetailsList), anyBoolean());
 
         // check with the details list from dataManager
         dataManager.getDetailsAsync(asset1, mockLoadDetailsCallback);
@@ -1255,7 +1239,7 @@ public class DataManagerTest {
 
         // check whether been serialised
         verify(mockJsonHelper, never()).serialiseAsset(any(Asset.class));
-        verify(mockJsonHelper, never()).serialiseDetails(ArgumentMatchers.<Detail>anyList());
+        verify(mockJsonHelper, never()).serialiseDetails(ArgumentMatchers.<Detail>anyList(), anyBoolean());
 
         // check with the details list from dataManager
         dataManager.getDetailsAsync(asset1, mockLoadDetailsCallback);
@@ -1282,7 +1266,7 @@ public class DataManagerTest {
 
         // check whether been serialised
         verify(mockJsonHelper, never()).serialiseAsset(any(Asset.class));
-        verify(mockJsonHelper, never()).serialiseDetails(ArgumentMatchers.<Detail>anyList());
+        verify(mockJsonHelper, never()).serialiseDetails(ArgumentMatchers.<Detail>anyList(), anyBoolean());
 
         // check with the details list from dataManager
         dataManager.getDetailsAsync(asset1, mockLoadDetailsCallback);
@@ -1328,7 +1312,7 @@ public class DataManagerTest {
 
         // check whether been serialised
         verify(mockJsonHelper, never()).serialiseAsset(any(Asset.class));
-        verify(mockJsonHelper, never()).serialiseDetails(ArgumentMatchers.<Detail>anyList());
+        verify(mockJsonHelper, never()).serialiseDetails(ArgumentMatchers.<Detail>anyList(), anyBoolean());
 
         // check with the details list from dataManager
         dataManager.getDetailsAsync(asset1, mockLoadDetailsCallback);
@@ -1408,7 +1392,7 @@ public class DataManagerTest {
     private List<Detail> mockDetails;
 
     @Mock
-    private IJsonHelper mockJsonHelper;
+    private IFileHelper mockJsonHelper;
 
     @Mock
     private IDataManager.LoadAssetsCallback mockLoadAssetsCallback;

@@ -6,13 +6,13 @@ import nz.ac.aut.comp705.sortmystuff.data.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.Detail;
 
 /**
- * IJsonHelper is responsible for serialising/deserialising objects to/from json files stored in
+ * IFileHelper is responsible for serialising/deserialising objects to/from files stored in
  * local storage.
  *
  * @author Yuan
  */
 
-public interface IJsonHelper {
+public interface IFileHelper {
 
     /**
      * Deserialise an asset from the json file. Root asset cannot be deserilised
@@ -59,18 +59,6 @@ public interface IJsonHelper {
     boolean serialiseAsset(final Asset asset);
 
     /**
-     * Serialised a list of details and write the data to the corresponding json file.
-     * Details inside this list must belong to the same asset. It returns false in
-     * the case that empty details list is given.
-     *
-     * @param details the list of details to be serialised
-     * @return true if asset is serialised successfully
-     * @throws NullPointerException if asset is {@code null}
-     */
-    @Deprecated
-    boolean serialiseDetails(final List<Detail> details);
-
-    /**
      * Serialised a list of details and write the data to the corresponding json file
      * and image files.
      * <p>
@@ -94,5 +82,4 @@ public interface IJsonHelper {
      * @return true if Root asset exists.
      */
     boolean rootExists();
-
 }

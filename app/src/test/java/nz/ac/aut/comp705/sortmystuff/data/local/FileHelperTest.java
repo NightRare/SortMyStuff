@@ -12,6 +12,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
@@ -38,25 +41,36 @@ import static nz.ac.aut.comp705.sortmystuff.testutils.TestUtil.areIdenticalDetai
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
 /**
  * Created by Yuan on 2017/5/5.
  */
 @RunWith(RobolectricTestRunner.class)
 @Config(constants = BuildConfig.class)
-public class JsonHelperTest {
+public class FileHelperTest {
 
     @Before
     public void setup() throws IOException {
+        MockitoAnnotations.initMocks(this);
+
+        // setup default photo
+        FileInputStream fis = new FileInputStream(TEST_DEFAULT_PHOTO);
+        Bitmap defaultPhoto = BitmapFactory.decodeStream(fis);
+        fis.close();
+        when(mockResLoader.getDefaultPhoto()).thenReturn(defaultPhoto);
+
         userDir = new File(TEST_USER_DIR);
-        jh = new JsonHelper(userDir, new GsonBuilder(),
-                new JsonHelper.FileCreator());
+        fh = new FileHelper(mockResLoader, userDir, new GsonBuilder(),
+                new FileHelper.FileCreator());
     }
 
     @After
     public void tearDown() throws IOException {
         FileUtils.cleanDirectory(userDir);
-        jh = null;
+        userDir = null;
+        fh = null;
+        mockResLoader = null;
     }
 
     //region Tests
@@ -64,24 +78,24 @@ public class JsonHelperTest {
     public void deserialiseAsset_assetDeserialisedFromLocalStorage() throws IOException {
         Asset root = prepareRootAsset();
         Asset asset1 = Asset.create(ASSET_NAME1, root);
-        jh.serialiseAsset(asset1);
+        fh.serialiseAsset(asset1);
 
-        Asset desAsset = jh.deserialiseAsset(asset1.getId());
+        Asset desAsset = fh.deserialiseAsset(asset1.getId());
         assertTrue(areIdenticalAssets(asset1, desAsset));
     }
 
     @Test
     public void deserialiseAsset_rootAssetNotExists() {
         Asset asset1 = Asset.create(ASSET_NAME1, Asset.createRoot());
-        jh.serialiseAsset(asset1);
+        fh.serialiseAsset(asset1);
 
-        Asset desAsset = jh.deserialiseAsset(asset1.getId());
+        Asset desAsset = fh.deserialiseAsset(asset1.getId());
         assertEquals(null, desAsset);
     }
 
     @Test
     public void deserialiseAsset_assetNotExists() {
-        Asset desAsset = jh.deserialiseAsset("NoSuchAsset");
+        Asset desAsset = fh.deserialiseAsset("NoSuchAsset");
         assertEquals(null, desAsset);
     }
 
@@ -89,13 +103,13 @@ public class JsonHelperTest {
     public void deserialiseRootAsset_rootAssetDeserialisedFromLocalStorage() {
         Asset root = prepareRootAsset();
 
-        Asset desRoot = jh.deserialiseRootAsset();
+        Asset desRoot = fh.deserialiseRootAsset();
         assertTrue(areIdenticalAssets(root, desRoot));
     }
 
     @Test
     public void deserialiseRootAsset_rootAssetNotExists() {
-        Asset desRoot = jh.deserialiseRootAsset();
+        Asset desRoot = fh.deserialiseRootAsset();
         assertEquals(null, desRoot);
     }
 
@@ -108,10 +122,10 @@ public class JsonHelperTest {
         assets.add(Asset.create(ASSET_NAME3, assets.get(0)));
 
         for (Asset a : assets) {
-            jh.serialiseAsset(a);
+            fh.serialiseAsset(a);
         }
 
-        List<Asset> desAssets = jh.deserialiseAllAssets();
+        List<Asset> desAssets = fh.deserialiseAllAssets();
 
         //remove root Asset so that can be compared with assets
         assertTrue(desAssets.remove(root));
@@ -129,19 +143,19 @@ public class JsonHelperTest {
         assets[2] = Asset.create(ASSET_NAME3, assets[0]);
 
         for (Asset a : assets) {
-            jh.serialiseAsset(a);
+            fh.serialiseAsset(a);
         }
 
-        List<Asset> desAssets = jh.deserialiseAllAssets();
+        List<Asset> desAssets = fh.deserialiseAllAssets();
         assertEquals(null, desAssets);
     }
 
     @Test
     public void deserialiseAllAssets_onlyHasRootAsset() {
         Asset root = prepareRootAsset();
-        jh.serialiseAsset(root);
+        fh.serialiseAsset(root);
 
-        List<Asset> desAssets = jh.deserialiseAllAssets();
+        List<Asset> desAssets = fh.deserialiseAllAssets();
         assertTrue(desAssets.size() == 1);
         assertTrue(areIdenticalAssets(desAssets.get(0), root));
     }
@@ -156,10 +170,10 @@ public class JsonHelperTest {
         Detail detail2 = TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL2, TEXTDETAIL_FIELD2);
         Collections.addAll(details, detail1, detail2);
 
-        jh.serialiseAsset(asset1);
-        jh.serialiseDetails(details);
+        fh.serialiseAsset(asset1);
+        fh.serialiseDetails(details, false);
 
-        List<Detail> desDetails = jh.deserialiseDetails(asset1.getId());
+        List<Detail> desDetails = fh.deserialiseDetails(asset1.getId());
         assertTrue(areIdenticalDetails(details, desDetails));
     }
 
@@ -174,9 +188,9 @@ public class JsonHelperTest {
         Collections.addAll(details, detail1, detail2);
 
         // asset1 is not serialised
-        jh.serialiseDetails(details);
+        fh.serialiseDetails(details, false);
 
-        List<Detail> desDetails = jh.deserialiseDetails(asset1.getId());
+        List<Detail> desDetails = fh.deserialiseDetails(asset1.getId());
         assertEquals(null, desDetails);
     }
 
@@ -186,8 +200,8 @@ public class JsonHelperTest {
         Asset root = Asset.createRoot();
         Asset asset1 = Asset.create(ASSET_NAME1, root);
 
-        assertTrue(jh.serialiseAsset(root));
-        assertTrue(jh.serialiseAsset(asset1));
+        assertTrue(fh.serialiseAsset(root));
+        assertTrue(fh.serialiseAsset(asset1));
 
         Reader reader = new FileReader(new File(ROOT_ASSET_FILE));
         Asset desRoot = gson.fromJson(reader, Asset.class);
@@ -195,7 +209,7 @@ public class JsonHelperTest {
             reader.close();
 
         reader = new FileReader(new File(TEST_USER_DIR + File.separator
-                + asset1.getId() + File.separator + JsonHelper.ASSET_FILENAME));
+                + asset1.getId() + File.separator + FileHelper.ASSET_FILENAME));
         Asset desAsset1 = gson.fromJson(reader, Asset.class);
         if(reader != null)
             reader.close();
@@ -211,10 +225,10 @@ public class JsonHelperTest {
 
         // root asset is not serialised
         // should not serialise
-        assertFalse(jh.serialiseAsset(asset1));
+        assertFalse(fh.serialiseAsset(asset1));
 
         File asset1File = new File(TEST_USER_DIR + File.separator
-                + asset1.getId() + File.separator + JsonHelper.ASSET_FILENAME);
+                + asset1.getId() + File.separator + FileHelper.ASSET_FILENAME);
 
         // the asset file should not exist
         assertFalse(asset1File.exists());
@@ -230,12 +244,12 @@ public class JsonHelperTest {
         details.add(TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1));
         details.add(TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL2, TEXTDETAIL_FIELD2));
 
-        assertTrue(jh.serialiseAsset(root));
-        assertTrue(jh.serialiseAsset(asset1));
-        assertTrue(jh.serialiseDetails(details));
+        assertTrue(fh.serialiseAsset(root));
+        assertTrue(fh.serialiseAsset(asset1));
+        assertTrue(fh.serialiseDetails(details, false));
 
         Reader reader = new FileReader(new File(TEST_USER_DIR + File.separator
-                + asset1.getId() + File.separator + JsonHelper.DETAILS_FILENAME));
+                + asset1.getId() + File.separator + FileHelper.DETAILS_FILENAME));
         Detail[] desDetails = gson.fromJson(reader, Detail[].class);
         if(reader != null)
             reader.close();
@@ -254,14 +268,14 @@ public class JsonHelperTest {
         details.add(TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1));
         details.add(TextDetail.createTextDetail(asset2.getId(), TEXTDETAIL_LABEL2, TEXTDETAIL_FIELD2));
 
-        assertTrue(jh.serialiseAsset(root));
-        assertTrue(jh.serialiseAsset(asset1));
+        assertTrue(fh.serialiseAsset(root));
+        assertTrue(fh.serialiseAsset(asset1));
 
         // should not serialise when details belong to different assets are in the list
-        assertFalse(jh.serialiseDetails(details));
+        assertFalse(fh.serialiseDetails(details, false));
 
         File detailsFile = new File(TEST_USER_DIR + File.separator
-                + asset1.getId() + File.separator + JsonHelper.DETAILS_FILENAME);
+                + asset1.getId() + File.separator + FileHelper.DETAILS_FILENAME);
 
         // details file should exist yet empty
         assertTrue(detailsFile.exists());
@@ -275,14 +289,14 @@ public class JsonHelperTest {
 
         List<Detail> details = new ArrayList<>();
 
-        assertTrue(jh.serialiseAsset(root));
-        assertTrue(jh.serialiseAsset(asset1));
+        assertTrue(fh.serialiseAsset(root));
+        assertTrue(fh.serialiseAsset(asset1));
 
         // if details is empty, should not serialise and return false
-        assertFalse(jh.serialiseDetails(details));
+        assertFalse(fh.serialiseDetails(details, false));
 
         File detailsFile = new File(TEST_USER_DIR + File.separator
-                + asset1.getId() + File.separator + JsonHelper.DETAILS_FILENAME);
+                + asset1.getId() + File.separator + FileHelper.DETAILS_FILENAME);
 
         // details file should exist yet empty
         assertTrue(detailsFile.exists());
@@ -296,7 +310,6 @@ public class JsonHelperTest {
 
         FileInputStream fis = new FileInputStream(TEST_IMAGE_1);
         Bitmap image = BitmapFactory.decodeStream(fis);
-        ShadowBitmap sb = Shadows.shadowOf(image);
         fis.close();
 
         ImageDetail imageDetail = ImageDetail.create(asset1.getId(), IMAGEDETAIL_LABEL1, image);
@@ -305,12 +318,12 @@ public class JsonHelperTest {
         details.add(TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1));
         details.add(imageDetail);
 
-        assertTrue(jh.serialiseAsset(root));
-        assertTrue(jh.serialiseAsset(asset1));
-        assertTrue(jh.serialiseDetails(details, true));
+        assertTrue(fh.serialiseAsset(root));
+        assertTrue(fh.serialiseAsset(asset1));
+        assertTrue(fh.serialiseDetails(details, true));
 
-        File file = new File(TEST_USER_DIR + File.separator
-                + asset1.getId() + File.separator + imageDetail.getImageFileName());
+        File file = new File(TEST_USER_DIR + File.separator + asset1.getId() +
+                File.separator + imageDetail.getId() + LocalResourceLoader.IMAGE_DETAIL_FORMAT);
         assertTrue(file.exists());
         assertTrue(file.length() > 0);
 
@@ -323,12 +336,12 @@ public class JsonHelperTest {
     @Test
     public void rootExists_rootExists() {
         prepareRootAsset();
-        assertTrue(jh.rootExists());
+        assertTrue(fh.rootExists());
     }
 
     @Test
     public void rootExists_rootNotExists() {
-        assertFalse(jh.rootExists());
+        assertFalse(fh.rootExists());
     }
 
     //endregion
@@ -346,21 +359,25 @@ public class JsonHelperTest {
 
     private static final String TEST_USER_DIR = "testdata";
     private static final String TEST_IMAGE_1 = "testimages/1.png";
+    private static final String TEST_DEFAULT_PHOTO = "testimages/default.png";
     private static final String ROOT_ASSET_FILE = TEST_USER_DIR + File.separator +
-            JsonHelper.ROOT_ASSET_DIR + File.separator + JsonHelper.ASSET_FILENAME;
+            FileHelper.ROOT_ASSET_DIR + File.separator + FileHelper.ASSET_FILENAME;
 
-    private IJsonHelper jh;
+    private IFileHelper fh;
 
     private File userDir;
 
+    @Mock
+    private LocalResourceLoader mockResLoader;
+
     private Asset prepareRootAsset() {
         Asset root = Asset.createRoot();
-        jh.serialiseAsset(root);
+        fh.serialiseAsset(root);
         return root;
     }
 
     /**
-     * The GsonBuilder should be customised according to the one in {@link JsonHelper}.
+     * The GsonBuilder should be customised according to the one in {@link FileHelper}.
      *
      * @return
      */
