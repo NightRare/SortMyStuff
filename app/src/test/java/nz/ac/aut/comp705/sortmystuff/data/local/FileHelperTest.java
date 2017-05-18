@@ -38,6 +38,7 @@ import static nz.ac.aut.comp705.sortmystuff.testutils.TestUtil.areIdenticalAsset
 import static nz.ac.aut.comp705.sortmystuff.testutils.TestUtil.areIdenticalDetails;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
@@ -88,13 +89,13 @@ public class FileHelperTest {
         fh.serialiseAsset(asset1);
 
         Asset desAsset = fh.deserialiseAsset(asset1.getId());
-        assertEquals(null, desAsset);
+        assertNull(desAsset);
     }
 
     @Test
     public void deserialiseAsset_assetNotExists() {
         Asset desAsset = fh.deserialiseAsset("NoSuchAsset");
-        assertEquals(null, desAsset);
+        assertNull(desAsset);
     }
 
     @Test
@@ -108,7 +109,7 @@ public class FileHelperTest {
     @Test
     public void deserialiseRootAsset_rootAssetNotExists() {
         Asset desRoot = fh.deserialiseRootAsset();
-        assertEquals(null, desRoot);
+        assertNull(desRoot);
     }
 
     @Test
@@ -355,7 +356,7 @@ public class FileHelperTest {
     private static final String TEXTDETAIL_FIELD2 = "TextDetail_Field_2";
     private static final String IMAGEDETAIL_LABEL1 = "ImageDetail_1";
 
-    private static final String TEST_USER_DIR = "testdata";
+    private static final String TEST_USER_DIR = "src/test/testdata";
     private static final String TEST_IMAGE_1 = "testimages/1.png";
     private static final String ROOT_ASSET_FILE = TEST_USER_DIR + File.separator +
             FileHelper.ROOT_ASSET_DIR + File.separator + FileHelper.ASSET_FILENAME;
