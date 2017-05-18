@@ -1,4 +1,4 @@
-package nz.ac.aut.comp705.sortmystuff.data;
+package nz.ac.aut.comp705.sortmystuff.data.models;
 
 import android.support.annotation.NonNull;
 
@@ -13,7 +13,7 @@ import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
  * @author Yuan
  */
 
-public abstract class Detail {
+public abstract class Detail<T> {
 
     //region DATA FIELDS
 
@@ -65,16 +65,30 @@ public abstract class Detail {
         return type;
     }
 
-    public abstract Object getField();
+    public abstract T getField();
 
     //endregion
 
     //region MODIFIERS
 
-    protected void setLabel(@NonNull String label) {
+    /**
+     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p>
+     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     */
+    @Deprecated
+    public void setLabel(@NonNull String label) {
         checkIllegalLabel(label);
         this.label = label;
     }
+
+    /**
+     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p>
+     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     */
+    @Deprecated
+    public abstract void setField(@NonNull T field);
 
     //endregion
 

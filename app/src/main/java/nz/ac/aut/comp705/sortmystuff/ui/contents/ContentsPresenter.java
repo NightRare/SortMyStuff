@@ -9,9 +9,9 @@ import android.widget.Toast;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
-import nz.ac.aut.comp705.sortmystuff.data.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
-import nz.ac.aut.comp705.sortmystuff.ui.detail.DetailActivity;
+import nz.ac.aut.comp705.sortmystuff.ui.details.DetailsActivity;
 
 /**
  * The implementation class of {@link IContentsPresenter}.
@@ -44,13 +44,7 @@ public class ContentsPresenter implements IContentsPresenter {
     public void start() {
         // if the app just launched, display Root Asset
         if (currentAssetId == null) {
-            Asset root = dm.getRootAsset();
-            if (root != null) {
-                currentAssetId = dm.getRootAsset().getId();
-            } else {
-                dm.createRootAsset();
-                currentAssetId = dm.getRootAsset().getId();
-            }
+            currentAssetId = dm.getRootAsset().getId();
         }
         loadCurrentContents(false);
     }
@@ -153,15 +147,15 @@ public class ContentsPresenter implements IContentsPresenter {
         switch (item.getItemId()) {
 
             case R.id.action_view_details:
-                // if it's Root Asset, do not show details
-                if (currentAssetId.equals(dm.getRootAsset().getId())) {
-                    Toast.makeText(activity, "Root has no detail", Toast.LENGTH_LONG).show();
-                    return false;
-                }
-                Intent intent = new Intent(activity, DetailActivity.class);
-                intent.putExtra("AssetID", currentAssetId);
-                activity.startActivity(intent);
-                return true;
+            // if it's Root Asset, do not show details
+            if (currentAssetId.equals(dm.getRootAsset().getId())) {
+                Toast.makeText(activity, "Root has no detail", Toast.LENGTH_LONG).show();
+                return false;
+            }
+            Intent intent = new Intent(activity, DetailsActivity.class);
+            intent.putExtra("AssetID", currentAssetId);
+            activity.startActivity(intent);
+            return true;
 
             case R.id.selection_mode_button:
                 enableEditMode();
@@ -171,13 +165,13 @@ public class ContentsPresenter implements IContentsPresenter {
                 if (currentAssetId.equals(dm.getRootAsset().getId())) {
                     Toast.makeText(activity, "Cannot delete Root", Toast.LENGTH_LONG).show();
                     return false;
-                }
+        }
                 view.showDeleteDialog(false);
                 return true;
 
             default:
-                return false;
-        }
+        return false;
+    }
     }
 
     @Override

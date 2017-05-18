@@ -1,4 +1,6 @@
-package nz.ac.aut.comp705.sortmystuff.data;
+package nz.ac.aut.comp705.sortmystuff.data.models;
+
+import android.support.annotation.NonNull;
 
 import com.google.common.base.Preconditions;
 
@@ -8,7 +10,7 @@ import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
  * Created by Yuan on 2017/4/24.
  */
 
-public final class TextDetail extends Detail {
+public final class TextDetail extends Detail<String> {
 
     //region DATA FIELDS
 
@@ -18,29 +20,37 @@ public final class TextDetail extends Detail {
 
     //region STATIC FACTORIES
 
-    public static TextDetail create(String assetId, String label, String field) {
+    public static TextDetail createTextDetail(String assetId, String label, String field) {
         checkIllegalField(field);
         return new TextDetail(assetId, DetailType.Text, label, field);
+    }
+
+    public static TextDetail createDateDetail(String assetId, String label, String field) {
+        checkIllegalField(field);
+        return new TextDetail(assetId, DetailType.Date, label, field);
     }
 
     //endregion
 
     //region ACCESSORS
 
-    public String getTextField() {
-        return field;
-    }
-
     @Override
-    public Object getField() {
-        return getTextField();
+    public String getField() {
+        return field;
     }
 
     //endregion
 
     //region MUTATORS
 
-    void setField(String field) {
+    /**
+     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p>
+     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     */
+    @Deprecated
+    @Override
+    public void setField(@NonNull String field) {
         checkIllegalField(field);
         this.field = field;
     }
@@ -52,7 +62,9 @@ public final class TextDetail extends Detail {
     @Override
     public boolean equals(Object o) {
         if(o instanceof TextDetail) {
-            return super.equals(o);
+            TextDetail td = (TextDetail) o;
+            if(td.getType().equals(getType()))
+                return super.equals(o);
         }
         return false;
     }

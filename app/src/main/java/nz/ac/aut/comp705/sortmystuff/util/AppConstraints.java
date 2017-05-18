@@ -21,7 +21,6 @@ public class AppConstraints {
 
     public final static int TEXTDETAIL_FIELD_CAP = 400;
 
-
     //********************************************
     // IDataManager
     //********************************************

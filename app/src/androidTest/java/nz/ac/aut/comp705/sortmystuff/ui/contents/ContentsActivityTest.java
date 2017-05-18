@@ -81,6 +81,7 @@ public class ContentsActivityTest {
 
         try {
             FileUtils.cleanDirectory(userDir);
+            dm.refreshFromLocal();
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -1,5 +1,6 @@
 package nz.ac.aut.comp705.sortmystuff.data;
 
+import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
 
 import com.google.common.base.Preconditions;
@@ -9,8 +10,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import nz.ac.aut.comp705.sortmystuff.data.local.IJsonHelper;
+import nz.ac.aut.comp705.sortmystuff.data.local.IFileHelper;
+import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
+import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
+import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
+import nz.ac.aut.comp705.sortmystuff.util.AppStatusCode;
+import nz.ac.aut.comp705.sortmystuff.util.BuiltInDetails;
 import nz.ac.aut.comp705.sortmystuff.util.Log;
 import nz.ac.aut.comp705.sortmystuff.util.exceptions.UpdateLocalStorageFailedException;
 
@@ -18,7 +27,6 @@ import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.ASSET_NOT_EXISTS;
 import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.LOCAL_DATA_CORRUPT;
 import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.NO_ROOT_ASSET;
 import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.OK;
-import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.ROOT_ASSET_IMMUTABLE;
 import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.UNEXPECTED_ERROR;
 
 /**
@@ -29,8 +37,16 @@ import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.UNEXPECTED_ERROR;
 
 public class DataManager implements IDataManager {
 
-    public DataManager(IJsonHelper jsonHelper) {
-        this.jsonHelper = jsonHelper;
+    @Deprecated
+    public DataManager(IFileHelper fileHelper) {
+        this.fileHelper = fileHelper;
+        dirtyCachedAssets = true;
+        dirtyCachedDetails = true;
+    }
+
+    public DataManager(IFileHelper fileHelper, LocalResourceLoader resLoader) {
+        this.fileHelper = fileHelper;
+        this.resLoader = resLoader;
         dirtyCachedAssets = true;
         dirtyCachedDetails = true;
     }
@@ -39,10 +55,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param name        the name
-     * @param containerId the id of the container asset
-     * @return
      */
     @Override
     public String createAsset(@NonNull String name, @NonNull String containerId) {
@@ -58,7 +70,7 @@ public class DataManager implements IDataManager {
         }
 
         Asset asset = Asset.create(name, cachedAssets.get(containerId));
-        if (!jsonHelper.serialiseAsset(asset)) {
+        if (!fileHelper.serialiseAsset(asset)) {
             throw new UpdateLocalStorageFailedException("Serialising asset failed, asset id: "
                     + asset.getId());
         }
@@ -66,37 +78,17 @@ public class DataManager implements IDataManager {
         return asset.getId();
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return
-     */
-    @Override
-    public String createRootAsset() {
-        if (dirtyCachedAssets) {
-            loadCachedAssetsFromLocal();
-        }
-
-        if (cachedRootAsset != null) {
-            Log.e(getClass().getName(), "Root asset already exists.");
-            return null;
-        }
-
+    private void createRootAsset() {
         Asset root = Asset.createRoot();
-        if (!jsonHelper.serialiseAsset(root)) {
+        if (!fileHelper.serialiseAsset(root)) {
             throw new UpdateLocalStorageFailedException("Serialising Root asset failed");
         }
         cachedRootAsset = root;
-        return root.getId();
+        return;
     }
 
     /**
      * {@inheritDoc}
-     *
-     * @param asset the owner
-     * @param label the title
-     * @param field the content of this detail
-     * @return
      */
     @Override
     public String createTextDetail(@NonNull Asset asset, @NonNull String label, @NonNull String field) {
@@ -107,11 +99,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param assetId the id of the owner
-     * @param label   the title
-     * @param field   the content of this detail
-     * @return
      */
     @Override
     public String createTextDetail(@NonNull final String assetId, @NonNull String label, @NonNull String field) {
@@ -126,21 +113,23 @@ public class DataManager implements IDataManager {
         if (assetId.equals(getRootAsset().getId()))
             return null;
 
-        TextDetail td = addOrUpdateTextDetail(assetId, null, label, field);
+        TextDetail td = (TextDetail) addDetail(assetId, DetailType.Text, label, field);
         return td == null ? null : td.getId();
     }
 
     /**
      * {@inheritDoc}
-     *
-     * @return
      */
     @Override
     public Asset getRootAsset() {
         if (dirtyCachedAssets || cachedRootAsset == null) {
             int code = loadCachedAssetsFromLocal();
-            if (code != OK) {
-                Log.e(getClass().getName(), "Root asset not available. Error code: " + code);
+            if (code == AppStatusCode.NO_ROOT_ASSET) {
+                createRootAsset();
+            }
+
+            if (cachedRootAsset == null) {
+                Log.e(Log.UNEXPECTED_ERROR, "Root asset not available. Error code: " + code);
                 return null;
             }
         }
@@ -149,8 +138,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param callback see {@link GetAssetCallback}
      */
     @Override
     public void getRootAssetAsync(@NonNull GetAssetCallback callback) {
@@ -169,8 +156,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param callback see {@link LoadAssetsCallback}
      */
     @Override
     public void getAllAssetsAsync(@NonNull LoadAssetsCallback callback) {
@@ -190,8 +175,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param callback see {@link LoadAssetsCallback}
      */
     @Override
     public void getRecycledAssetsAsync(@NonNull LoadAssetsCallback callback) {
@@ -211,9 +194,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param container the container Asset
-     * @param callback  see {@link LoadAssetsCallback}
      */
     @Override
     public void getContentAssetsAsync(@NonNull Asset container, @NonNull LoadAssetsCallback callback) {
@@ -224,9 +204,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param containerId the id of the container Asset
-     * @param callback    see {@link LoadAssetsCallback}
      */
     @Override
     public void getContentAssetsAsync(@NonNull String containerId, @NonNull LoadAssetsCallback callback) {
@@ -256,9 +233,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param asset    the asset whose parent assets are queried
-     * @param callback see {@link LoadAssetsCallback}
      */
     @Override
     public void getParentAssetsAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback) {
@@ -269,9 +243,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param assetId  the id of the asset whose parent assets are queried
-     * @param callback see {@link LoadAssetsCallback}
      */
     @Override
     public void getParentAssetsAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback) {
@@ -301,9 +272,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param asset    the asset whose parent assets are queried
-     * @param callback see {@link LoadAssetsCallback}
      */
     @Override
     public void getParentAssetsDescAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback) {
@@ -314,9 +282,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param assetId  the id of the asset whose parent assets are queried
-     * @param callback see {@link LoadAssetsCallback}
      */
     @Override
     public void getParentAssetsDescAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback) {
@@ -347,9 +312,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param assetId  the id
-     * @param callback see {@link GetAssetCallback}
      */
     @Override
     public void getAssetAsync(@NonNull String assetId, @NonNull GetAssetCallback callback) {
@@ -373,9 +335,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param asset    the owner asset
-     * @param callback see {@link LoadDetailsCallback}
      */
     @Override
     public void getDetailsAsync(@NonNull Asset asset, @NonNull LoadDetailsCallback callback) {
@@ -386,9 +345,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param assetId  the id of the owner asset
-     * @param callback see {@link LoadDetailsCallback}
      */
     @Override
     public void getDetailsAsync(@NonNull String assetId, @NonNull LoadDetailsCallback callback) {
@@ -415,9 +371,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param detailId the id
-     * @param callback see {@link GetDetailCallback}
      */
     @Override
     public void getDetailAsync(@NonNull String detailId, @NonNull GetDetailCallback callback) {
@@ -430,9 +383,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param asset   the asset to be updated
-     * @param newName the new name
      */
     @Override
     public void updateAssetName(@NonNull Asset asset, @NonNull String newName) {
@@ -443,9 +393,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param assetId the id of the asset to be updated
-     * @param newName the new name
      */
     @Override
     public void updateAssetName(@NonNull String assetId, @NonNull final String newName) {
@@ -460,7 +407,7 @@ public class DataManager implements IDataManager {
         }
         Asset asset = cachedAssets.get(assetId);
         asset.setName(newName);
-        if (!jsonHelper.serialiseAsset(asset)) {
+        if (!fileHelper.serialiseAsset(asset)) {
             dirtyCachedAssets = true;
             throw new UpdateLocalStorageFailedException("Write asset failed, id: " + assetId);
         }
@@ -469,9 +416,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param asset          the asset
-     * @param newContainerId the id of the new container
      */
     @Override
     public void moveAsset(@NonNull Asset asset, @NonNull String newContainerId) {
@@ -482,9 +426,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param assetId        the asset id
-     * @param newContainerId the id of the new container
      */
     @Override
     public void moveAsset(@NonNull String assetId, @NonNull String newContainerId) {
@@ -502,7 +443,7 @@ public class DataManager implements IDataManager {
                     + " container id: " + newContainerId);
             return;
         }
-        if (!jsonHelper.serialiseAsset(asset)) {
+        if (!fileHelper.serialiseAsset(asset)) {
             dirtyCachedAssets = true;
             throw new UpdateLocalStorageFailedException("Write asset failed, id: " + assetId);
         }
@@ -510,8 +451,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param asset the asset to be recycled
      */
     @Override
     public void recycleAsset(@NonNull Asset asset) {
@@ -522,8 +461,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param assetId the id of the asset to be recycled
      */
     @Override
     public void recycleAsset(@NonNull String assetId) {
@@ -540,7 +477,7 @@ public class DataManager implements IDataManager {
         }
         asset.recycle();
         cachedRecycledAssets.put(assetId, cachedAssets.remove(assetId));
-        if (!jsonHelper.serialiseAsset(asset)) {
+        if (!fileHelper.serialiseAsset(asset)) {
             dirtyCachedAssets = true;
             throw new UpdateLocalStorageFailedException("Write asset failed, id: " + assetId);
         }
@@ -549,7 +486,6 @@ public class DataManager implements IDataManager {
     /**
      * {@inheritDoc}
      *
-     * @param assetId the id of the asset to be recycled
      */
     @Override
     public void recycleAssetRecursively(@NonNull String assetId) {
@@ -576,7 +512,6 @@ public class DataManager implements IDataManager {
     /**
      * {@inheritDoc}
      *
-     * @param asset the asset to be recycled
      */
     @Override
     public void recycleAssetRecursively(@NonNull Asset asset) {
@@ -598,8 +533,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param assetId
      */
     @Override
     public void restoreAsset(@NonNull String assetId) {
@@ -609,8 +542,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param detail the detail
      */
     @Override
     public void removeDetail(@NonNull Detail detail) {
@@ -621,9 +552,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param assetId  the id of the owner asset
-     * @param detailId the id of the detail
      */
     @Override
     public void removeDetail(@NonNull String assetId, @NonNull String detailId) {
@@ -638,8 +566,11 @@ public class DataManager implements IDataManager {
 
         List<Detail> details = cachedDetails.get(assetId);
         boolean removed = false;
+        boolean updateImage = false;
         for (Detail d : details) {
             if (d.getId().equals(detailId)) {
+                if (d.getType().equals(DetailType.Image))
+                    updateImage = true;
                 details.remove(d);
                 removed = true;
                 break;
@@ -651,8 +582,8 @@ public class DataManager implements IDataManager {
             return;
 
         cachedAssets.get(assetId).updateTimeStamp();
-        if (!jsonHelper.serialiseDetails(details) ||
-                !jsonHelper.serialiseAsset(cachedAssets.get(assetId))) {
+        if (!fileHelper.serialiseDetails(details, updateImage) ||
+                !fileHelper.serialiseAsset(cachedAssets.get(assetId))) {
             dirtyCachedAssets = true;
             dirtyCachedDetails = true;
             throw new UpdateLocalStorageFailedException(
@@ -662,10 +593,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param detail the detail
-     * @param label  the new label
-     * @param field  the new field
      */
     @Override
     public void updateTextDetail(@NonNull TextDetail detail,
@@ -677,11 +604,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param assetId  the id of the owner asset
-     * @param detailId the id of the detail
-     * @param label    the new label
-     * @param field    the new field
      */
     @Override
     public void updateTextDetail(@NonNull String assetId, @NonNull String detailId,
@@ -694,7 +616,32 @@ public class DataManager implements IDataManager {
         Preconditions.checkArgument(label.length() < AppConstraints.DETAIL_LABEL_CAP);
         Preconditions.checkArgument(field.length() < AppConstraints.TEXTDETAIL_FIELD_CAP);
 
-        addOrUpdateTextDetail(assetId, detailId, label, field);
+        modifyDetail(assetId, detailId, label, field);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void resetImageDetail(@NonNull ImageDetail detail) {
+        Preconditions.checkNotNull(detail);
+
+        modifyDetail(detail.getAssetId(), detail.getId(), detail.getLabel()
+                , resLoader.getDefaultPhoto());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void updateImageDetail(@NonNull ImageDetail detail, @NonNull String label, @NonNull Bitmap field) {
+        Preconditions.checkNotNull(detail);
+        Preconditions.checkNotNull(label);
+        Preconditions.checkNotNull(field);
+        Preconditions.checkArgument(!label.replaceAll(" ", "").isEmpty());
+        Preconditions.checkArgument(label.length() < AppConstraints.DETAIL_LABEL_CAP);
+
+        modifyDetail(detail.getAssetId(), detail.getId(), label, field);
     }
 
     /**
@@ -703,6 +650,7 @@ public class DataManager implements IDataManager {
     @Override
     public void refreshFromLocal() {
         dirtyCachedAssets = true;
+        dirtyCachedDetails = true;
     }
 
     /**
@@ -718,7 +666,9 @@ public class DataManager implements IDataManager {
 
     //region PRIVATE STUFF
 
-    private IJsonHelper jsonHelper;
+    private IFileHelper fileHelper;
+
+    private LocalResourceLoader resLoader;
 
     private Asset cachedRootAsset;
 
@@ -733,29 +683,32 @@ public class DataManager implements IDataManager {
     private boolean dirtyCachedDetails;
 
     private synchronized int loadCachedAssetsFromLocal() {
-        if (!jsonHelper.rootExists())
+        if (!fileHelper.rootExists())
             return NO_ROOT_ASSET;
 
         cachedAssets = new HashMap<>();
         cachedRecycledAssets = new HashMap<>();
-        List<Asset> allAssets = jsonHelper.deserialiseAllAssets();
+        List<Asset> allAssets = fileHelper.deserialiseAllAssets();
 
         // assign each asset to corresponding cache
         for (Asset asset : allAssets) {
             if (asset.isRecycled()) {
                 cachedRecycledAssets.put(asset.getId(), asset);
             } else {
+                cachedAssets.put(asset.getId(), asset);
                 if (asset.isRoot()) {
                     cachedRootAsset = asset;
+                } else {
+                    asset.setPhoto(loadPhoto(asset.getId()));
                 }
-                cachedAssets.put(asset.getId(), asset);
             }
         }
 
         // form the tree structure in user assets
         for (Asset asset : cachedAssets.values()) {
-            // root does not need to attach to the tree
-            if (asset.isRoot()) continue;
+            if (asset.isRoot()) {
+                asset.attachToTree(null);
+            }
 
             asset.attachToTree(cachedAssets.get(asset.getContainerId()));
         }
@@ -765,7 +718,7 @@ public class DataManager implements IDataManager {
     }
 
     private synchronized int loadCachedDetailsFromLocal(String assetId) {
-        if (!jsonHelper.rootExists())
+        if (!fileHelper.rootExists())
             return NO_ROOT_ASSET;
         if (!assetExists(assetId)) {
             return ASSET_NOT_EXISTS;
@@ -777,7 +730,7 @@ public class DataManager implements IDataManager {
             return OK;
         }
         releaseOneCachedDetails();
-        List<Detail> details = jsonHelper.deserialiseDetails(assetId);
+        List<Detail> details = fileHelper.deserialiseDetails(assetId);
         if (details == null) {
             return LOCAL_DATA_CORRUPT;
         }
@@ -785,6 +738,20 @@ public class DataManager implements IDataManager {
 
         dirtyCachedDetails = false;
         return OK;
+    }
+
+    private synchronized Bitmap loadPhoto(String assetId) {
+        Bitmap photo = null;
+        List<Detail> detailList = fileHelper.deserialiseDetails(assetId);
+        for (Detail detail : detailList) {
+            if (detail.getType().equals(DetailType.Image)
+                    && detail.getLabel().equals(BuiltInDetails.PHOTO))
+                photo = (Bitmap) detail.getField();
+        }
+        if (photo == null) {
+            photo = resLoader.getDefaultPhoto();
+        }
+        return photo;
     }
 
 
@@ -809,14 +776,11 @@ public class DataManager implements IDataManager {
         return false;
     }
 
-    /**
-     * @param assetId
-     * @param detailId null if add, id if update
-     * @param label
-     * @param field
-     * @return
-     */
-    private TextDetail addOrUpdateTextDetail(String assetId, String detailId, String label, String field) {
+    private <T> Detail addDetail(String assetId, DetailType type, String label, T field) {
+        // check type of the field
+        if (!field.getClass().equals(type.getFieldClass()))
+            throw new IllegalArgumentException
+                    ("Inconsistency between detail type and the type of the field.");
 
         int code = loadCachedDetailsFromLocal(assetId);
         if (code != OK) {
@@ -824,34 +788,83 @@ public class DataManager implements IDataManager {
             return null;
         }
 
-        TextDetail td = null;
-        if (detailId == null) {
-            td = TextDetail.create(assetId, label, field);
-            cachedDetails.get(assetId).add(td);
-        } else {
-            boolean updated = false;
-            for (Detail detail : cachedDetails.get(assetId)) {
-                if (detail.getId().equals(detailId)) {
-                    updated = true;
-                    td = (TextDetail) detail;
-                    td.setLabel(label);
-                    td.setField(field);
-                }
-            }
-            if (!updated)
-                return td;
+        Detail detail = null;
+        boolean updateImage = false;
+
+        if (type.equals(DetailType.Text)) {
+            detail = TextDetail.createTextDetail(assetId, label, (String) field);
+
+        } else if (type.equals(DetailType.Date)) {
+            detail = TextDetail.createDateDetail(assetId, label, (String) field);
+
+        } else if (type.equals(DetailType.Image)) {
+            Bitmap defaultPhoto = resLoader.getDefaultPhoto();
+            detail = ImageDetail.create(assetId, label, defaultPhoto);
+            updateImage = true;
         }
 
+        if (detail != null)
+            cachedDetails.get(assetId).add(detail);
+        else
+            return null;
+
         cachedAssets.get(assetId).updateTimeStamp();
-        if (!jsonHelper.serialiseDetails(cachedDetails.get(assetId)) ||
-                !jsonHelper.serialiseAsset(cachedAssets.get(assetId))) {
+
+        if (!fileHelper.serialiseDetails(cachedDetails.get(assetId), updateImage) ||
+                !fileHelper.serialiseAsset(cachedAssets.get(assetId))) {
             dirtyCachedAssets = true;
             dirtyCachedDetails = true;
             throw new UpdateLocalStorageFailedException(
-                    "Serialising TextDetail failed, Detail id: " + td.getId() + "; Asset id: " + assetId);
+                    "Serialising TextDetail failed, Detail id: " + detail.getId() + "; Asset id: " + assetId);
         }
 
-        return td;
+        return detail;
+    }
+
+    private <T> Detail modifyDetail(String assetId, String detailId,
+                                    @NonNull String label, @NonNull T field) {
+
+        int code = loadCachedDetailsFromLocal(assetId);
+        if (code != OK) {
+            Log.e(getClass().getName(), "Cannot create detail, error code: " + code);
+            return null;
+        }
+
+        Detail detail = null;
+        boolean updateImage = false;
+
+        for (Detail d : cachedDetails.get(assetId)) {
+            // if found the detail
+            if (d.getId().equals(detailId)) {
+
+                // check type of the field
+                if (!field.getClass().equals(d.getType().getFieldClass()))
+                    throw new IllegalArgumentException
+                            ("Inconsistency between detail type and the type of the field.");
+
+                detail = d;
+                detail.setLabel(label);
+                detail.setField(field);
+
+                if (d.getType().equals(DetailType.Image))
+                    updateImage = true;
+                break;
+            }
+        }
+
+        if (detail != null) {
+            cachedAssets.get(assetId).updateTimeStamp();
+
+            if (!fileHelper.serialiseDetails(cachedDetails.get(assetId), updateImage) ||
+                    !fileHelper.serialiseAsset(cachedAssets.get(assetId))) {
+                dirtyCachedAssets = true;
+                dirtyCachedDetails = true;
+                throw new UpdateLocalStorageFailedException(
+                        "Serialising TextDetail failed, Detail id: " + detail.getId() + "; Asset id: " + assetId);
+            }
+        }
+
+        return detail;
     }
 
     private static boolean identicalAssets(Asset a1, Asset a2) {
@@ -871,6 +884,13 @@ public class DataManager implements IDataManager {
             return false;
 
         return true;
+    }
+
+    private void wipeAllCache() {
+        cachedDetails = null;
+        cachedRootAsset = null;
+        cachedAssets = null;
+        cachedRecycledAssets = null;
     }
 
     //endregion

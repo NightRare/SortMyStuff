@@ -1,11 +1,9 @@
 package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
 import android.view.MenuItem;
-import android.view.View;
 
 import java.util.List;
 
-import nz.ac.aut.comp705.sortmystuff.data.Asset;
 import nz.ac.aut.comp705.sortmystuff.ui.IPresenter;
 
 /**

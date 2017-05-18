@@ -1,48 +1,53 @@
 package nz.ac.aut.comp705.sortmystuff.data.local;
 
-import android.app.Application;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
-import java.net.URI;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import nz.ac.aut.comp705.sortmystuff.data.Asset;
-import nz.ac.aut.comp705.sortmystuff.data.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.util.JsonDetailAdapter;
 import nz.ac.aut.comp705.sortmystuff.util.Log;
 
 /**
- * An implementation class of {@link IJsonHelper}.
+ * An implementation class of {@link IFileHelper}.
  *
  * @author Yuan
  */
 
-public class JsonHelper implements IJsonHelper {
+public class FileHelper implements IFileHelper {
 
-    public static final  String ASSET_FILENAME = "asset.json";
+    public static final String ASSET_FILENAME = "asset.json";
 
-    public static final  String DETAILS_FILENAME = "details.json";
+    public static final String DETAILS_FILENAME = "details.json";
 
     public static final String ROOT_ASSET_DIR = "root";
 
     /**
-     * Initialises a JsonHelper.
-     * @param userDir
-     * @param gBuilder
-     * @param fc
+     * Initialises a FileHelper.
+     *
+     * @param userDir  the directory of the current user
+     * @param gBuilder the GsonBuilder
+     * @param fc       the FileCreator
      */
-    public JsonHelper(File userDir, GsonBuilder gBuilder, FileCreator fc) {
+    @Deprecated
+    public FileHelper(File userDir, GsonBuilder gBuilder, FileCreator fc) {
         Preconditions.checkNotNull(userDir);
 
         this.gBuilder = gBuilder;
@@ -57,13 +62,28 @@ public class JsonHelper implements IJsonHelper {
             this.userDir.mkdirs();
     }
 
+    public FileHelper(LocalResourceLoader resLoader, File userDir, GsonBuilder gBuilder, FileCreator fc) {
+        Preconditions.checkNotNull(resLoader);
+        Preconditions.checkNotNull(userDir);
+
+        this.gBuilder = gBuilder;
+        this.userDir = userDir;
+        this.fc = fc;
+
+        this.gBuilder.serializeNulls();
+        this.gBuilder.setPrettyPrinting();
+        this.gBuilder.registerTypeAdapter(Detail.class, new JsonDetailAdapter());
+
+        if (!this.userDir.exists())
+            this.userDir.mkdirs();
+
+        this.resLoader = resLoader;
+    }
+
     //region IJSonHelper methods
 
     /**
      * {@inheritDoc}
-     *
-     * @param assetId the id of the asset
-     * @return
      */
     @Override
     public Asset deserialiseAsset(final String assetId) {
@@ -74,25 +94,19 @@ public class JsonHelper implements IJsonHelper {
             return null;
         }
 
-        return deserialiseAssetFromFile(fc.createFile(
-                userDir + File.separator + assetId + File.separator + ASSET_FILENAME));
+        return deserialiseAssetFromFile(assetJsonFile(assetId));
     }
 
     /**
      * {@inheritDoc}
-     *
-     * @return
      */
     @Override
     public Asset deserialiseRootAsset() {
-        return deserialiseAssetFromFile(fc.createFile(
-                userDir + File.separator + ROOT_ASSET_DIR + File.separator + ASSET_FILENAME));
+        return deserialiseAssetFromFile(rootAssetJsonFile());
     }
 
     /**
      * {@inheritDoc}
-     *
-     * @return
      */
     @Override
     public List<Asset> deserialiseAllAssets() {
@@ -103,12 +117,11 @@ public class JsonHelper implements IJsonHelper {
             return null;
         }
 
-        for (File dir : userDir.listFiles()) {
-            if (!isValidAssetDir(dir))
+        for (File assetDir : userDir.listFiles()) {
+            if (!isValidAssetDir(assetDir))
                 continue;
 
-            Asset asset = deserialiseAssetFromFile(fc.createFile(
-                    dir + File.separator + ASSET_FILENAME));
+            Asset asset = deserialiseAssetFromFile(fc.createFile(assetDir, ASSET_FILENAME));
             if (asset != null && !assets.contains(asset)) {
                 assets.add(asset);
             }
@@ -118,47 +131,32 @@ public class JsonHelper implements IJsonHelper {
 
     /**
      * {@inheritDoc}
-     *
-     * @param assetId the id of the owner asset
-     * @return
      */
     @Override
     public List<Detail> deserialiseDetails(String assetId) {
         Preconditions.checkNotNull(assetId);
 
-        String target = userDir.getPath() + File.separator + assetId;
-        for (File dir : userDir.listFiles()) {
-            if (!dir.getPath().equals(target))
-                continue;
-
-            final File file;
-            file = fc.createFile(dir, DETAILS_FILENAME);
-            if (!file.exists()) {
-                Log.e(getClass().getName(), DETAILS_FILENAME + " does not exist in " + dir);
-                return null;
-            }
-
-            Detail[] details = readJsonFile(file, Detail[].class);
-
-            List<Detail> list = new LinkedList();
-            if (details != null) {
-                for (Detail d : details) {
-                    if (d != null && !list.contains(d))
-                        list.add(d);
-                }
-            }
-
-            return list;
+        File file = detailsJsonFile(assetId);
+        if (!file.exists()) {
+            Log.e(Log.FILE_NOT_EXISTS, file.getPath());
+            return null;
         }
 
-        return null;
+        Detail[] details = readJsonFile(file, Detail[].class);
+        List<Detail> list = new ArrayList<>();
+
+        if (details != null) {
+            for (Detail d : details) {
+                if (d != null && !list.contains(d))
+                    list.add(d);
+            }
+        }
+
+        return deserialiseImageFiles(list);
     }
 
     /**
      * {@inheritDoc}
-     *
-     * @param asset the asset to be serialised
-     * @return
      */
     @Override
     public boolean serialiseAsset(final Asset asset) {
@@ -173,7 +171,7 @@ public class JsonHelper implements IJsonHelper {
 
             assetDir = prepareAssetDir(ROOT_ASSET_DIR);
         } else if (!rootExists()) {
-            Log.e(getClass().getName(), "Cannot serialise \"" + asset.getId()
+            Log.e(Log.FILE_NOT_EXISTS, "Cannot serialise \"" + asset.getId()
                     + "\". Must serialise Root asset at first.");
             return false;
         } else {
@@ -187,12 +185,9 @@ public class JsonHelper implements IJsonHelper {
 
     /**
      * {@inheritDoc}
-     *
-     * @param details the list of details to be serialised
-     * @return
      */
     @Override
-    public boolean serialiseDetails(final List<Detail> details) {
+    public boolean serialiseDetails(List<Detail> details, boolean imageUpdated) {
         Preconditions.checkNotNull(details);
         Preconditions.checkArgument(!details.contains(null), "details should not contain null.");
         if (details.isEmpty())
@@ -218,6 +213,13 @@ public class JsonHelper implements IJsonHelper {
             return false;
         }
 
+        if(imageUpdated) {
+            // if serialising image files fails
+            if(!serialiseImageFiles(details)) {
+                return false;
+            }
+        }
+
         detailFile = fc.createFile(assetDir, DETAILS_FILENAME);
 
         final Detail[] dArray = details.toArray(new Detail[details.size()]);
@@ -226,23 +228,24 @@ public class JsonHelper implements IJsonHelper {
 
     /**
      * {@inheritDoc}
-     *
-     * @return
      */
     @Override
     public boolean rootExists() {
         boolean rootExists;
 
-        File rootFile = fc.createFile(
-                userDir + File.separator + ROOT_ASSET_DIR + File.separator + ASSET_FILENAME);
-        rootExists = rootFile.exists();
-        if(!rootExists)
+        rootExists = rootAssetJsonFile().exists();
+        if (!rootExists) {
+            Log.e(Log.FILE_NOT_EXISTS, "Root json file not exists.");
             return false;
+        }
 
         // check whether the file corrupt
-        Asset asset = deserialiseAssetFromFile(rootFile);
-        rootExists = (asset == null ? false : true);
-        return rootExists;
+        Asset asset = deserialiseAssetFromFile(rootAssetJsonFile());
+        if(asset == null) {
+            Log.e(Log.LOCAL_FILE_CORRUPT, "Root json file corrupted.");
+            return false;
+        }
+        return true;
     }
 
     //endregion
@@ -275,6 +278,8 @@ public class JsonHelper implements IJsonHelper {
     //endregion
 
     //region Private stuff
+
+    private LocalResourceLoader resLoader;
 
     private File userDir;
 
@@ -370,14 +375,14 @@ public class JsonHelper implements IJsonHelper {
             gBuilder.create().toJson(srcObj, klass, writer);
             return true;
         } catch (IOException e) {
-            Log.e(JsonHelper.class.getName(), "IOException", e);
+            Log.e(Log.GSON_WRITE_FAILED, "IOException", e);
             return false;
         } finally {
             if (writer != null) {
                 try {
                     writer.close();
                 } catch (Exception e) {
-                    Log.e(JsonHelper.class.getName(), "Unexpected error", e);
+                    Log.e(Log.CLOSING_STREAM_FAILED, "Unexpected error", e);
                 }
             }
         }
@@ -397,17 +402,134 @@ public class JsonHelper implements IJsonHelper {
             reader = fc.createFileReader(file);
             return gBuilder.create().fromJson(reader, klass);
         } catch (IOException e) {
-            Log.e(JsonHelper.class.getName(), "IOException", e);
+            Log.e(Log.GSON_READ_FAILED, "IOException", e);
             return null;
         } finally {
             if (reader != null) {
                 try {
                     reader.close();
                 } catch (Exception e) {
-                    Log.e(JsonHelper.class.getName(), "Unexpected error", e);
+                    Log.e(Log.CLOSING_STREAM_FAILED, "Unexpected error", e);
                 }
             }
         }
+    }
+
+    /**
+     *
+     * @param image
+     * @param file
+     * @return
+     */
+    private boolean writeToImageFile(Bitmap image, File file) {
+        FileOutputStream fos = null;
+        try{
+            if(!file.exists()) {
+                if(!file.createNewFile())
+                    return false;
+            }
+            fos = new FileOutputStream(file);
+            return image.compress(Bitmap.CompressFormat.PNG, 100, fos);
+        } catch (IOException e) {
+            Log.e(Log.BITMAP_WRITE_FAILED, "IOException", e);
+            return false;
+        } finally {
+            if(fos != null) {
+                try {
+                    fos.flush();
+                    fos.close();
+                } catch (Exception e) {
+                    Log.e(Log.CLOSING_STREAM_FAILED, "Unexpected error", e);
+                }
+            }
+        }
+    }
+
+    private Bitmap readFromImageFile(File file) {
+        if(!file.exists()) {
+            return null;
+        }
+
+        FileInputStream fis = null;
+        try{
+            fis = new FileInputStream(file);
+            return BitmapFactory.decodeStream(fis);
+        } catch (IOException e) {
+            Log.e(Log.BITMAP_WRITE_FAILED, "IOException", e);
+            return null;
+        } finally {
+            if(fis != null) {
+                try {
+                    fis.close();
+                } catch (Exception e) {
+                    Log.e(Log.CLOSING_STREAM_FAILED, "Unexpected error", e);
+                }
+            }
+        }
+    }
+
+    private boolean serialiseImageFiles(List<Detail> details) {
+        for (Detail d : details) {
+            if (!(d instanceof ImageDetail))
+                continue;
+
+            ImageDetail imageDetail = (ImageDetail) d;
+            File imageFile = imageFile(d.getAssetId(), d.getId());
+
+            // if set back to default photo, then remove the customised image file
+            if(imageDetail.getField().sameAs(resLoader.getDefaultPhoto())
+                    && imageFile.exists()) {
+                if(!imageFile.delete())
+                    return false;
+            }
+            // if the image is customised, then save it to the local storage
+            else {
+                if(!writeToImageFile(imageDetail.getField(), imageFile))
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    private List<Detail> deserialiseImageFiles(List<Detail> details) {
+        for (Detail d : details) {
+            if (!(d instanceof ImageDetail))
+                continue;
+
+            ImageDetail imageDetail = (ImageDetail) d;
+            File imageFile = imageFile(d.getAssetId(), d.getId());
+
+            Bitmap image = null;
+
+            // if there is not customised image file, then set to the default file
+            if(imageFile.exists()) {
+                image = readFromImageFile(imageFile);
+            }
+            if(image == null) {
+                image = resLoader.getDefaultPhoto();
+            }
+            imageDetail.setField(image);
+        }
+        return details;
+    }
+
+    private File assetJsonFile(String assetId) {
+        return fc.createFile(userDir + File.separator + assetId + File.separator + ASSET_FILENAME);
+    }
+
+    private File rootAssetJsonFile() {
+        return fc.createFile(userDir + File.separator + ROOT_ASSET_DIR + File.separator +
+                ASSET_FILENAME);
+    }
+
+    private File detailsJsonFile(String assetId) {
+        return fc.createFile(userDir.getPath() + File.separator + assetId + File.separator +
+                DETAILS_FILENAME);
+    }
+
+    private File imageFile(String assetId, String detailId) {
+        return fc.createFile(userDir + File.separator + assetId + File.separator + detailId +
+                LocalResourceLoader.IMAGE_DETAIL_FORMAT);
     }
 
     //endregion

@@ -1,9 +1,14 @@
 package nz.ac.aut.comp705.sortmystuff.data;
 
+import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
 
 import java.util.List;
 
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
+import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.util.exceptions.*;
 
 /**
@@ -28,14 +33,6 @@ public interface IDataManager {
      * @throws UpdateLocalStorageFailedException if update local storage failed
      */
     String createAsset(@NonNull String name, @NonNull String containerId);
-
-    /**
-     * Create the Root asset and save it to the local storage.
-     *
-     * @return the id of the created asset; {@code null} if failed (e.g. already exists)
-     * @throws UpdateLocalStorageFailedException if update local storage failed
-     */
-    String createRootAsset();
 
     /**
      * Create a TextDetail and save it to the local storage. Cannot create Detail for Root
@@ -74,7 +71,7 @@ public interface IDataManager {
     /**
      * Get the Root asset from the local data source.
      *
-     * @return the Root asset of the current user; or null if no root asset record
+     * @return the Root asset of the current user
      */
     Asset getRootAsset();
 
@@ -139,7 +136,7 @@ public interface IDataManager {
      * For example, Root -> Apartment -> Bookshelf -> Drawer, if query the parent Assets of Drawer
      * the items in list would be [Bookshelf, Apartment, Root].
      *
-     * @param assetId    the id of the asset whose parent assets are queried
+     * @param assetId  the id of the asset whose parent assets are queried
      * @param callback see {@link LoadAssetsCallback}
      * @throws NullPointerException if any argument is {@code null}
      */
@@ -163,7 +160,7 @@ public interface IDataManager {
      * For example, Root -> Apartment -> Bookshelf -> Drawer, if query the parent Assets of Drawer
      * in descendant order, the items in list would be [Root, Apartment, Bookshelf, Drawer].
      *
-     * @param assetId    the id of the asset whose parent assets are queried
+     * @param assetId  the id of the asset whose parent assets are queried
      * @param callback see {@link LoadAssetsCallback}
      * @throws NullPointerException if any argument is {@code null}
      */
@@ -208,7 +205,7 @@ public interface IDataManager {
 
     //endregion
 
-    //region Update and Delete data methods
+    //region Update data methods
 
     /**
      * Update the name of the asset in memory and local storage.
@@ -299,25 +296,6 @@ public interface IDataManager {
     void restoreAsset(@NonNull String assetId);
 
     /**
-     * Remove the detail from the asset.
-     *
-     * @param detail  the detail
-     * @throws NullPointerException              if any argument is {@code null}
-     * @throws UpdateLocalStorageFailedException if update local storage failed
-     */
-    void removeDetail(@NonNull Detail detail);
-
-    /**
-     * Remove the detail from the asset.
-     *
-     * @param assetId  the id of the owner asset
-     * @param detailId the id of the detail
-     * @throws NullPointerException              if any argument is {@code null}
-     * @throws UpdateLocalStorageFailedException if update local storage failed
-     */
-    void removeDetail(@NonNull String assetId, @NonNull String detailId);
-
-    /**
      * Update the TextDetail according to the given arguments.
      *
      * @param detail the detail
@@ -346,9 +324,53 @@ public interface IDataManager {
     void updateTextDetail(@NonNull String assetId, @NonNull String detailId,
                           @NonNull String label, @NonNull String field);
 
+    /**
+     * Reset the field (image) of the ImageDetail to the default image.
+     *
+     * @param detail the ImageDetail to be reset
+     */
+    void resetImageDetail(@NonNull ImageDetail detail);
+
+    /**
+     * Update the ImageDetail according to the given arguments.
+     *
+     * @param detail the detail
+     * @param label  the new label
+     * @param field  the new field
+     * @throws NullPointerException              if any argument is {@code null}
+     * @throws IllegalArgumentException          if label is empty string; or the length of
+     *                                           label exceeds app constraints
+     * @throws UpdateLocalStorageFailedException if update local storage failed
+     */
+    void updateImageDetail(@NonNull ImageDetail detail, @NonNull String label, @NonNull Bitmap field);
+
+
     //endregion
 
-    //region Other methods
+    //region DELETE DATA METHODS
+
+    /**
+     * Remove the detail from the asset.
+     *
+     * @param detail the detail
+     * @throws NullPointerException              if any argument is {@code null}
+     * @throws UpdateLocalStorageFailedException if update local storage failed
+     */
+    void removeDetail(@NonNull Detail detail);
+
+    /**
+     * Remove the detail from the asset.
+     *
+     * @param assetId  the id of the owner asset
+     * @param detailId the id of the detail
+     * @throws NullPointerException              if any argument is {@code null}
+     * @throws UpdateLocalStorageFailedException if update local storage failed
+     */
+    void removeDetail(@NonNull String assetId, @NonNull String detailId);
+
+    //endregion
+
+    //region OTHER METHODS
 
     /**
      * Force reload data from local storage.
@@ -362,7 +384,7 @@ public interface IDataManager {
 
     //endregion
 
-    //region Callback interfaces
+    //region CALLBACK INTERFACES
 
     /**
      * A callback interface for asynchronised loading methods.
@@ -414,7 +436,7 @@ public interface IDataManager {
          *
          * @param detail the requested Detail
          */
-        void onDetailsLoaded(Detail detail);
+        void onDetailLoaded(Detail detail);
     }
 
     //endregion

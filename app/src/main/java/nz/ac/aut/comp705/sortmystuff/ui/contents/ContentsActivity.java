@@ -23,7 +23,7 @@ import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
-import nz.ac.aut.comp705.sortmystuff.data.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 
 /**

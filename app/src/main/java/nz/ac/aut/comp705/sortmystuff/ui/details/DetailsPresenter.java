@@ -1,4 +1,4 @@
-package nz.ac.aut.comp705.sortmystuff.ui.detail;
+package nz.ac.aut.comp705.sortmystuff.ui.details;
 
 import android.content.Context;
 import android.content.DialogInterface;
@@ -11,8 +11,8 @@ import android.widget.LinearLayout;
 import java.util.ArrayList;
 import java.util.List;
 
-import nz.ac.aut.comp705.sortmystuff.data.Asset;
-import nz.ac.aut.comp705.sortmystuff.data.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.util.Log;
 
@@ -20,11 +20,11 @@ import nz.ac.aut.comp705.sortmystuff.util.Log;
  * Created by DonnaCello on 30 Apr 2017.
  */
 
-public class DetailPresenter implements IDetailPresenter {
+public class DetailsPresenter implements IDetailsPresenter {
 
     IDataManager dm;
-    IDetailView view;
-    DetailActivity activity;
+    IDetailsView view;
+    DetailsActivity activity;
     String currentAsset;
 
     /**
@@ -34,7 +34,7 @@ public class DetailPresenter implements IDetailPresenter {
      * @param view     the IContentsView instance
      * @param activity the ContentsActivity instance
      */
-    public DetailPresenter(IDataManager dm, IDetailView view, DetailActivity activity) {
+    public DetailsPresenter(IDataManager dm, IDetailsView view, DetailsActivity activity) {
         this.dm = dm;
         this.view = view;
         this.activity = activity;
