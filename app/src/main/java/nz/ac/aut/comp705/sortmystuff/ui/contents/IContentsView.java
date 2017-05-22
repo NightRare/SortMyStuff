@@ -26,7 +26,7 @@ public interface IContentsView extends IView<IContentsPresenter> {
      *
      * @param assets the assets
      */
-    void showAssetContents(List<Asset> assets);
+    void showAssetContents(List<Asset> assets, boolean enableEditMode);
 
     /**
      * Displays the "add asset dialog".
