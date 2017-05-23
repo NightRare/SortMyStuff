@@ -87,4 +87,8 @@ public interface IContentsPresenter extends IPresenter {
      * @param assetIds the list of ids of the assets to be recycled
      */
     void recycleAssetsRecursively(List<String> assetIds);
+
+//    void enableMoveMode();
+//
+//    void quitMoveMode();
 }

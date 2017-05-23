@@ -45,6 +45,8 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
         // init UI components
         fab = (FloatingActionButton) findViewById(R.id.addAssetButton);
+        fabCancelMoveButton = (FloatingActionButton) findViewById(R.id.cancel_move_button);
+        fabConfirmMoveButton = (FloatingActionButton) findViewById(R.id.confirm_move_button);
 
         assetListView = (ListView) findViewById(R.id.index_list);
 
@@ -83,6 +85,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        this.menu = menu;
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.contents_menu, menu);
         return true;
@@ -94,6 +97,14 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
             return true;
         return super.onOptionsItemSelected(item);
     }
+
+    public void toggleMenuDisplay(boolean showMenu){
+        if(menu == null)
+            return;
+        menu.setGroupVisible(R.id.main_menu_group, showMenu);
+    }
+
+
 
 
     //endregion
@@ -191,14 +202,18 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
     //region UI Components
 
+    private Menu menu;
+
     private FloatingActionButton fab;
+    private FloatingActionButton fabCancelMoveButton;
+    private FloatingActionButton fabConfirmMoveButton;
 
     private Toolbar toolbar;
     private TextView pathBarRoot;
     private RecyclerView pathBar;
 
     private ListView assetListView;
-    private Button selectAll_btn, selectNone_btn, cancel_btn;
+    private Button cancel_btn, selectAll_btn, selectNone_btn, move_btn;
     private AssetListAdapter adapter;
 
     //endregion
@@ -206,18 +221,22 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     private void displayInEditMode(List<Asset> assets) {
         adapter = new AssetListAdapter(assets, getApplicationContext(), true);
         assetListView.setAdapter(adapter);
-        selectNone_btn.setVisibility(View.VISIBLE);
-        selectAll_btn.setVisibility(View.VISIBLE);
         cancel_btn.setVisibility(View.VISIBLE);
+        selectAll_btn.setVisibility(View.VISIBLE);
+        selectNone_btn.setVisibility(View.VISIBLE);
+        move_btn.setVisibility(View.VISIBLE);
+
         fab.setVisibility(View.GONE);
     }
 
     private void displayWithoutEditMode(List<Asset> assets) {
         adapter = new AssetListAdapter(assets, getApplicationContext(), false);
         assetListView.setAdapter(adapter);
-        selectNone_btn.setVisibility(View.GONE);
-        selectAll_btn.setVisibility(View.GONE);
         cancel_btn.setVisibility(View.GONE);
+        selectAll_btn.setVisibility(View.GONE);
+        selectNone_btn.setVisibility(View.GONE);
+        move_btn.setVisibility(View.GONE);
+
         fab.setVisibility(View.VISIBLE);
     }
 
@@ -295,10 +314,12 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         cancel_btn = (Button) findViewById(R.id.cancel_button);
         selectAll_btn = (Button) findViewById(R.id.select_all_button);
         selectNone_btn = (Button) findViewById(R.id.select_none_button);
+        move_btn = (Button) findViewById(R.id.move_button);
 
-        selectNone_btn.setVisibility(View.GONE);
-        selectAll_btn.setVisibility(View.GONE);
         cancel_btn.setVisibility(View.GONE);
+        selectAll_btn.setVisibility(View.GONE);
+        selectNone_btn.setVisibility(View.GONE);
+        move_btn.setVisibility(View.GONE);
     }
 
     /**
@@ -310,6 +331,25 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
             @Override
             public void onClick(View v) {
                 showAddDialog();
+            }
+        });
+        fabCancelMoveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toggleMenuDisplay(true);
+                fab.setVisibility(View.VISIBLE);
+                fabCancelMoveButton.setVisibility(View.GONE);
+                fabConfirmMoveButton.setVisibility(View.GONE);
+            }
+        });
+
+        fabConfirmMoveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toggleMenuDisplay(true);
+                fab.setVisibility(View.VISIBLE);
+                fabCancelMoveButton.setVisibility(View.GONE);
+                fabConfirmMoveButton.setVisibility(View.GONE);
             }
         });
 
@@ -379,6 +419,14 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
                         selectNone();
                         Toast.makeText(ContentsActivity.this, "0 items selected", Toast.LENGTH_SHORT).show();
                         break;
+
+                    case R.id.move_button:
+                        presenter.quitEditMode();
+                        toggleMenuDisplay(false);
+                        fab.setVisibility(View.GONE);
+                        fabCancelMoveButton.setVisibility(View.VISIBLE);
+                        fabConfirmMoveButton.setVisibility(View.VISIBLE);
+
                 }
             }
         };
@@ -386,6 +434,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         cancel_btn.setOnClickListener(selectionModeListener);
         selectAll_btn.setOnClickListener(selectionModeListener);
         selectNone_btn.setOnClickListener(selectionModeListener);
+        move_btn.setOnClickListener(selectionModeListener);
     }
 
     private void selectAll() {
