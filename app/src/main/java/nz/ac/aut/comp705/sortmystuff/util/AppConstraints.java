@@ -12,6 +12,7 @@ public class AppConstraints {
 
     public final static int ASSET_NAME_CAP = 40;
 
+    public final static String ROOT_ASSET_ID = "RootAsset";
 
     //********************************************
     // DETAIL

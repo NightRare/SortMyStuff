@@ -74,7 +74,7 @@ public final class Asset {
 
 
     public static Asset createRoot() {
-        String id = UUID.randomUUID().toString();
+        String id = AppConstraints.ROOT_ASSET_ID;
 
         return new Asset(id, "Root", "", null, true, new ArrayList<Asset>(),
                 System.currentTimeMillis(),
@@ -194,19 +194,15 @@ public final class Asset {
      */
     @Deprecated
     public boolean attachToTree(@Nullable Asset containerObj) {
-        if(containerObj == null) {
-            if(isRoot()) {
-                if (contents == null) {
-                    contents = new ArrayList<>();
-                }
-                return true;
-            }
-            else return false;
-        }
+        if (contents == null)
+            contents = new ArrayList<>();
 
-        if (!containerObj.getId().equals(containerId)) {
+        if(isRoot())
+            return true;
+
+        if (!containerObj.getId().equals(containerId))
             return false;
-        }
+
         container = containerObj;
         if (container.contents == null)
             container.contents = new ArrayList<>();
