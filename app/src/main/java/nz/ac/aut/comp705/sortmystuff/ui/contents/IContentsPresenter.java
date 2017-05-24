@@ -4,6 +4,7 @@ import android.view.MenuItem;
 
 import java.util.List;
 
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.ui.IPresenter;
 
 /**
@@ -55,6 +56,8 @@ public interface IContentsPresenter extends IPresenter {
      * @param assetName the name of the new asset.
      */
     void addAsset(String assetName);
+
+    void moveAssets(List<Asset> assets);
 
     /**
      * Performs corresponding action when the given menu item is selected (interacted with) by

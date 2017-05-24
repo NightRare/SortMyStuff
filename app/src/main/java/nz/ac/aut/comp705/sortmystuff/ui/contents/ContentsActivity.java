@@ -2,6 +2,7 @@ package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -20,6 +21,8 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
@@ -61,6 +64,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         registerListeners();
 
         selectedAssetIds = new ArrayList<>();
+        selectedAssets = new ArrayList<>();
 
         // Create the presenter
         IDataManager dm = ((SortMyStuffApp) getApplication()).getFactory().getDataManager();
@@ -216,6 +220,8 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     private Button cancel_btn, selectAll_btn, selectNone_btn, move_btn;
     private AssetListAdapter adapter;
 
+    private List<Asset> selectedAssets;
+
     //endregion
 
     private void displayInEditMode(List<Asset> assets) {
@@ -346,10 +352,31 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         fabConfirmMoveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (selectedAssets.isEmpty()) {
+                    Toast.makeText(ContentsActivity.this,
+                            "You haven't selected any items.", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    presenter.moveAssets(selectedAssets);
+
+                    int size = selectedAssets.size();
+                    String msg = " asset moved.";
+                    if (size > 1)
+                        msg = " assets moved.";
+                    Toast.makeText(ContentsActivity.this,
+                            size + msg, Toast.LENGTH_SHORT).show();
+
+                    presenter.loadCurrentContents(false);
+
+                }
                 toggleMenuDisplay(true);
                 fab.setVisibility(View.VISIBLE);
                 fabCancelMoveButton.setVisibility(View.GONE);
                 fabConfirmMoveButton.setVisibility(View.GONE);
+
+
+
+
             }
         });
 
@@ -370,6 +397,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
                     AssetListAdapter.ViewHolder holder = (AssetListAdapter.ViewHolder) view.getTag();
                     holder.checkbox.toggle();
                     AssetListAdapter.getSelectStatusMap().put(position, holder.checkbox.isChecked());
+                    //adapter.notifyDataSetChanged();
                 }
                 else {
                     //fetches the selected asset in the list
@@ -421,6 +449,15 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
                         break;
 
                     case R.id.move_button:
+                        selectedAssets = AssetListAdapter.getSelectedAssetList();
+//                        selectedItemsIndex.clear();
+//                        Set<Map.Entry<Integer, Boolean>> mapEntrySet =
+//                                AssetListAdapter.getSelectStatusMap().entrySet();
+//                        for (Map.Entry<Integer, Boolean> e : mapEntrySet) {
+//                            if (e.getValue())
+//                                selectedItemsIndex.add(e.getKey());
+//                        }
+
                         presenter.quitEditMode();
                         toggleMenuDisplay(false);
                         fab.setVisibility(View.GONE);

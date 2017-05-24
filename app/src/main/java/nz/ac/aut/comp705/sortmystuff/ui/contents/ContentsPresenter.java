@@ -137,6 +137,13 @@ public class ContentsPresenter implements IContentsPresenter {
         loadCurrentContents(false);
     }
 
+    @Override
+    public void moveAssets(List<Asset> assets) {
+        for (Asset a : assets) {
+            dm.moveAsset(a, currentAssetId);
+        }
+    }
+
     /**
      * {@inheritDoc}
      *
