@@ -139,9 +139,21 @@ public class ContentsPresenter implements IContentsPresenter {
 
     @Override
     public void moveAssets(List<Asset> assets) {
+        //reject the attempt to move to the original directory
+        if (assets.get(0).getContainerId().equals(currentAssetId)) {
+            Toast.makeText(activity, "The assets are already here:)", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         for (Asset a : assets) {
             dm.moveAsset(a, currentAssetId);
         }
+
+        int size = assets.size();
+        String msg = " asset moved.";
+        if (size > 1)
+            msg = " assets moved.";
+        Toast.makeText(activity, size + msg, Toast.LENGTH_SHORT).show();
     }
 
     /**

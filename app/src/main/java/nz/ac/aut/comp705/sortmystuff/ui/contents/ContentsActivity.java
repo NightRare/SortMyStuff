@@ -108,9 +108,6 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         menu.setGroupVisible(R.id.main_menu_group, showMenu);
     }
 
-
-
-
     //endregion
 
     //region IContentsView METHODS
@@ -358,25 +355,12 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
                 }
                 else {
                     presenter.moveAssets(selectedAssets);
-
-                    int size = selectedAssets.size();
-                    String msg = " asset moved.";
-                    if (size > 1)
-                        msg = " assets moved.";
-                    Toast.makeText(ContentsActivity.this,
-                            size + msg, Toast.LENGTH_SHORT).show();
-
                     presenter.loadCurrentContents(false);
-
                 }
                 toggleMenuDisplay(true);
                 fab.setVisibility(View.VISIBLE);
                 fabCancelMoveButton.setVisibility(View.GONE);
                 fabConfirmMoveButton.setVisibility(View.GONE);
-
-
-
-
             }
         });
 
@@ -450,13 +434,6 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
                     case R.id.move_button:
                         selectedAssets = AssetListAdapter.getSelectedAssetList();
-//                        selectedItemsIndex.clear();
-//                        Set<Map.Entry<Integer, Boolean>> mapEntrySet =
-//                                AssetListAdapter.getSelectStatusMap().entrySet();
-//                        for (Map.Entry<Integer, Boolean> e : mapEntrySet) {
-//                            if (e.getValue())
-//                                selectedItemsIndex.add(e.getKey());
-//                        }
 
                         presenter.quitEditMode();
                         toggleMenuDisplay(false);

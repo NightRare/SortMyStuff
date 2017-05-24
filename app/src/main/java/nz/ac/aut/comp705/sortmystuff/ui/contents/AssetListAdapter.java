@@ -68,7 +68,7 @@ public class AssetListAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        ViewHolder holder = null;
+        ViewHolder holder;
 
         if (convertView == null) {
             holder = new ViewHolder();
@@ -110,14 +110,6 @@ public class AssetListAdapter extends BaseAdapter {
     public static HashMap<Integer, Boolean> getSelectStatusMap() {
         return selectStatusMap;
     }
-
-    public static void setSelectStatusMap(HashMap<Integer, Boolean> selectStatusMap) {
-        AssetListAdapter.selectStatusMap = selectStatusMap;
-    }
-
-//    public List<Asset> getAssetList() {
-//        return assetList;
-//    }
 
     public static List<Asset> getSelectedAssetList() {
         Set<Map.Entry<Integer, Boolean>> mapSet = selectStatusMap.entrySet();
