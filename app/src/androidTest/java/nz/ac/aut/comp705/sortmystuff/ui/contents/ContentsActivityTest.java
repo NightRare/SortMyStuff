@@ -9,6 +9,7 @@ import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.Display;
 import android.view.View;
 
 import com.google.common.base.Preconditions;
@@ -18,6 +19,7 @@ import junit.framework.Assert;
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
 import org.junit.After;
 import org.junit.Before;
@@ -47,6 +49,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.isChecked;
 import static android.support.test.espresso.matcher.ViewMatchers.isDescendantOfA;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.isNotChecked;
+import static android.support.test.espresso.matcher.ViewMatchers.withChild;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
@@ -391,6 +394,69 @@ public class ContentsActivityTest {
         }
     }
 
+    @Test
+    public void moveAsset_seleteNothing() {
+        //add some assets following such structure:
+        //dining room > table big, table small
+        //living room > (empty)
+        prepareAssetsToMove();
+
+        //enter selection mode by long-click an item
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(0).perform(longClick());
+
+        //select nothing and click MOVE button
+        onView(withId(R.id.move_button)).perform(click());
+
+        //two tables should stay where they were
+        onView(withChild(withText(ASSET_TABLE_BIG))).check(matches(isDisplayed()));
+        onView(withChild(withText(ASSET_TABLE_SMALL))).check(matches(isDisplayed()));
+
+        //and the living room should still be empty
+        onView(withId(R.id.pathbar_root)).perform(click());
+        clickAsset(1);
+        onView(withChild(withText(ASSET_TABLE_BIG))).check(doesNotExist());
+        onView(withChild(withText(ASSET_TABLE_SMALL))).check(doesNotExist());
+
+    }
+
+    @Test
+    public void moveAsset_seleteSomeAssets() {
+        //add some assets following such structure:
+        //dining room > table big, table small
+        //living room > (empty)
+        prepareAssetsToMove();
+
+        //enter selection mode by long-click an item
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(0).perform(longClick());
+
+        //select two tables and click MOVE button
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(0).perform(click());
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(1).perform(click());
+        onView(withId(R.id.move_button)).perform(click());
+
+        //go to the living room where tables will be moved
+        onView(withId(R.id.pathbar_root)).perform(click());
+        clickAsset(1);
+
+        //click CONFIRM button
+        onView(withId(R.id.confirm_move_button)).perform(click());
+
+        //now the living room should contain two tables
+        onView(withChild(withText(ASSET_TABLE_BIG))).check(matches(isDisplayed()));
+        onView(withChild(withText(ASSET_TABLE_SMALL))).check(matches(isDisplayed()));
+
+        //and two tables should disappear from the dining room
+        onView(withId(R.id.pathbar_root)).perform(click());
+        clickAsset(0);
+        onView(withChild(withText(ASSET_TABLE_BIG))).check(doesNotExist());
+        onView(withChild(withText(ASSET_TABLE_SMALL))).check(doesNotExist());
+
+    }
+
 
 
     //region PRIVATE STUFF
@@ -408,6 +474,10 @@ public class ContentsActivityTest {
     private static final String ASSET1_NAME = "ASSET1_NAME";
     private static final String ASSET2_NAME = "ASSET2_NAME";
     private static final String ASSET3_NAME = "ASSET3_NAME";
+    private static final String ASSET_LIVING_ROOM = "Living Room";
+    private static final String ASSET_DINING_ROOM = "Dining Room";
+    private static final String ASSET_TABLE_BIG = "table big";
+    private static final String ASSET_TABLE_SMALL = "table small";
     private static final String PATH_BAR_0_PREFIX = "  ";
     private static final String PATH_BAR_PREFIX = " >  ";
 
@@ -437,6 +507,19 @@ public class ContentsActivityTest {
                 description.appendText("is isDescendantOfA Pathbar layout with text " + itemText);
             }
         };
+    }
+
+    private void prepareAssetsToMove() {
+        // add two rooms
+        addAsset(ASSET_DINING_ROOM);
+        addAsset(ASSET_LIVING_ROOM);
+
+        //go the the dining room
+        clickAsset(0);
+
+        //add two tables
+        addAsset(ASSET_TABLE_BIG);
+        addAsset(ASSET_TABLE_SMALL);
     }
 
     @Deprecated

@@ -7,6 +7,8 @@ import android.view.View;
 import android.widget.CheckBox;
 import android.widget.Toast;
 
+import com.google.common.base.Preconditions;
+
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
@@ -139,7 +141,10 @@ public class ContentsPresenter implements IContentsPresenter {
 
     @Override
     public void moveAssets(List<Asset> assets) {
-        //reject the attempt to move to the original directory
+        Preconditions.checkNotNull(assets, "The assets to move cannot be null.");
+        Preconditions.checkArgument(!assets.isEmpty(), "The assets to move cannot be empty");
+
+        //reject the attempt to move to current directory
         if (assets.get(0).getContainerId().equals(currentAssetId)) {
             Toast.makeText(activity, "The assets are already here:)", Toast.LENGTH_SHORT).show();
             return;
@@ -221,18 +226,6 @@ public class ContentsPresenter implements IContentsPresenter {
         loadCurrentContents(false);
     }
 
-
-//    @Override
-//    public void enableMoveMode() {
-//        editModeEnabled = false;
-//        loadCurrentContents(false);
-//    }
-//
-//    @Override
-//    public void quitMoveMode() {
-//
-//    }
-
     //endregion
 
     //region Private stuff
@@ -287,14 +280,6 @@ public class ContentsPresenter implements IContentsPresenter {
 
             }
         });
-    }
-
-
-    private void setCheckboxStatus(View view, boolean checked) {
-        CheckBox checkBox = (CheckBox) view.findViewById(R.id.asset_checkbox);
-        checkBox.setVisibility(View.VISIBLE);
-        if (checkBox != null)
-            checkBox.setChecked(checked);
     }
 
     //endregion

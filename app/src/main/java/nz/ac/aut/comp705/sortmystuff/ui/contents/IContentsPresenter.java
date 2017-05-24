@@ -57,6 +57,10 @@ public interface IContentsPresenter extends IPresenter {
      */
     void addAsset(String assetName);
 
+    /**
+     * Move a list of assets to a new container.
+     * @param assets the assets to move.
+     */
     void moveAssets(List<Asset> assets);
 
     /**
@@ -91,7 +95,4 @@ public interface IContentsPresenter extends IPresenter {
      */
     void recycleAssetsRecursively(List<String> assetIds);
 
-//    void enableMoveMode();
-//
-//    void quitMoveMode();
 }

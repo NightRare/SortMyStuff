@@ -81,7 +81,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         presenter.start();
     }
 
-   @Override
+    @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putString(CURRENT_ASSET_ID, presenter.getCurrentAssetId());
         super.onSaveInstanceState(outState);
@@ -102,8 +102,9 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         return super.onOptionsItemSelected(item);
     }
 
-    public void toggleMenuDisplay(boolean showMenu){
-        if(menu == null)
+    //Show or hide the toolbar menu.
+    public void toggleMenuDisplay(boolean showMenu) {
+        if (menu == null)
             return;
         menu.setGroupVisible(R.id.main_menu_group, showMenu);
     }
@@ -142,7 +143,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         adapter = new AssetListAdapter(assets, getApplicationContext(), false);
         assetListView.setAdapter(adapter);
 
-        if(enableEditMode)
+        if (enableEditMode)
             displayInEditMode(assets);
         else
             displayWithoutEditMode(assets);
@@ -180,11 +181,10 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     @Override
     public void showDeleteDialog(boolean deletingCurrentAsset) {
         String message;
-        if(deletingCurrentAsset) {
+        if (deletingCurrentAsset) {
             message = "Deleting \'" + getTitle().toString() + "\'\n" +
                     "and its children assets.";
-        }
-        else {
+        } else {
             message = "Deleting selected assets\n" +
                     "and their children assets.";
         }
@@ -201,6 +201,8 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
     private List<String> selectedAssetIds;
 
+    private List<Asset> selectedAssets;
+
     //region UI Components
 
     private Menu menu;
@@ -216,8 +218,6 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     private ListView assetListView;
     private Button cancel_btn, selectAll_btn, selectNone_btn, move_btn;
     private AssetListAdapter adapter;
-
-    private List<Asset> selectedAssets;
 
     //endregion
 
@@ -248,6 +248,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
      * Build a dialog box format for adding assets
      * that enables a single line input
      * and has a functional save and cancel button
+     *
      * @return builder the dialog box format
      */
     private AlertDialog.Builder getAddAssetDialogBuilder() {
@@ -285,7 +286,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         builder.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                if(deletingCurrentAsset)
+                if (deletingCurrentAsset)
                     presenter.recycleCurrentAssetRecursively();
                 else
                     presenter.recycleAssetsRecursively(selectedAssetIds);
@@ -352,8 +353,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
                 if (selectedAssets.isEmpty()) {
                     Toast.makeText(ContentsActivity.this,
                             "You haven't selected any items.", Toast.LENGTH_SHORT).show();
-                }
-                else {
+                } else {
                     presenter.moveAssets(selectedAssets);
                     presenter.loadCurrentContents(false);
                 }
@@ -382,8 +382,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
                     holder.checkbox.toggle();
                     AssetListAdapter.getSelectStatusMap().put(position, holder.checkbox.isChecked());
                     //adapter.notifyDataSetChanged();
-                }
-                else {
+                } else {
                     //fetches the selected asset in the list
                     Asset a = (Asset) parent.getItemAtPosition(position);
                     //sets the selected asset's ID as the current asset (to be viewed)
@@ -433,6 +432,8 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
                         break;
 
                     case R.id.move_button:
+                        //get the selected assets before quitting edit mode,
+                        //or else the selectedAssetList will be empty
                         selectedAssets = AssetListAdapter.getSelectedAssetList();
 
                         presenter.quitEditMode();
