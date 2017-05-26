@@ -1,15 +1,13 @@
 package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
 import android.content.Intent;
-import android.support.design.widget.FloatingActionButton;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.CheckBox;
 import android.widget.Toast;
 
 import com.google.common.base.Preconditions;
 
 import java.util.List;
+import java.util.prefs.PreferenceChangeEvent;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
@@ -186,7 +184,7 @@ public class ContentsPresenter implements IContentsPresenter {
                 enableEditMode();
                 return true;
 
-            case R.id.delete_asset_button:
+            case R.id.delete_current_asset_button:
                 if (currentAssetId.equals(dm.getRootAsset().getId())) {
                     Toast.makeText(activity, "Cannot delete Root", Toast.LENGTH_LONG).show();
                     return false;
@@ -209,8 +207,12 @@ public class ContentsPresenter implements IContentsPresenter {
     }
 
     @Override
-    public void recycleAssetsRecursively(List<String> assetIds) {
-        // TODO recycleAssetsRecursively to be implemented
+    public void recycleAssetsRecursively(List<Asset> assets) {
+        Preconditions.checkNotNull(assets);
+        for(Asset a : assets) {
+            dm.recycleAssetRecursively(a);
+        }
+        loadCurrentContents(true);
     }
 
 

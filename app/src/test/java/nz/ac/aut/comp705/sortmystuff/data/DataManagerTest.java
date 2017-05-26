@@ -951,7 +951,7 @@ public class DataManagerTest {
         mockAssets.add(asset1);
 
         // check whether serialised
-        dataManager.recycleAsset(asset1);
+        dataManager.recycleAssetRecursively(asset1);
 
         final ArgumentMatcher<Asset> matchRecycledAsset = new ArgumentMatcher<Asset>() {
             @Override
@@ -995,7 +995,7 @@ public class DataManagerTest {
     public void recycleAsset_assetNotExists() {
         final Asset root = prepareRootAsset();
 
-        dataManager.recycleAsset("NoSuchAssetId");
+        dataManager.recycleAssetRecursively("NoSuchAssetId");
         // check whether serialised
         verify(mockFileHelper, never()).serialiseAsset(any(Asset.class));
 
@@ -1013,7 +1013,7 @@ public class DataManagerTest {
     public void recycleAsset_recycleRootAsset() {
         final Asset root = prepareRootAsset();
 
-        dataManager.recycleAsset(root);
+        dataManager.recycleAssetRecursively(root);
 
         // check whether serialised
         verify(mockFileHelper, never()).serialiseAsset(any(Asset.class));
@@ -1039,7 +1039,7 @@ public class DataManagerTest {
         when(mockFileHelper.serialiseAsset(any(Asset.class))).thenReturn(false);
 
         try {
-            dataManager.recycleAsset(asset1);
+            dataManager.recycleAssetRecursively(asset1);
         } catch (UpdateLocalStorageFailedException e) {
             return;
         }
