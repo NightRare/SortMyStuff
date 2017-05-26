@@ -449,39 +449,6 @@ public class DataManager implements IDataManager {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void recycleAsset(@NonNull Asset asset) {
-        Preconditions.checkNotNull(asset);
-
-        recycleAsset(asset.getId());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void recycleAsset(@NonNull String assetId) {
-        Preconditions.checkNotNull(assetId);
-
-        if (!assetExists(assetId)) {
-            Log.e(getClass().getName(), "asset not exists, failed to recycle, asset id: " + assetId);
-            return;
-        }
-        Asset asset = cachedAssets.get(assetId);
-        if (asset.isRoot()) {
-            Log.e(getClass().getName(), "cannot recycle Root asset");
-            return;
-        }
-        asset.recycle();
-        cachedRecycledAssets.put(assetId, cachedAssets.remove(assetId));
-        if (!fileHelper.serialiseAsset(asset)) {
-            dirtyCachedAssets = true;
-            throw new UpdateLocalStorageFailedException("Write asset failed, id: " + assetId);
-        }
-    }
 
     /**
      * {@inheritDoc}
@@ -491,22 +458,18 @@ public class DataManager implements IDataManager {
     public void recycleAssetRecursively(@NonNull String assetId) {
         Preconditions.checkNotNull(assetId);
 
-        if (!assetExists(assetId)) {
-            Log.e(getClass().getName(), "asset not exists, failed to recycle, asset id: " + assetId);
+        if (!assetExists(assetId) || assetId.equals(AppConstraints.ROOT_ASSET_ID)) {
+            Log.e(getClass().getName(), "asset not exists or it is Root Asset, failed to recycle, asset id: " + assetId);
             return;
         }
         Asset asset = cachedAssets.get(assetId);
-        if (asset.isRoot()) {
-            Log.e(getClass().getName(), "cannot recycle Root asset");
-            return;
-        }
 
         if(!asset.getContents().isEmpty()) {
             for(Asset a : asset.getContents()) {
                 recycleAssetRecursively(a.getId());
             }
         }
-        recycleAsset(assetId);
+        recycleAsset(asset);
     }
 
     /**
@@ -517,7 +480,7 @@ public class DataManager implements IDataManager {
     public void recycleAssetRecursively(@NonNull Asset asset) {
         Preconditions.checkNotNull(asset);
 
-        recycleAsset(asset.getId());
+        recycleAssetRecursively(asset.getId());
     }
 
     /**
@@ -761,6 +724,18 @@ public class DataManager implements IDataManager {
         }
 
         return cachedAssets.containsKey(assetId);
+    }
+
+
+    private void recycleAsset(@NonNull Asset asset) {
+        Preconditions.checkNotNull(asset);
+
+        asset.recycle();
+        cachedRecycledAssets.put(asset.getId(), cachedAssets.remove(asset.getId()));
+        if (!fileHelper.serialiseAsset(asset)) {
+            dirtyCachedAssets = true;
+            throw new UpdateLocalStorageFailedException("Write asset failed, id: " + asset.getId());
+        }
     }
 
     private boolean releaseOneCachedDetails() {

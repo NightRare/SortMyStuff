@@ -191,7 +191,7 @@ public class ContentsPresenter implements IContentsPresenter {
                     Toast.makeText(activity, "Cannot delete Root", Toast.LENGTH_LONG).show();
                     return false;
                 }
-                view.showDeleteDialog(false);
+                view.showDeleteDialog(true);
                 return true;
 
             default:

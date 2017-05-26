@@ -254,24 +254,6 @@ public interface IDataManager {
     void moveAsset(@NonNull String assetId, @NonNull String newContainerId);
 
     /**
-     * Recycle the asset.
-     *
-     * @param asset the asset to be recycled
-     * @throws NullPointerException              if any argument is {@code null}
-     * @throws UpdateLocalStorageFailedException if update local storage failed
-     */
-    void recycleAsset(@NonNull Asset asset);
-
-    /**
-     * Recycle the asset with given id.
-     *
-     * @param assetId the id of the asset to be recycled
-     * @throws NullPointerException              if any argument is {@code null}
-     * @throws UpdateLocalStorageFailedException if update local storage failed
-     */
-    void recycleAsset(@NonNull String assetId);
-
-    /**
      * Recycle the asset with given id and all its children assets.
      *
      * @param assetId the id of the asset to be recycled
