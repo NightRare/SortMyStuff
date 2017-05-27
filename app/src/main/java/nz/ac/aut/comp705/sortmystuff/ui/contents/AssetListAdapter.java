@@ -25,12 +25,12 @@ import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 
 public class AssetListAdapter extends BaseAdapter {
 
-    private static List<Asset> assetList;
+    private List<Asset> assetList;
 
-    private static List<Asset> selectedAssetList;
+    private List<Asset> selectedAssetList;
 
     //Whether the checkbox is selected.
-    private static HashMap<Integer, Boolean> selectStatusMap;
+    private HashMap<Integer, Boolean> selectStatusMap;
     private Context context;
     private LayoutInflater inflater;
     private Boolean showCheckbox;
@@ -107,11 +107,11 @@ public class AssetListAdapter extends BaseAdapter {
         CheckBox checkbox;
     }
 
-    public static HashMap<Integer, Boolean> getSelectStatusMap() {
+    public HashMap<Integer, Boolean> getSelectStatusMap() {
         return selectStatusMap;
     }
 
-    public static List<Asset> getSelectedAssetList() {
+    public List<Asset> getSelectedAssetList() {
         Set<Map.Entry<Integer, Boolean>> mapSet = selectStatusMap.entrySet();
         for (Map.Entry<Integer, Boolean> i : mapSet) {
             if (i.getValue())

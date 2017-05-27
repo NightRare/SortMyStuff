@@ -30,9 +30,9 @@
             android:text="ALL" />
 
         <Button
-            android:id="@+id/select_none_button"
+            android:id="@+id/delete_button"
             style="@style/action_button_style"
-            android:text="NONE" />
+            android:text="DELETE" />
 
         <Button
             android:id="@+id/move_button"

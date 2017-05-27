@@ -55,18 +55,6 @@ public class ImageDetail extends Detail<Bitmap> {
 
     //endregion
 
-    //region OBJECT METHODS OVERRIDING
-
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof ImageDetail) {
-            return super.equals(o);
-        }
-        return false;
-    }
-
-    //endregion
-
     //region PRIVATE
 
     private transient Bitmap field;

@@ -40,6 +40,7 @@ import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 
 import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.longClick;
 import static android.support.test.espresso.action.ViewActions.replaceText;
@@ -51,9 +52,11 @@ import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.isNotChecked;
 import static android.support.test.espresso.matcher.ViewMatchers.withChild;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
+import static android.support.test.espresso.matcher.ViewMatchers.withContentDescription;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.is;
@@ -457,7 +460,105 @@ public class ContentsActivityTest {
 
     }
 
+    @Test
+    public void deleteAsset_deleteCurrentAsset() {
+        addAsset(ASSET1_NAME);
+        clickAsset(0);
 
+        // check if the current asset is asset1
+        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.toolbarMain);
+        Assert.assertEquals(ASSET1_NAME, toolbar.getTitle());
+
+        openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
+        onView(withText("Delete Asset")).perform(click());
+        onView(withText("Confirm")).perform(click());
+
+        // current asset set back to the container (in this case the Root) asset and asset1 no
+        // longer exists
+        Assert.assertEquals(ROOT_ASSET_NAME, toolbar.getTitle());
+        onView(withChild(withText(ASSET1_NAME))).check(doesNotExist());
+    }
+
+    @Test
+    public void deleteAsset_cancelDeleteCurrentAsset() {
+        addAsset(ASSET1_NAME);
+        clickAsset(0);
+
+        // check if the current asset is asset1
+        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.toolbarMain);
+        Assert.assertEquals(ASSET1_NAME, toolbar.getTitle());
+
+        openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
+        onView(withText("Delete Asset")).perform(click());
+        onView(withText("Cancel")).perform(click());
+
+        // current asset should still be asset1
+        Assert.assertEquals(ASSET1_NAME, toolbar.getTitle());
+    }
+
+    @Test
+    public void deleteAsset_deleteRootAsset() {
+        addAsset(ASSET1_NAME);
+
+        openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
+        onView(withText("Delete Asset")).perform(click());
+
+        // delete asset dialog should not pop up
+        onView(withText("Confirm")).check(doesNotExist());
+
+        // Root asset cannot be deleted
+        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.toolbarMain);
+        Assert.assertEquals(ROOT_ASSET_NAME, toolbar.getTitle());
+        onView(withChild(withText(ASSET1_NAME))).check(matches(isDisplayed()));
+    }
+
+    @Test
+    public void deleteAsset_deleteMultipleAssets() {
+        addAsset(ASSET1_NAME);
+        addAsset(ASSET2_NAME);
+        addAsset(ASSET3_NAME);
+
+        // enter selection mode
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(0).perform(longClick());
+
+        // delete asset1 and asset2
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(0).perform(click());
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(1).perform(click());
+
+        onView(withId(R.id.delete_button)).perform(click());
+        onView(withText("Confirm")).perform(click());
+
+        // asset1 and asset2 should be deleted while asset3 is still there
+        onView(withChild(withText(ASSET1_NAME))).check(doesNotExist());
+        onView(withChild(withText(ASSET2_NAME))).check(doesNotExist());
+        onView(withChild(withText(ASSET3_NAME))).check(matches(isDisplayed()));
+    }
+
+    @Test
+    public void deleteAsset_cancelDeleteMultipleAssets() {
+        addAsset(ASSET1_NAME);
+        addAsset(ASSET2_NAME);
+
+        // enter selection mode
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(0).perform(longClick());
+
+        // delete asset1 and asset2
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(0).perform(click());
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(1).perform(click());
+
+        onView(withId(R.id.delete_button)).perform(click());
+        onView(withText("Cancel")).perform(click());
+
+        // if cancel deleting, nothing should be deleted
+        onView(withChild(withText(ASSET1_NAME))).check(matches(isDisplayed()));
+        onView(withChild(withText(ASSET2_NAME))).check(matches(isDisplayed()));
+    }
 
     //region PRIVATE STUFF
 
