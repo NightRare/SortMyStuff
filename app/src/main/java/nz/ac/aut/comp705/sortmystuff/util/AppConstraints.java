@@ -18,6 +18,8 @@ public class AppConstraints {
     // DETAIL
     //********************************************
 
+    public final static int CATEGORY_NAME_CAP = 40;
+
     public final static int DETAIL_LABEL_CAP = 40;
 
     public final static int TEXTDETAIL_FIELD_CAP = 400;
