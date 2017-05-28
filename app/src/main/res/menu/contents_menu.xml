@@ -2,6 +2,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsActivity">
+    <item android:id="@+id/search_view"
+        android:icon="@drawable/ic_search_white_48dp"
+        android:title="Search"
+        app:showAsAction="ifRoom" />
 
     <group android:id="@+id/main_menu_group">
         <item
@@ -22,10 +26,6 @@
             android:title="Delete Asset"
             app:showAsAction="never" />
 
-        <item
-            android:id="@+id/search_button"
-            android:icon="@drawable/ic_search_white_48dp"
-            android:title="Search"
-            app:showAsAction="ifRoom" />
+
     </group>
 </menu>

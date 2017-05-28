@@ -6,6 +6,7 @@ import android.widget.Toast;
 
 import com.google.common.base.Preconditions;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.PreferenceChangeEvent;
 
@@ -13,6 +14,7 @@ import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.ui.details.DetailsActivity;
+import nz.ac.aut.comp705.sortmystuff.ui.search.SearchActivity;
 
 /**
  * The implementation class of {@link IContentsPresenter}.
@@ -172,12 +174,17 @@ public class ContentsPresenter implements IContentsPresenter {
             case R.id.action_view_details:
                 // if it's Root Asset, do not show details
                 if (currentAssetId.equals(dm.getRootAsset().getId())) {
-                    Toast.makeText(activity, "Root has no detail", Toast.LENGTH_LONG).show();
+                    view.showMessageOnScreen("Root has no detail");
                     return false;
                 }
                 Intent intent = new Intent(activity, DetailsActivity.class);
                 intent.putExtra("AssetID", currentAssetId);
                 activity.startActivity(intent);
+                return true;
+
+            case R.id.search_view:
+                Intent searchIntent = new Intent(activity, SearchActivity.class);
+                activity.startActivity(searchIntent);
                 return true;
 
             case R.id.selection_mode_button:
@@ -191,6 +198,8 @@ public class ContentsPresenter implements IContentsPresenter {
                 }
                 view.showDeleteDialog(true);
                 return true;
+
+
 
             default:
                 return false;
