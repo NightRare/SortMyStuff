@@ -18,4 +18,6 @@ public interface ISearchPresenter extends IPresenter {
 
 
     public void loadResult(String query);
+
+    public void goToDetailPage(String assetId);
 }

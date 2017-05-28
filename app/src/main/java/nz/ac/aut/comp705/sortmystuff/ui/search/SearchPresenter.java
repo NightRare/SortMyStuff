@@ -1,5 +1,6 @@
 package nz.ac.aut.comp705.sortmystuff.ui.search;
 
+import android.content.Intent;
 import android.util.Log;
 import android.view.View;
 
@@ -8,6 +9,7 @@ import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.ui.details.DetailsActivity;
 
 /**
  * Created by DonnaCello on 23 May 2017.
@@ -55,6 +57,14 @@ public class SearchPresenter implements ISearchPresenter{
     @Override
     public void loadResult(String query){
         view.showResultList(search(query));
+    }
+
+    @Override
+    public void goToDetailPage(String assetId) {
+        Intent goToDetail = new Intent(activity, DetailsActivity.class);
+        goToDetail.putExtra("AssetID", assetId);
+        activity.startActivity(goToDetail);
+
     }
 
 

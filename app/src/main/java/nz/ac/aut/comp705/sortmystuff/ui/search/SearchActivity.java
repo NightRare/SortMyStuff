@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,6 +18,7 @@ import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.ui.details.DetailsActivity;
 
 public class SearchActivity extends AppCompatActivity implements ISearchView {
 
@@ -26,8 +28,8 @@ public class SearchActivity extends AppCompatActivity implements ISearchView {
         setContentView(R.layout.search_act);
         setTitle("Search");
 
-//        Toolbar toolbar = (Toolbar) findViewById(R.id.search_toolbar);
-//        setSupportActionBar(toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.search_toolbar);
+        setSupportActionBar(toolbar);
 
         startPresenter();
 
@@ -45,11 +47,11 @@ public class SearchActivity extends AppCompatActivity implements ISearchView {
         });
 
         result = (ListView) findViewById(R.id.result_list);
-        result.setOnClickListener(new View.OnClickListener() {
+        result.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onClick(View v) {
-                Intent goToAsset = new Intent();
-
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Asset asset = (Asset) parent.getItemAtPosition(position);
+                presenter.goToDetailPage(asset.getId());
             }
         });
 
