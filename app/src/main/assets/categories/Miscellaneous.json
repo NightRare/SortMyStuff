@@ -1,0 +1,18 @@
+{
+  "name":"Miscellaneous",
+  "details":[
+    {
+      "assetId": "DUMMY_ASSET_ID",
+      "id": "BASIC_DUMMY_DETAIL_ID_1",
+      "label": "Photo",
+      "type": "Image"
+    },
+    {
+      "field": "",
+      "assetId": "DUMMY_ASSET_ID",
+      "id": "BASIC_DUMMY_DETAIL_ID_2",
+      "label": "Notes",
+      "type": "Text"
+    }
+  ]
+}

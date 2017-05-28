@@ -80,8 +80,6 @@ public final class TextDetail extends Detail<String> {
 
     private static void checkIllegalField(String field) {
         Preconditions.checkNotNull(field);
-        if(field.isEmpty())
-            throw new IllegalArgumentException("cannot be empty");
         if(field.length() > AppConstraints.TEXTDETAIL_FIELD_CAP)
             throw new IllegalArgumentException("string length exceeds cap");
     }

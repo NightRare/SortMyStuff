@@ -1,0 +1,30 @@
+{
+  "name":"Books",
+  "details":[
+    {
+      "assetId": "DUMMY_ASSET_ID",
+      "id": "BASIC_DUMMY_DETAIL_ID_1",
+      "label": "Photo",
+      "type": "Image"
+    },
+    {
+      "field": "",
+      "assetId": "DUMMY_ASSET_ID",
+      "id": "BASIC_DUMMY_DETAIL_ID_2",
+      "label": "Notes",
+      "type": "Text"
+    },
+    {
+      "assetId": "DUMMY_ASSET_ID",
+      "id": "EXTENDED_DUMMY_DETAIL_ID_1",
+      "label": "Expiry Date",
+      "type": "Date"
+    },
+    {
+      "assetId": "DUMMY_ASSET_ID",
+      "id": "EXTENDED_DUMMY_DETAIL_ID_2",
+      "label": "Purchased From",
+      "type": "Text"
+    }
+  ]
+}
