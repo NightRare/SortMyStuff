@@ -9,11 +9,14 @@ import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import nz.ac.aut.comp705.sortmystuff.R;
-import nz.ac.aut.comp705.sortmystuff.data.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 
 /**
  * The Adapter class for the list view of assets list.
@@ -24,8 +27,10 @@ public class AssetListAdapter extends BaseAdapter {
 
     private List<Asset> assetList;
 
+    private List<Asset> selectedAssetList;
+
     //Whether the checkbox is selected.
-    private static HashMap<Integer, Boolean> selectStatusMap;
+    private HashMap<Integer, Boolean> selectStatusMap;
     private Context context;
     private LayoutInflater inflater;
     private Boolean showCheckbox;
@@ -33,8 +38,9 @@ public class AssetListAdapter extends BaseAdapter {
     public AssetListAdapter(List<Asset> list, Context context, Boolean showCheckbox) {
         this.context = context;
         this.assetList = list;
+        selectedAssetList = new ArrayList<>();
         inflater = LayoutInflater.from(context);
-        selectStatusMap = new HashMap<Integer, Boolean>();
+        selectStatusMap = new HashMap<>();
         this.showCheckbox = showCheckbox;
         initSelectionStatus();
     }
@@ -62,11 +68,11 @@ public class AssetListAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        ViewHolder holder = null;
+        ViewHolder holder;
 
         if (convertView == null) {
             holder = new ViewHolder();
-            convertView = inflater.inflate(R.layout.assets_layout, null);
+            convertView = inflater.inflate(R.layout.contents_assets_layout, null);
 
             holder.imageView = (ImageView) convertView.findViewById(R.id.asset_image);
             holder.textView = (TextView) convertView.findViewById(R.id.asset_name);
@@ -101,11 +107,18 @@ public class AssetListAdapter extends BaseAdapter {
         CheckBox checkbox;
     }
 
-    public static HashMap<Integer, Boolean> getSelectStatusMap() {
+    public HashMap<Integer, Boolean> getSelectStatusMap() {
         return selectStatusMap;
     }
 
-    public static void setSelectStatusMap(HashMap<Integer, Boolean> selectStatusMap) {
-        AssetListAdapter.selectStatusMap = selectStatusMap;
+    public List<Asset> getSelectedAssetList() {
+        Set<Map.Entry<Integer, Boolean>> mapSet = selectStatusMap.entrySet();
+        for (Map.Entry<Integer, Boolean> i : mapSet) {
+            if (i.getValue())
+                selectedAssetList.add(assetList.get(i.getKey()));
+        }
+        return selectedAssetList;
     }
+
+
 }

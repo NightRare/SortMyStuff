@@ -2,7 +2,7 @@ package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
 import java.util.List;
 
-import nz.ac.aut.comp705.sortmystuff.data.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.ui.IView;
 
 /**
@@ -49,4 +49,11 @@ public interface IContentsView extends IView<IContentsPresenter> {
      * @param assets the list of parent assets, excluding Root asset.
      */
     void showPath(List<Asset> assets);
+
+    /**
+     * Displays the delete confirm dialog.
+     *
+     * @param deletingCurrentAsset true if it is deleting the currentAsset
+     */
+    void showDeleteDialog(boolean deletingCurrentAsset);
 }

@@ -1,8 +1,10 @@
 package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
 import android.view.MenuItem;
-import android.view.View;
 
+import java.util.List;
+
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.ui.IPresenter;
 
 /**
@@ -56,6 +58,12 @@ public interface IContentsPresenter extends IPresenter {
     void addAsset(String assetName);
 
     /**
+     * Move a list of assets to a new container.
+     * @param assets the assets to move.
+     */
+    void moveAssets(List<Asset> assets);
+
+    /**
      * Performs corresponding action when the given menu item is selected (interacted with) by
      * the user.
      *
@@ -74,4 +82,17 @@ public interface IContentsPresenter extends IPresenter {
      * Quit selection mode (namely edit mode) where each asset can not be selected or modified.
      */
     void quitEditMode();
+
+    /**
+     * Recycle the current asset and all its contained assets.
+     */
+    void recycleCurrentAssetRecursively();
+
+    /**
+     * Recycle the selected assets and all their contained assets.
+     *
+     * @param assets the list of the assets to be recycled
+     */
+    void recycleAssetsRecursively(List<Asset> assets);
+
 }

@@ -13,9 +13,10 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
-import nz.ac.aut.comp705.sortmystuff.data.Detail;
-import nz.ac.aut.comp705.sortmystuff.data.DetailType;
-import nz.ac.aut.comp705.sortmystuff.data.TextDetail;
+import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
+import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
+import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 
 /**
  * Created by Yuan on 2017/4/25.
@@ -47,9 +48,15 @@ public class JsonDetailAdapter implements JsonSerializer<Detail>, JsonDeserializ
     @Override
     public JsonElement serialize(Detail src, Type typeOfSrc, JsonSerializationContext context) {
         switch(src.getType()) {
+            case Date:
+                TextDetail dDetail = (TextDetail) src;
+                return context.serialize(dDetail, TextDetail.class);
             case Text:
-                TextDetail td = (TextDetail) src;
-                return context.serialize(td, TextDetail.class);
+                TextDetail tDetail = (TextDetail) src;
+                return context.serialize(tDetail, TextDetail.class);
+            case Image:
+                ImageDetail iDetail = (ImageDetail) src;
+                return context.serialize(iDetail, ImageDetail.class);
             default:
                 return context.serialize(src, Detail.class);
         }

@@ -1,0 +1,68 @@
+package nz.ac.aut.comp705.sortmystuff.data.models;
+
+import android.graphics.Bitmap;
+import android.support.annotation.NonNull;
+
+import com.google.common.base.Preconditions;
+
+/**
+ * Created by Yuan on 2017/5/16.
+ */
+
+public class ImageDetail extends Detail<Bitmap> {
+
+    //region DATA FIELDS
+
+
+    //endregion
+
+    //region STATIC FACTORIES
+
+    public static ImageDetail create(String assetId, String label, Bitmap field) {
+        Preconditions.checkNotNull(field);
+
+        return new ImageDetail(assetId, DetailType.Image, label, field);
+    }
+
+    //endregion
+
+    //region ACCESSORS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Bitmap getField() {
+        return field;
+    }
+
+    //endregion
+
+    //region MUTATORS
+
+    /**
+     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p>
+     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     */
+    @Deprecated
+    @Override
+    public void setField(@NonNull Bitmap field) {
+        Preconditions.checkNotNull(field);
+
+        this.field = field;
+    }
+
+    //endregion
+
+    //region PRIVATE
+
+    private transient Bitmap field;
+
+    private ImageDetail(String assetId, DetailType type, String label, Bitmap field) {
+        super(assetId, type, label);
+        this.field = field;
+    }
+
+    //endregion
+}

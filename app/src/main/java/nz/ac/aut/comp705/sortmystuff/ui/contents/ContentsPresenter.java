@@ -2,16 +2,17 @@ package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
 import android.content.Intent;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.CheckBox;
 import android.widget.Toast;
 
+import com.google.common.base.Preconditions;
+
 import java.util.List;
+import java.util.prefs.PreferenceChangeEvent;
 
 import nz.ac.aut.comp705.sortmystuff.R;
-import nz.ac.aut.comp705.sortmystuff.data.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
-import nz.ac.aut.comp705.sortmystuff.ui.detail.DetailActivity;
+import nz.ac.aut.comp705.sortmystuff.ui.details.DetailsActivity;
 
 /**
  * The implementation class of {@link IContentsPresenter}.
@@ -44,13 +45,7 @@ public class ContentsPresenter implements IContentsPresenter {
     public void start() {
         // if the app just launched, display Root Asset
         if (currentAssetId == null) {
-            Asset root = dm.getRootAsset();
-            if (root != null) {
-                currentAssetId = dm.getRootAsset().getId();
-            } else {
-                dm.createRootAsset();
-                currentAssetId = dm.getRootAsset().getId();
-            }
+            currentAssetId = dm.getRootAsset().getId();
         }
         loadCurrentContents(false);
     }
@@ -142,6 +137,28 @@ public class ContentsPresenter implements IContentsPresenter {
         loadCurrentContents(false);
     }
 
+    @Override
+    public void moveAssets(List<Asset> assets) {
+        Preconditions.checkNotNull(assets, "The assets to move cannot be null.");
+        Preconditions.checkArgument(!assets.isEmpty(), "The assets to move cannot be empty");
+
+        //reject the attempt to move to current directory
+        if (assets.get(0).getContainerId().equals(currentAssetId)) {
+            Toast.makeText(activity, "The assets are already here:)", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        for (Asset a : assets) {
+            dm.moveAsset(a, currentAssetId);
+        }
+
+        int size = assets.size();
+        String msg = " asset moved.";
+        if (size > 1)
+            msg = " assets moved.";
+        Toast.makeText(activity, size + msg, Toast.LENGTH_SHORT).show();
+    }
+
     /**
      * {@inheritDoc}
      *
@@ -150,32 +167,64 @@ public class ContentsPresenter implements IContentsPresenter {
      */
     @Override
     public boolean selectOptionItem(MenuItem item) {
-        int id = item.getItemId();
+        switch (item.getItemId()) {
 
-        //action button stuff
-        if (id == R.id.action_view_details) {
-            // if it's Root Asset, do not show details
-            if (currentAssetId.equals(dm.getRootAsset().getId())) {
-                Toast.makeText(activity, "Root has no detail", Toast.LENGTH_LONG).show();
+            case R.id.action_view_details:
+                // if it's Root Asset, do not show details
+                if (currentAssetId.equals(dm.getRootAsset().getId())) {
+                    Toast.makeText(activity, "Root has no detail", Toast.LENGTH_LONG).show();
+                    return false;
+                }
+                Intent intent = new Intent(activity, DetailsActivity.class);
+                intent.putExtra("AssetID", currentAssetId);
+                activity.startActivity(intent);
+                return true;
+
+            case R.id.selection_mode_button:
+                enableEditMode();
+                return true;
+
+            case R.id.delete_current_asset_button:
+                if (currentAssetId.equals(dm.getRootAsset().getId())) {
+                    Toast.makeText(activity, "Cannot delete Root", Toast.LENGTH_LONG).show();
+                    return false;
+                }
+                view.showDeleteDialog(true);
+                return true;
+
+            default:
                 return false;
-            }
-            Intent intent = new Intent(activity, DetailActivity.class);
-            intent.putExtra("AssetID", currentAssetId);
-            activity.startActivity(intent);
-            return true;
         }
-        return false;
+    }
+
+
+    @Override
+    public void recycleCurrentAssetRecursively() {
+        String deleteAssetId = currentAssetId;
+        setCurrentAssetIdToContainer();
+        dm.recycleAssetRecursively(deleteAssetId);
+        loadCurrentContents(true);
+    }
+
+    @Override
+    public void recycleAssetsRecursively(List<Asset> assets) {
+        Preconditions.checkNotNull(assets);
+        for(Asset a : assets) {
+            dm.recycleAssetRecursively(a);
+        }
+        loadCurrentContents(true);
+    }
+
+
+    @Override
+    public void enableEditMode() {
+        editModeEnabled = true;
+        loadCurrentContents(false);
     }
 
     @Override
     public void quitEditMode() {
         editModeEnabled = false;
-        loadCurrentContents(false);
-    }
-
-    @Override
-    public void enableEditMode() {
-        editModeEnabled = true;
         loadCurrentContents(false);
     }
 
@@ -192,6 +241,7 @@ public class ContentsPresenter implements IContentsPresenter {
     private String currentAssetId;
 
     private boolean editModeEnabled;
+
     /**
      * Loads the contents of the asset.
      *
@@ -232,14 +282,6 @@ public class ContentsPresenter implements IContentsPresenter {
 
             }
         });
-    }
-
-
-    private void setCheckboxStatus(View view, boolean checked) {
-        CheckBox checkBox = (CheckBox) view.findViewById(R.id.asset_checkbox);
-        checkBox.setVisibility(View.VISIBLE);
-        if (checkBox != null)
-            checkBox.setChecked(checked);
     }
 
     //endregion
