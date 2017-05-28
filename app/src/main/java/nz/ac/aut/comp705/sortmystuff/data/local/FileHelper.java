@@ -16,11 +16,14 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Category;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.util.JsonDetailAdapter;
 import nz.ac.aut.comp705.sortmystuff.util.Log;
@@ -153,6 +156,22 @@ public class FileHelper implements IFileHelper {
         }
 
         return deserialiseImageFiles(list);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Category> deserialiseCategories() {
+        String json = resLoader.getCategoriesJson();
+        Category[] categories = gBuilder.create().fromJson(json, Category[].class);
+        for(Category cat : categories) {
+            for(Detail d : cat.getDetails()) {
+                if(d.getType().equals(DetailType.Image))
+                    d.setField(resLoader.getDefaultPhoto());
+            }
+        }
+        return Arrays.asList(categories);
     }
 
     /**

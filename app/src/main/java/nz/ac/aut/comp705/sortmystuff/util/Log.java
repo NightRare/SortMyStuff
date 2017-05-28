@@ -15,6 +15,7 @@ public class Log {
     public static final String CLOSING_STREAM_FAILED = "CLOSING_STREAM_FAILED";
     public static final String FILE_NOT_EXISTS = "FILE_NOT_EXISTS";
     public static final String UNEXPECTED_ERROR = "UNEXPECTED_ERROR";
+    public static final String ASSETMANAGER_READ_FAILED = "ASSETMANAGER_READ_FAILED";
 
     //endregion
 
