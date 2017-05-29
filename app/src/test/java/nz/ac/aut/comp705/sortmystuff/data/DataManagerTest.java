@@ -156,7 +156,7 @@ public class DataManagerTest {
     public void createTextDetail_textDetailCreatedAndSaveToJsonFile() {
         // prepare an asset
         Asset root = prepareRootAsset();
-        final Asset asset = Asset.create(ASSET_NAME1, root);
+        final Asset asset = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset);
 
         final String detailId = dataManager.createTextDetail(asset, TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
@@ -186,7 +186,7 @@ public class DataManagerTest {
     public void createTextDetail_emptyLabel() {
         // prepare an asset
         Asset root = prepareRootAsset();
-        final Asset asset = Asset.create(ASSET_NAME1, root);
+        final Asset asset = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset);
 
         try {
@@ -205,7 +205,7 @@ public class DataManagerTest {
 
         // prepare an asset
         Asset root = prepareRootAsset();
-        final Asset asset = Asset.create(ASSET_NAME1, root);
+        final Asset asset = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset);
 
         try {
@@ -236,7 +236,7 @@ public class DataManagerTest {
         try {
             // prepare an asset
             Asset root = prepareRootAsset();
-            final Asset asset = Asset.create(ASSET_NAME1, root);
+            final Asset asset = Asset.createAsMisc(ASSET_NAME1, root);
             mockAssets.add(asset);
 
             dataManager.createTextDetail(asset, TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
@@ -307,9 +307,9 @@ public class DataManagerTest {
     @Test
     public void getAllAssetsAsync_getAllAssets() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
-        final Asset asset2 = Asset.create(ASSET_NAME2, root);
-        final Asset asset3 = Asset.create(ASSET_NAME3, asset2);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, root);
+        final Asset asset3 = Asset.createAsMisc(ASSET_NAME3, asset2);
         mockAssets.add(asset1);
         mockAssets.add(asset2);
         mockAssets.add(asset3);
@@ -350,9 +350,9 @@ public class DataManagerTest {
     @Test
     public void getRecycledAssetsAsync_getRecycledAssets() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
-        final Asset asset2 = Asset.create(ASSET_NAME2, root);
-        final Asset asset3 = Asset.create(ASSET_NAME3, asset2);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, root);
+        final Asset asset3 = Asset.createAsMisc(ASSET_NAME3, asset2);
 
         //recycling
         asset1.recycle();
@@ -391,9 +391,9 @@ public class DataManagerTest {
     @Test
     public void getRecycledAssetsAsync_noRecycledAssets() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
-        final Asset asset2 = Asset.create(ASSET_NAME2, root);
-        final Asset asset3 = Asset.create(ASSET_NAME3, asset2);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, root);
+        final Asset asset3 = Asset.createAsMisc(ASSET_NAME3, asset2);
         mockAssets.add(asset1);
         mockAssets.add(asset2);
         mockAssets.add(asset3);
@@ -426,9 +426,9 @@ public class DataManagerTest {
     @Test
     public void getContentAssetsAsync_getContentAssets() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
-        final Asset asset2 = Asset.create(ASSET_NAME2, root);
-        final Asset asset3 = Asset.create(ASSET_NAME3, asset2);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, root);
+        final Asset asset3 = Asset.createAsMisc(ASSET_NAME3, asset2);
         mockAssets.add(asset1);
         mockAssets.add(asset2);
         mockAssets.add(asset3);
@@ -491,9 +491,9 @@ public class DataManagerTest {
     @Test
     public void getParentAssetsAsync_getParentAssets() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
-        final Asset asset2 = Asset.create(ASSET_NAME2, asset1);
-        final Asset asset3 = Asset.create(ASSET_NAME3, asset2);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, asset1);
+        final Asset asset3 = Asset.createAsMisc(ASSET_NAME3, asset2);
         mockAssets.add(asset1);
         mockAssets.add(asset2);
         mockAssets.add(asset3);
@@ -526,9 +526,9 @@ public class DataManagerTest {
     @Test
     public void getParentAssetsAsync_getParentOfRoot() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
-        final Asset asset2 = Asset.create(ASSET_NAME2, asset1);
-        final Asset asset3 = Asset.create(ASSET_NAME3, asset2);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, asset1);
+        final Asset asset3 = Asset.createAsMisc(ASSET_NAME3, asset2);
         mockAssets.add(asset1);
         mockAssets.add(asset2);
         mockAssets.add(asset3);
@@ -560,7 +560,7 @@ public class DataManagerTest {
     @Test
     public void getAssetAsync_getAsset() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         // test get asset1 by id
@@ -610,7 +610,7 @@ public class DataManagerTest {
     @Test
     public void getDetailsAsync_getDetails() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
         TextDetail td1 = TextDetail.createTextDetail(
                 asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
@@ -661,7 +661,7 @@ public class DataManagerTest {
     @Test
     public void getDetailsAsync_loadFromLocalFileAtFirstTime() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
         TextDetail td1 = TextDetail.createTextDetail(
                 asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
@@ -685,7 +685,7 @@ public class DataManagerTest {
     @Test
     public void updateAssetName_assetNameUpdatedAndSaveToJsonFile() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         Assert.assertNotEquals(ASSET_NAME1, ASSET_NAME2);
@@ -731,7 +731,7 @@ public class DataManagerTest {
     @Test
     public void updateAssetName_illegalNewName() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         boolean passTest = false;
@@ -759,7 +759,7 @@ public class DataManagerTest {
     @Test
     public void updateAssetName_updateLocalJsonFileFailed() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         when(mockFileHelper.serialiseAsset(any(Asset.class))).thenReturn(false);
@@ -779,8 +779,8 @@ public class DataManagerTest {
     @Test
     public void moveAsset_assetMovedAndSaveToJsonFile() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
-        final Asset asset2 = Asset.create(ASSET_NAME2, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, root);
         mockAssets.add(asset1);
         mockAssets.add(asset2);
 
@@ -815,7 +815,7 @@ public class DataManagerTest {
     @Test
     public void moveAsset_assetNotExists() {
         final Asset root = prepareRootAsset();
-        final Asset asset2 = Asset.create(ASSET_NAME2, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, root);
         mockAssets.add(asset2);
 
         dataManager.moveAsset("NoSuchAssetId", asset2.getId());
@@ -836,7 +836,7 @@ public class DataManagerTest {
     @Test
     public void moveAsset_containerIdNotExists() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         dataManager.moveAsset(asset1, "NoSuchContainerId");
@@ -858,8 +858,8 @@ public class DataManagerTest {
     public void moveAsset_moveAssetToChildrenContainer() {
         // asset2 is contained by (the child of) asset1
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
-        final Asset asset2 = Asset.create(ASSET_NAME2, asset1);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, asset1);
         mockAssets.add(asset1);
         mockAssets.add(asset2);
 
@@ -892,7 +892,7 @@ public class DataManagerTest {
     @Test
     public void moveAsset_moveRootAsset() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         dataManager.moveAsset(root, root.getId());
@@ -924,8 +924,8 @@ public class DataManagerTest {
     @Test
     public void moveAsset_updateLocalJsonFileFailed() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
-        final Asset asset2 = Asset.create(ASSET_NAME2, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, root);
         mockAssets.add(asset1);
         mockAssets.add(asset2);
 
@@ -947,7 +947,7 @@ public class DataManagerTest {
     @Test
     public void recycleAsset_assetRecycledAndSaveToJsonFile() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         // check whether serialised
@@ -1033,7 +1033,7 @@ public class DataManagerTest {
     @Test
     public void recycleAsset_updateLocalJsonFileFailed() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         when(mockFileHelper.serialiseAsset(any(Asset.class))).thenReturn(false);
@@ -1073,7 +1073,7 @@ public class DataManagerTest {
     @Test
     public void removeDetail_detailRemovedAndSaveToJsonFile() throws InterruptedException {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         // td1 and td2 belong to asset1
@@ -1121,8 +1121,8 @@ public class DataManagerTest {
     @Test
     public void removeDetail_notFromOwnerAsset() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
-        final Asset asset2 = Asset.create(ASSET_NAME2, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, root);
         mockAssets.add(asset1);
         mockAssets.add(asset2);
 
@@ -1150,7 +1150,7 @@ public class DataManagerTest {
     @Test
     public void removeDetail_detailNotExists() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
@@ -1177,7 +1177,7 @@ public class DataManagerTest {
     @Test
     public void removeDetail_updateLocalJsonFileFailed() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
@@ -1202,7 +1202,7 @@ public class DataManagerTest {
     @Test
     public void updateTextDetail_detailUpdatedAndSaveToJsonFile() throws InterruptedException {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         // td1 and td2 belong to asset1
@@ -1249,8 +1249,8 @@ public class DataManagerTest {
     @Test
     public void updateTextDetail_notForOwnerAsset() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
-        final Asset asset2 = Asset.create(ASSET_NAME2, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, root);
         mockAssets.add(asset1);
         mockAssets.add(asset2);
 
@@ -1278,7 +1278,7 @@ public class DataManagerTest {
     @Test
     public void updateTextDetail_detailNotExists() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
@@ -1305,7 +1305,7 @@ public class DataManagerTest {
     @Test
     public void updateTextDetail_illegalArguments() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
@@ -1353,7 +1353,7 @@ public class DataManagerTest {
     @Test
     public void updateTextDetail_updateLocalJsonFileFailed() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),

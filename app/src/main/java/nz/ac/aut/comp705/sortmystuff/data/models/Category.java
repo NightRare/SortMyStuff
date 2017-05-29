@@ -25,7 +25,7 @@ public class Category {
 
     //region STATIC FACTORY
 
-    public static Category create(String name) {
+    static Category create(String name) {
         checkIllegalName(name);
         List<Detail> details = new ArrayList<>();
 
@@ -38,6 +38,7 @@ public class Category {
         return name;
     }
 
+    @Deprecated
     public List<Detail> getDetails() {
         return new ArrayList<>(details);
     }
@@ -46,17 +47,17 @@ public class Category {
 
     //region MODIFIERS
 
-    public void setName(String name) {
+    void setName(String name) {
         checkIllegalName(name);
         this.name = name;
     }
 
-    public boolean addDetail(Detail detail) {
+    boolean addDetail(Detail detail) {
         return hasLabel(detail.getLabel()) ?
                 false : details.add(duplicateDetail(DUMMY_ASSET_ID, detail));
     }
 
-    public boolean removeDetail(String label) {
+    boolean removeDetail(String label) {
         for (Detail d : details) {
             if (d.getLabel().equals(label))
                 return details.remove(d);

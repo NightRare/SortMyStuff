@@ -7,7 +7,6 @@ import android.support.annotation.Nullable;
 import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,6 +36,8 @@ public final class Asset {
     @NonNull
     private String containerId;
 
+    private CategoryType category;
+
     // value of System.currentTimeMillis() when the asset is created
     @NonNull
     private long createTimestamp;
@@ -56,14 +57,16 @@ public final class Asset {
     //region STATIC FACTORIES
 
     /**
-     * Static factory to create an asset with the given name.
+     * Static factory to create an asset with the given name and has a category type as given.
      *
-     * @param name      the name of the asset.
-     * @param container the container of the asset.
+     * @param name
+     * @param container
+     * @param category
+     * @return an Asset instance
      * @throws NullPointerException     if name or container is {@code null}
      * @throws IllegalArgumentException if name is empty or exceeds the length limit
      */
-    public static Asset create(String name, Asset container) {
+    public static Asset create(String name, Asset container, CategoryType category) {
         checkIllegalName(name);
         Preconditions.checkNotNull(container);
 
@@ -72,7 +75,7 @@ public final class Asset {
         Long mt = System.currentTimeMillis();
         List<Asset> contents = new ArrayList<>();
 
-        Asset asset = new Asset(id, name, container.id, container, false, contents, ct, mt, false, null);
+        Asset asset = new Asset(id, name, container.id, category, container, false, contents, ct, mt, false, null);
         if (container.contents == null) {
             container.contents = new ArrayList<>();
         }
@@ -82,12 +85,27 @@ public final class Asset {
     }
 
     /**
+     * Static factory to create an asset with the given name and has a category type as "Miscellaneous".
+     *
+     * @param name      the name of the asset.
+     * @param container the container of the asset.
+     * @return an Asset instance
+     * @throws NullPointerException     if name or container is {@code null}
+     * @throws IllegalArgumentException if name is empty or exceeds the length limit
+     */
+    public static Asset createAsMisc(String name, Asset container) {
+        return create(name, container, CategoryType.Miscellaneous);
+    }
+
+    /**
      * Static factory to create a Root Asset.
+     *
+     * @return the Root Asset instance
      */
     public static Asset createRoot() {
         String id = AppConstraints.ROOT_ASSET_ID;
 
-        return new Asset(id, "Root", "", null, true, new ArrayList<Asset>(),
+        return new Asset(id, "Root", "", CategoryType.None, null, true, new ArrayList<Asset>(),
                 System.currentTimeMillis(),
                 System.currentTimeMillis(), false, null);
     }
@@ -159,14 +177,14 @@ public final class Asset {
      * Sets the name of the asset.
      *
      * @param name the new name.
-     * @throws NullPointerException if name is {@code null}
+     * @throws NullPointerException     if name is {@code null}
      * @throws IllegalArgumentException if name is empty or exceeds the length limit
      */
     @Deprecated
     public void setName(@NonNull String name) {
         checkIllegalName(name);
 
-        if(!isRoot()) {
+        if (!isRoot()) {
             this.name = name;
             updateTimeStamp();
         }
@@ -313,12 +331,13 @@ public final class Asset {
     }
 
     private Asset(@NonNull String id, @NonNull String name, @NonNull String containerId,
-                  @Nullable Asset container, boolean isRoot, @NonNull List<Asset> contents,
+                  CategoryType category, @Nullable Asset container, boolean isRoot, @NonNull List<Asset> contents,
                   @NonNull Long createdTimestamp, @NonNull Long modifiedTimestamp,
                   boolean isRecycled, @Nullable Bitmap photo) {
         this.id = id;
         this.name = name;
         this.containerId = containerId;
+        this.category = category;
         this.container = container;
         this.isRoot = isRoot;
         this.contents = contents;
