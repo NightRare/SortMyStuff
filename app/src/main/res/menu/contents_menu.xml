@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsActivity">
 
+
     <group android:id="@+id/main_menu_group">
         <item
             android:id="@+id/action_view_details"
@@ -22,8 +23,7 @@
             android:title="Delete Asset"
             app:showAsAction="never" />
 
-        <item
-            android:id="@+id/search_button"
+        <item android:id="@+id/search_view"
             android:icon="@drawable/ic_search_white_48dp"
             android:title="Search"
             app:showAsAction="ifRoom" />
