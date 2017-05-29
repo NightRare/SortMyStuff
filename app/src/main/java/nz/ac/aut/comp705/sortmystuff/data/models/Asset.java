@@ -36,7 +36,7 @@ public final class Asset {
     @NonNull
     private String containerId;
 
-    private CategoryType category;
+    private CategoryType categoryType;
 
     // value of System.currentTimeMillis() when the asset is created
     @NonNull
@@ -57,7 +57,7 @@ public final class Asset {
     //region STATIC FACTORIES
 
     /**
-     * Static factory to create an asset with the given name and has a category type as given.
+     * Static factory to create an asset with the given name and has a categoryType type as given.
      *
      * @param name
      * @param container
@@ -85,7 +85,7 @@ public final class Asset {
     }
 
     /**
-     * Static factory to create an asset with the given name and has a category type as "Miscellaneous".
+     * Static factory to create an asset with the given name and has a categoryType type as "Miscellaneous".
      *
      * @param name      the name of the asset.
      * @param container the container of the asset.
@@ -167,6 +167,10 @@ public final class Asset {
 
     public Bitmap getPhoto() {
         return photo;
+    }
+
+    public CategoryType getCategoryType() {
+        return categoryType;
     }
 
     //endregion
@@ -280,6 +284,11 @@ public final class Asset {
         this.photo = photo;
     }
 
+    @Deprecated
+    public void setCategoryType(CategoryType categoryType) {
+        this.categoryType = categoryType;
+    }
+
     //endregion
 
     //region OBJECT METHODS OVERRIDING
@@ -331,13 +340,13 @@ public final class Asset {
     }
 
     private Asset(@NonNull String id, @NonNull String name, @NonNull String containerId,
-                  CategoryType category, @Nullable Asset container, boolean isRoot, @NonNull List<Asset> contents,
+                  CategoryType categoryType, @Nullable Asset container, boolean isRoot, @NonNull List<Asset> contents,
                   @NonNull Long createdTimestamp, @NonNull Long modifiedTimestamp,
                   boolean isRecycled, @Nullable Bitmap photo) {
         this.id = id;
         this.name = name;
         this.containerId = containerId;
-        this.category = category;
+        this.categoryType = categoryType;
         this.container = container;
         this.isRoot = isRoot;
         this.contents = contents;

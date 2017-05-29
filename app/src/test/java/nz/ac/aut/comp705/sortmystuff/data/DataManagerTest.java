@@ -18,6 +18,7 @@ import org.robolectric.annotation.Config;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,8 +26,11 @@ import nz.ac.aut.comp705.sortmystuff.BuildConfig;
 import nz.ac.aut.comp705.sortmystuff.data.local.IFileHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Category;
+import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
+import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.testutils.TestUtil;
 import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
@@ -58,7 +62,7 @@ public class DataManagerTest {
     public void setup() throws IOException {
         MockitoAnnotations.initMocks(this);
 
-        // setup default photo
+        // set up default photo
         FileInputStream fis = new FileInputStream(TestUtil.TEST_DEFAULT_PHOTO);
         Bitmap defaultPhoto = BitmapFactory.decodeStream(fis);
         fis.close();
@@ -66,6 +70,7 @@ public class DataManagerTest {
 
         mockAssets = new LinkedList<>();
         mockDetails = new LinkedList<>();
+        mockCategories = new LinkedList<>();
 
         // mocking the behaviours of jsonHelper
         when(mockFileHelper.serialiseAsset(any(Asset.class))).thenReturn(true);
@@ -79,7 +84,7 @@ public class DataManagerTest {
                 return argument.equals(mockDetails.get(0).getAssetId());
             }
         }))).thenReturn(mockDetails);
-
+        when(mockFileHelper.deserialiseCategories()).thenReturn(mockCategories);
 
         dataManager = new DataManager(mockFileHelper, mockResLoader);
     }
@@ -100,6 +105,8 @@ public class DataManagerTest {
 
     @Test
     public void createAsset_assetCreatedAndSaveToJsonFile() {
+        prepareCategories();
+
         // prepare a root asset as container
         final Asset root = prepareRootAsset();
 
@@ -107,9 +114,24 @@ public class DataManagerTest {
         verify(mockFileHelper).serialiseAsset(argThat(new ArgumentMatcher<Asset>() {
             @Override
             public boolean matches(Asset argument) {
-                return areIdenticalAssets(argument, assetId, ASSET_NAME1, root.getId(), null, null);
+                return areIdenticalAssets(argument, assetId, ASSET_NAME1, root.getId(),
+                        CategoryType.Miscellaneous, null, null);
             }
         }));
+        verify(mockFileHelper).serialiseDetails(argThat(new ArgumentMatcher<List<Detail>>() {
+            @Override
+            public boolean matches(List<Detail> argument) {
+                // get the details of Miscellaneous
+                List<Detail> miscDetails = mockCategories.get(0).getDetails();
+
+                // check the labels of the argument details and that of the defined details
+                for(int i = 0; i < argument.size(); i++) {
+                    if(!argument.get(i).getLabel().equals(miscDetails.get(i).getLabel()))
+                        return false;
+                }
+                return argument.size() == miscDetails.size();
+            }
+        }), ArgumentMatchers.eq(true));
     }
 
     @Test
@@ -138,6 +160,7 @@ public class DataManagerTest {
 
     @Test
     public void createAsset_updateLocalStorageFailed() {
+        prepareCategories();
         // mocking serialise failed
         when(mockFileHelper.serialiseAsset(any(Asset.class))).thenReturn(false);
 
@@ -145,11 +168,10 @@ public class DataManagerTest {
             // prepare a root asset as container
             final Asset root = prepareRootAsset();
             dataManager.createAsset(ASSET_NAME1, root.getId());
+            Assert.fail();
         } catch (UpdateLocalStorageFailedException e) {
             // pass test
-            return;
         }
-        Assert.fail();
     }
 
     @Test
@@ -271,7 +293,8 @@ public class DataManagerTest {
         verify(mockFileHelper).serialiseAsset(argThat(new ArgumentMatcher<Asset>() {
             @Override
             public boolean matches(Asset argument) {
-                return areIdenticalAssets(argument, rootId, ROOT_ASSET_NAME, null, null, null);
+                return areIdenticalAssets(argument, rootId, ROOT_ASSET_NAME, null,
+                        CategoryType.None, null, null);
             }
         }));
     }
@@ -701,7 +724,7 @@ public class DataManagerTest {
             @Override
             public boolean matches(Asset argument) {
                 boolean nameChanged = areIdenticalAssets(argument, asset1.getId(),
-                        ASSET_NAME2, asset1.getContainerId(),
+                        ASSET_NAME2, asset1.getContainerId(), asset1.getCategoryType(),
                         asset1.getCreateTimestamp(), null);
                 if(!nameChanged) return false;
 
@@ -790,7 +813,7 @@ public class DataManagerTest {
             @Override
             public boolean matches(Asset argument) {
                 boolean assetMoved = areIdenticalAssets(argument, asset1.getId(),
-                        ASSET_NAME1, asset2.getId(),
+                        ASSET_NAME1, asset2.getId(), asset1.getCategoryType(),
                         asset1.getCreateTimestamp(), null);
                 if(!assetMoved) return false;
 
@@ -1093,7 +1116,7 @@ public class DataManagerTest {
             @Override
             public boolean matches(Asset argument) {
                 boolean identical = areIdenticalAssets(argument, asset1.getId(), asset1.getName(),
-                        root.getId(), asset1.getCreateTimestamp(), null);
+                        root.getId(), asset1.getCategoryType(), asset1.getCreateTimestamp(), null);
                 if(!identical) return false;
 
                 // updateTimestamp should be changed when get recycled
@@ -1219,7 +1242,7 @@ public class DataManagerTest {
             @Override
             public boolean matches(Asset argument) {
                 boolean identical = areIdenticalAssets(argument, asset1.getId(), asset1.getName(),
-                        root.getId(), asset1.getCreateTimestamp(), null);
+                        root.getId(), asset1.getCategoryType(), asset1.getCreateTimestamp(), null);
                 if(!identical) return false;
 
                 // updateTimestamp should be changed when get recycled
@@ -1415,6 +1438,8 @@ public class DataManagerTest {
 
     private List<Detail> mockDetails;
 
+    private List<Category> mockCategories;
+
     @Mock
     private IFileHelper mockFileHelper;
 
@@ -1438,6 +1463,26 @@ public class DataManagerTest {
         mockAssets.add(root);
         when(mockFileHelper.rootExists()).thenReturn(true);
         return root;
+    }
+
+    private void prepareCategories() {
+        Category misc = Category.create(CategoryType.Miscellaneous.toString());
+        Category food = Category.create(CategoryType.Food.toString());
+
+        Detail notes = TextDetail.createTextDetail("dummyAssetId",
+                CategoryType.BasicDetail.NOTES, "");
+        Detail photo = ImageDetail.create("dummyAssetId",
+                CategoryType.BasicDetail.PHOTO, mockResLoader.getDefaultPhoto());
+        misc.addDetail(notes);
+        misc.addDetail(photo);
+        food.addDetail(notes);
+        food.addDetail(photo);
+
+        Detail expiryDate = TextDetail.createDateDetail("dummyAssetId", "Expiry Date", "");
+        food.addDetail(expiryDate);
+
+        mockCategories.add(misc);
+        mockCategories.add(food);
     }
 
     private String getStringWithLength(int length) {

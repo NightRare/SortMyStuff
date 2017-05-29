@@ -82,8 +82,6 @@ public class DataManager implements IDataManager {
                     + asset.getId());
         }
         cachedAssets.put(asset.getId(), asset);
-        releaseOneCachedDetails();
-        cachedDetails.put(asset.getId(), details);
         return asset.getId();
     }
 
