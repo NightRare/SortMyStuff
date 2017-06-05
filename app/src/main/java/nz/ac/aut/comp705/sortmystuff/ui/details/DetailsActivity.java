@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -20,6 +21,7 @@ import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
+import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 
 public class DetailsActivity extends AppCompatActivity implements IDetailsView {
 
@@ -42,6 +44,7 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
             public void onClick(View view) { presenter.showDialogBox(view);
             }
         });
+
     }
 
     /**
@@ -61,7 +64,7 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
      */
     @Override
     public void showDetails(List<Detail> detailList){
-        details.setAdapter(new DetailAdapter(this, android.R.layout.two_line_list_item, detailList));
+        details.setAdapter(new DetailAdapter(this, R.layout.two_lines_list, detailList));
     }
 
     /**
@@ -116,10 +119,21 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
             }
 
             Detail item = detailList.get(position);
+
             TextView label = (TextView) v.findViewById(android.R.id.text1);
             label.setText(item.getLabel());
+
             TextView field = (TextView) v.findViewById(android.R.id.text2);
-            field.setText((String)item.getField());
+
+            if (item.getType().equals(DetailType.Date) || item.getType().equals(DetailType.Text)) {
+                field.setText((String)item.getField());
+            }
+
+            ImageView imageView = (ImageView) v.findViewById(R.id.asset_image);
+            if (item.getType().equals(DetailType.Image)) {
+                imageView.setImageResource(R.drawable.image_placeholder);
+            }
+
             return v;
         }
     }
