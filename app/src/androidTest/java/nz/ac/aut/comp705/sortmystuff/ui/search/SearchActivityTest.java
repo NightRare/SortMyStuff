@@ -3,40 +3,31 @@ package nz.ac.aut.comp705.sortmystuff.ui.search;
 import android.app.Activity;
 import android.content.Context;
 import android.support.test.espresso.Espresso;
+import android.support.test.espresso.assertion.ViewAssertions;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.contrib.RecyclerViewActions;
-import android.support.test.espresso.matcher.BoundedMatcher;
-import android.support.v7.widget.Toolbar;
-
-import junit.framework.Assert;
+import android.view.View;
+import android.widget.ListView;
 
 import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu;
 import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.action.ViewActions.longClick;
 import static android.support.test.espresso.action.ViewActions.replaceText;
-import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.matcher.ViewMatchers.isChecked;
-import static android.support.test.espresso.matcher.ViewMatchers.isDescendantOfA;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.isNotChecked;
-import static android.support.test.espresso.matcher.ViewMatchers.withChild;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
-import static android.support.test.espresso.matcher.ViewMatchers.withContentDescription;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
 
 import org.apache.commons.io.FileUtils;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeMatcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -51,8 +42,6 @@ import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsActivity;
 import nz.ac.aut.comp705.sortmystuff.util.Log;
-
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
 
 /**
  * Created by DonnaCello on 28 May 2017.
@@ -116,11 +105,23 @@ public class SearchActivityTest {
     @Test
     public void search_twoItems(){
         search("Ap");
-        //maybe check for size instead?
-//        onData(anything()).inAdapterView(withId(R.id.result_list))
-//                .atPosition(0).check(matches(withText("Apricot")));
-//        onData(anything()).inAdapterView(withId(R.id.result_list))
-//                .atPosition(1).check(matches(withText("Apple")));
+        //there should be two items in result list: Apple and Apricot
+        onView (withId (R.id.result_list)).check (ViewAssertions.matches (withListSize(2)));
+    }
+
+    @Test
+    public void search_noResult(){
+        search("Ba");
+        //Message: "No results found." should display
+        onData(anything()).inAdapterView(withId(R.id.result_list))
+                .atPosition(0).check(matches(withText("No results found.")));
+    }
+
+    @Test
+    public void search_noKeyword(){
+        search("");
+        //Result list should be empty
+        onView (withId (R.id.result_list)).check(ViewAssertions.matches(withListSize(0)));
     }
 
 
@@ -144,5 +145,17 @@ public class SearchActivityTest {
         onView(allOf(withClassName(endsWith("EditText")), withText(is(""))))
                 .perform(replaceText(keyword));
         onView(withId(R.id.search_now_button)).perform(click());
+    }
+
+    public static Matcher<View> withListSize (final int size) {
+        return new TypeSafeMatcher<View>() {
+            @Override public boolean matchesSafely (final View view) {
+                return ((ListView) view).getCount () == size;
+            }
+
+            @Override public void describeTo (final Description description) {
+                description.appendText ("ListView should have " + size + " items");
+            }
+        };
     }
 }
