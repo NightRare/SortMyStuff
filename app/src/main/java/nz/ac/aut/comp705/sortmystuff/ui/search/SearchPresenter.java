@@ -3,6 +3,7 @@ package nz.ac.aut.comp705.sortmystuff.ui.search;
 import android.content.Intent;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +18,7 @@ import nz.ac.aut.comp705.sortmystuff.ui.details.DetailsActivity;
 
 public class SearchPresenter implements ISearchPresenter{
 
-    final String MSG_NO_ASSET_FOUND = "No results found. Try Again";
+    final String MSG_NO_ASSET_FOUND = "No results found.";
     /**
      * When the corresponding activity is on created, this method will be invoked.
      */
@@ -48,8 +49,10 @@ public class SearchPresenter implements ISearchPresenter{
                 resultList.add(asset);
             }
         }
-        if(resultList.isEmpty()){
-            resultList.add(MSG_NO_ASSET_FOUND);
+        if(resultList.isEmpty()){resultList.add(MSG_NO_ASSET_FOUND);}
+        if(query =="" || query.length()==0){
+            resultList.clear();
+            Toast.makeText(activity,"Please enter a keyword.",Toast.LENGTH_LONG);
         }
         return resultList;
     }
