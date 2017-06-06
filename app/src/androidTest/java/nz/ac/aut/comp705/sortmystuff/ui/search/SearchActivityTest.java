@@ -1,11 +1,17 @@
 package nz.ac.aut.comp705.sortmystuff.ui.search;
 
+import android.app.Activity;
+import android.content.Context;
 import android.support.test.espresso.Espresso;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.contrib.RecyclerViewActions;
 import android.support.test.espresso.matcher.BoundedMatcher;
+import android.support.v7.widget.Toolbar;
+
+import junit.framework.Assert;
+
 import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu;
@@ -30,13 +36,21 @@ import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.io.File;
+import java.io.IOException;
+
 import nz.ac.aut.comp705.sortmystuff.R;
+import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
+import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
+import nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsActivity;
+import nz.ac.aut.comp705.sortmystuff.util.Log;
 
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 
@@ -49,20 +63,86 @@ public class SearchActivityTest {
 
     @Before
     public void setup() {
-        
+        context = InstrumentationRegistry.getTargetContext();
+        app = (SortMyStuffApp) context.getApplicationContext();
+        activity = contentsActivityTestRule.getActivity();
+        dm = app.getFactory().getDataManager();
+        addAsset("Apple");
+        addAsset("Orange");
+        addAsset("Apricot");
+        Espresso.onView(withId(R.id.search_view)).perform(click());
     }
 
     @After
     public void tearDown() {
+        File userDir = new File(
+                app.getFilesDir().getPath() + File.separator + "default-user");
 
+        try {
+            FileUtils.cleanDirectory(userDir);
+            dm.refreshFromLocal();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        context = null;
+        app = null;
+        activity = null;
+        dm = null;
     }
 
     @Rule
-    public ActivityTestRule<SearchActivity> searchActivityTestRule
-            = new ActivityTestRule<>(SearchActivity.class);
+    public ActivityTestRule<ContentsActivity> contentsActivityTestRule
+            = new ActivityTestRule<>(ContentsActivity.class);
+//      public ActivityTestRule<SearchActivity> searchActivityTestRule
+//            = new ActivityTestRule<>(SearchActivity.class);
 
     @Test
-    public void tryType(){
-        Espresso.onView(withId(R.id.search_view)).perform(click());
+    public void loadSearch_checkComponents(){
+        //check if Search UI components (toolbar, and search bar, search button) are there
+        onView(withId(R.id.search_toolbar)).check(matches(isDisplayed()));
+        onView(withId(R.id.search_text_bar)).check(matches(isDisplayed()));
+        onView(withId(R.id.search_now_button)).check(matches(isDisplayed()));
+    }
+
+    @Test
+    public void search_Orange(){
+        search("Orange");
+        //Orange should display in search results
+        onData(anything()).inAdapterView(withId(R.id.result_list))
+                .atPosition(0).check(matches(withText("Orange")));
+    }
+
+    @Test
+    public void search_twoItems(){
+        search("Ap");
+        //maybe check for size instead?
+//        onData(anything()).inAdapterView(withId(R.id.result_list))
+//                .atPosition(0).check(matches(withText("Apricot")));
+//        onData(anything()).inAdapterView(withId(R.id.result_list))
+//                .atPosition(1).check(matches(withText("Apple")));
+    }
+
+
+    private Context context;
+
+    private SortMyStuffApp app;
+
+    private Activity activity;
+
+    private IDataManager dm;
+
+    private void addAsset(String assetName) {
+        onView(withId(R.id.addAssetButton)).perform(click());
+        onView(allOf(withClassName(endsWith("EditText")), withText(is(""))))
+                .perform(replaceText(assetName));
+        onView(withText("Save")).perform(click());
+    }
+
+    private void search(String keyword){
+        onView(withId(R.id.search_text_bar)).check(matches(isDisplayed()));
+        onView(allOf(withClassName(endsWith("EditText")), withText(is(""))))
+                .perform(replaceText(keyword));
+        onView(withId(R.id.search_now_button)).perform(click());
     }
 }
