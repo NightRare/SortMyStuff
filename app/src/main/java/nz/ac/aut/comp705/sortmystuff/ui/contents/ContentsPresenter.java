@@ -13,6 +13,7 @@ import java.util.prefs.PreferenceChangeEvent;
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
+import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.ui.details.DetailsActivity;
 import nz.ac.aut.comp705.sortmystuff.ui.search.SearchActivity;
 
@@ -134,8 +135,8 @@ public class ContentsPresenter implements IContentsPresenter {
      * @param assetName the name of the new asset.
      */
     @Override
-    public void addAsset(String assetName) {
-        dm.createAsset(assetName, currentAssetId);
+    public void createAsset(String assetName, CategoryType category) {
+        dm.createAsset(assetName, currentAssetId, category);
         loadCurrentContents(false);
     }
 
