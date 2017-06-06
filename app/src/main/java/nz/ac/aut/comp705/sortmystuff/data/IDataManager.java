@@ -6,6 +6,8 @@ import android.support.annotation.NonNull;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Category;
+import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
@@ -24,6 +26,7 @@ public interface IDataManager {
 
     /**
      * Create an asset and save it to the local storage.
+     * The default details of the asset are generated according to "Miscellaneous" category.
      *
      * @param name        the name
      * @param containerId the id of the container asset
@@ -35,7 +38,22 @@ public interface IDataManager {
     String createAsset(@NonNull String name, @NonNull String containerId);
 
     /**
-     * Create a TextDetail and save it to the local storage. Cannot create Detail for Root
+     * Create an asset and save it to the local storage.
+     * The default details of the asset are generated according to the given category.
+     *
+     * @param name        the name
+     * @param containerId the id of the container asset
+     * @param categoryType the CategoryType
+     * @return the id of the created asset; {@code null} if failed
+     * @throws NullPointerException              if any argument is {@code null};
+     * @throws IllegalArgumentException          if name is empty or length exceeds app constraints
+     * @throws UpdateLocalStorageFailedException if update local storage failed
+     */
+    String createAsset(@NonNull String name, @NonNull String containerId, CategoryType categoryType);
+
+
+    /**
+     * Create a TextDetail and save it to the local storage. Cannot createAsMisc Detail for Root
      * asset.
      *
      * @param asset the owner
@@ -47,10 +65,11 @@ public interface IDataManager {
      *                                           label or field exceeds app constraints
      * @throws UpdateLocalStorageFailedException if update local storage failed
      */
+    @Deprecated
     String createTextDetail(@NonNull Asset asset, @NonNull String label, @NonNull String field);
 
     /**
-     * Create a TextDetail and save it to the local storage. Cannot create Detail for Root
+     * Create a TextDetail and save it to the local storage. Cannot createAsMisc Detail for Root
      * asset.
      *
      * @param assetId the id of the owner
@@ -62,6 +81,7 @@ public interface IDataManager {
      *                                           label or field exceeds app constraints
      * @throws UpdateLocalStorageFailedException if update local storage failed
      */
+    @Deprecated
     String createTextDetail(@NonNull String assetId, @NonNull String label, @NonNull String field);
 
     //endregion
@@ -252,24 +272,6 @@ public interface IDataManager {
      * @throws UpdateLocalStorageFailedException if update local storage failed
      */
     void moveAsset(@NonNull String assetId, @NonNull String newContainerId);
-
-    /**
-     * Recycle the asset.
-     *
-     * @param asset the asset to be recycled
-     * @throws NullPointerException              if any argument is {@code null}
-     * @throws UpdateLocalStorageFailedException if update local storage failed
-     */
-    void recycleAsset(@NonNull Asset asset);
-
-    /**
-     * Recycle the asset with given id.
-     *
-     * @param assetId the id of the asset to be recycled
-     * @throws NullPointerException              if any argument is {@code null}
-     * @throws UpdateLocalStorageFailedException if update local storage failed
-     */
-    void recycleAsset(@NonNull String assetId);
 
     /**
      * Recycle the asset with given id and all its children assets.

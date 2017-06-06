@@ -13,13 +13,14 @@ import java.util.Map;
 import nz.ac.aut.comp705.sortmystuff.data.local.IFileHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Category;
+import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 import nz.ac.aut.comp705.sortmystuff.util.AppStatusCode;
-import nz.ac.aut.comp705.sortmystuff.util.BuiltInDetails;
 import nz.ac.aut.comp705.sortmystuff.util.Log;
 import nz.ac.aut.comp705.sortmystuff.util.exceptions.UpdateLocalStorageFailedException;
 
@@ -58,6 +59,11 @@ public class DataManager implements IDataManager {
      */
     @Override
     public String createAsset(@NonNull String name, @NonNull String containerId) {
+        return createAsset(name, containerId, CategoryType.Miscellaneous);
+    }
+
+    @Override
+    public String createAsset(@NonNull String name, @NonNull String containerId, CategoryType categoryType) {
         Preconditions.checkNotNull(name);
         Preconditions.checkNotNull(containerId);
         Preconditions.checkArgument(!name.replaceAll(" ", "").isEmpty());
@@ -69,8 +75,9 @@ public class DataManager implements IDataManager {
             return null;
         }
 
-        Asset asset = Asset.create(name, cachedAssets.get(containerId));
-        if (!fileHelper.serialiseAsset(asset)) {
+        Asset asset = Asset.create(name, cachedAssets.get(containerId), categoryType);
+        List<Detail> details = getCategory(categoryType).generateDetails(asset.getId());
+        if (!fileHelper.serialiseAsset(asset) || !fileHelper.serialiseDetails(details, true)) {
             throw new UpdateLocalStorageFailedException("Serialising asset failed, asset id: "
                     + asset.getId());
         }
@@ -90,6 +97,7 @@ public class DataManager implements IDataManager {
     /**
      * {@inheritDoc}
      */
+    @Deprecated
     @Override
     public String createTextDetail(@NonNull Asset asset, @NonNull String label, @NonNull String field) {
         Preconditions.checkNotNull(asset);
@@ -100,6 +108,7 @@ public class DataManager implements IDataManager {
     /**
      * {@inheritDoc}
      */
+    @Deprecated
     @Override
     public String createTextDetail(@NonNull final String assetId, @NonNull String label, @NonNull String field) {
         Preconditions.checkNotNull(assetId);
@@ -109,7 +118,7 @@ public class DataManager implements IDataManager {
         Preconditions.checkArgument(label.length() < AppConstraints.DETAIL_LABEL_CAP);
         Preconditions.checkArgument(field.length() < AppConstraints.TEXTDETAIL_FIELD_CAP);
 
-        // cannot create detail for Root asset
+        // cannot createAsMisc detail for Root asset
         if (assetId.equals(getRootAsset().getId()))
             return null;
 
@@ -449,39 +458,6 @@ public class DataManager implements IDataManager {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void recycleAsset(@NonNull Asset asset) {
-        Preconditions.checkNotNull(asset);
-
-        recycleAsset(asset.getId());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void recycleAsset(@NonNull String assetId) {
-        Preconditions.checkNotNull(assetId);
-
-        if (!assetExists(assetId)) {
-            Log.e(getClass().getName(), "asset not exists, failed to recycle, asset id: " + assetId);
-            return;
-        }
-        Asset asset = cachedAssets.get(assetId);
-        if (asset.isRoot()) {
-            Log.e(getClass().getName(), "cannot recycle Root asset");
-            return;
-        }
-        asset.recycle();
-        cachedRecycledAssets.put(assetId, cachedAssets.remove(assetId));
-        if (!fileHelper.serialiseAsset(asset)) {
-            dirtyCachedAssets = true;
-            throw new UpdateLocalStorageFailedException("Write asset failed, id: " + assetId);
-        }
-    }
 
     /**
      * {@inheritDoc}
@@ -491,22 +467,18 @@ public class DataManager implements IDataManager {
     public void recycleAssetRecursively(@NonNull String assetId) {
         Preconditions.checkNotNull(assetId);
 
-        if (!assetExists(assetId)) {
-            Log.e(getClass().getName(), "asset not exists, failed to recycle, asset id: " + assetId);
+        if (!assetExists(assetId) || assetId.equals(AppConstraints.ROOT_ASSET_ID)) {
+            Log.e(getClass().getName(), "asset not exists or it is Root Asset, failed to recycle, asset id: " + assetId);
             return;
         }
         Asset asset = cachedAssets.get(assetId);
-        if (asset.isRoot()) {
-            Log.e(getClass().getName(), "cannot recycle Root asset");
-            return;
-        }
 
         if(!asset.getContents().isEmpty()) {
             for(Asset a : asset.getContents()) {
                 recycleAssetRecursively(a.getId());
             }
         }
-        recycleAsset(assetId);
+        recycleAsset(asset);
     }
 
     /**
@@ -517,7 +489,7 @@ public class DataManager implements IDataManager {
     public void recycleAssetRecursively(@NonNull Asset asset) {
         Preconditions.checkNotNull(asset);
 
-        recycleAsset(asset.getId());
+        recycleAssetRecursively(asset.getId());
     }
 
     /**
@@ -560,7 +532,7 @@ public class DataManager implements IDataManager {
 
         int code = loadCachedDetailsFromLocal(assetId);
         if (code != OK) {
-            Log.e(getClass().getName(), "Cannot create detail, error code: " + code);
+            Log.e(getClass().getName(), "Cannot createAsMisc detail, error code: " + code);
             return;
         }
 
@@ -670,6 +642,8 @@ public class DataManager implements IDataManager {
 
     private LocalResourceLoader resLoader;
 
+    private Map<CategoryType, Category> categories;
+
     private Asset cachedRootAsset;
 
     private Map<String, Asset> cachedAssets;
@@ -681,6 +655,18 @@ public class DataManager implements IDataManager {
     private boolean dirtyCachedAssets;
 
     private boolean dirtyCachedDetails;
+
+    private Category getCategory(CategoryType categoryType) {
+        if(categories == null) {
+            categories = new HashMap<>();
+            for(Category c : fileHelper.deserialiseCategories()) {
+                categories.put(Enum.valueOf(CategoryType.class, c.getName()),
+                        c);
+            }
+        }
+
+        return categories.get(categoryType);
+    }
 
     private synchronized int loadCachedAssetsFromLocal() {
         if (!fileHelper.rootExists())
@@ -694,23 +680,21 @@ public class DataManager implements IDataManager {
         for (Asset asset : allAssets) {
             if (asset.isRecycled()) {
                 cachedRecycledAssets.put(asset.getId(), asset);
-            } else {
-                cachedAssets.put(asset.getId(), asset);
-                if (asset.isRoot()) {
-                    cachedRootAsset = asset;
-                } else {
-                    asset.setPhoto(loadPhoto(asset.getId()));
-                }
+                continue;
             }
+
+            cachedAssets.put(asset.getId(), asset);
+            if (asset.isRoot()) {
+                cachedRootAsset = asset;
+            } else {
+                asset.setPhoto(loadPhoto(asset.getId()));
+            }
+
         }
 
         // form the tree structure in user assets
         for (Asset asset : cachedAssets.values()) {
-            if (asset.isRoot()) {
-                asset.attachToTree(null);
-            }
-
-            asset.attachToTree(cachedAssets.get(asset.getContainerId()));
+            asset.attachToTree(asset.isRoot() ? null : cachedAssets.get(asset.getContainerId()));
         }
 
         dirtyCachedAssets = false;
@@ -720,13 +704,13 @@ public class DataManager implements IDataManager {
     private synchronized int loadCachedDetailsFromLocal(String assetId) {
         if (!fileHelper.rootExists())
             return NO_ROOT_ASSET;
-        if (!assetExists(assetId)) {
+        if (!assetExists(assetId))
             return ASSET_NOT_EXISTS;
-        }
+
         if (dirtyCachedDetails || cachedDetails == null) {
             cachedDetails = new HashMap<>();
         }
-        if (cachedDetails.containsKey(assetId)) {
+        else if (cachedDetails.containsKey(assetId)) {
             return OK;
         }
         releaseOneCachedDetails();
@@ -745,7 +729,7 @@ public class DataManager implements IDataManager {
         List<Detail> detailList = fileHelper.deserialiseDetails(assetId);
         for (Detail detail : detailList) {
             if (detail.getType().equals(DetailType.Image)
-                    && detail.getLabel().equals(BuiltInDetails.PHOTO))
+                    && detail.getLabel().equals(CategoryType.BasicDetail.PHOTO))
                 photo = (Bitmap) detail.getField();
         }
         if (photo == null) {
@@ -761,6 +745,18 @@ public class DataManager implements IDataManager {
         }
 
         return cachedAssets.containsKey(assetId);
+    }
+
+
+    private void recycleAsset(@NonNull Asset asset) {
+        Preconditions.checkNotNull(asset);
+
+        asset.recycle();
+        cachedRecycledAssets.put(asset.getId(), cachedAssets.remove(asset.getId()));
+        if (!fileHelper.serialiseAsset(asset)) {
+            dirtyCachedAssets = true;
+            throw new UpdateLocalStorageFailedException("Write asset failed, id: " + asset.getId());
+        }
     }
 
     private boolean releaseOneCachedDetails() {
@@ -784,7 +780,7 @@ public class DataManager implements IDataManager {
 
         int code = loadCachedDetailsFromLocal(assetId);
         if (code != OK) {
-            Log.e(getClass().getName(), "Cannot create detail, error code: " + code);
+            Log.e(getClass().getName(), "Cannot createAsMisc detail, error code: " + code);
             return null;
         }
 
@@ -826,7 +822,7 @@ public class DataManager implements IDataManager {
 
         int code = loadCachedDetailsFromLocal(assetId);
         if (code != OK) {
-            Log.e(getClass().getName(), "Cannot create detail, error code: " + code);
+            Log.e(getClass().getName(), "Cannot createAsMisc detail, error code: " + code);
             return null;
         }
 

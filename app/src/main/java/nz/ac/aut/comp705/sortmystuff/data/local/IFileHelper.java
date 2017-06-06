@@ -3,6 +3,7 @@ package nz.ac.aut.comp705.sortmystuff.data.local;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Category;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 
 /**
@@ -47,6 +48,8 @@ public interface IFileHelper {
      * @throws NullPointerException if assetId is {@code null}
      */
     List<Detail> deserialiseDetails(final String assetId);
+
+    List<Category> deserialiseCategories();
 
     /**
      * Serialised an asset and write the data to the corresponding json file. If Root asset does

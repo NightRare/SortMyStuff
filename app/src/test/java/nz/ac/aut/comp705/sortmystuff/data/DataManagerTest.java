@@ -18,6 +18,7 @@ import org.robolectric.annotation.Config;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,8 +26,11 @@ import nz.ac.aut.comp705.sortmystuff.BuildConfig;
 import nz.ac.aut.comp705.sortmystuff.data.local.IFileHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Category;
+import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
+import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.testutils.TestUtil;
 import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
@@ -58,7 +62,7 @@ public class DataManagerTest {
     public void setup() throws IOException {
         MockitoAnnotations.initMocks(this);
 
-        // setup default photo
+        // set up default photo
         FileInputStream fis = new FileInputStream(TestUtil.TEST_DEFAULT_PHOTO);
         Bitmap defaultPhoto = BitmapFactory.decodeStream(fis);
         fis.close();
@@ -66,6 +70,7 @@ public class DataManagerTest {
 
         mockAssets = new LinkedList<>();
         mockDetails = new LinkedList<>();
+        mockCategories = new LinkedList<>();
 
         // mocking the behaviours of jsonHelper
         when(mockFileHelper.serialiseAsset(any(Asset.class))).thenReturn(true);
@@ -79,7 +84,7 @@ public class DataManagerTest {
                 return argument.equals(mockDetails.get(0).getAssetId());
             }
         }))).thenReturn(mockDetails);
-
+        when(mockFileHelper.deserialiseCategories()).thenReturn(mockCategories);
 
         dataManager = new DataManager(mockFileHelper, mockResLoader);
     }
@@ -100,6 +105,8 @@ public class DataManagerTest {
 
     @Test
     public void createAsset_assetCreatedAndSaveToJsonFile() {
+        prepareCategories();
+
         // prepare a root asset as container
         final Asset root = prepareRootAsset();
 
@@ -107,9 +114,24 @@ public class DataManagerTest {
         verify(mockFileHelper).serialiseAsset(argThat(new ArgumentMatcher<Asset>() {
             @Override
             public boolean matches(Asset argument) {
-                return areIdenticalAssets(argument, assetId, ASSET_NAME1, root.getId(), null, null);
+                return areIdenticalAssets(argument, assetId, ASSET_NAME1, root.getId(),
+                        CategoryType.Miscellaneous, null, null);
             }
         }));
+        verify(mockFileHelper).serialiseDetails(argThat(new ArgumentMatcher<List<Detail>>() {
+            @Override
+            public boolean matches(List<Detail> argument) {
+                // get the details of Miscellaneous
+                List<Detail> miscDetails = mockCategories.get(0).getDetails();
+
+                // check the labels of the argument details and that of the defined details
+                for(int i = 0; i < argument.size(); i++) {
+                    if(!argument.get(i).getLabel().equals(miscDetails.get(i).getLabel()))
+                        return false;
+                }
+                return argument.size() == miscDetails.size();
+            }
+        }), ArgumentMatchers.eq(true));
     }
 
     @Test
@@ -138,6 +160,7 @@ public class DataManagerTest {
 
     @Test
     public void createAsset_updateLocalStorageFailed() {
+        prepareCategories();
         // mocking serialise failed
         when(mockFileHelper.serialiseAsset(any(Asset.class))).thenReturn(false);
 
@@ -145,18 +168,17 @@ public class DataManagerTest {
             // prepare a root asset as container
             final Asset root = prepareRootAsset();
             dataManager.createAsset(ASSET_NAME1, root.getId());
+            Assert.fail();
         } catch (UpdateLocalStorageFailedException e) {
             // pass test
-            return;
         }
-        Assert.fail();
     }
 
     @Test
     public void createTextDetail_textDetailCreatedAndSaveToJsonFile() {
         // prepare an asset
         Asset root = prepareRootAsset();
-        final Asset asset = Asset.create(ASSET_NAME1, root);
+        final Asset asset = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset);
 
         final String detailId = dataManager.createTextDetail(asset, TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
@@ -186,7 +208,7 @@ public class DataManagerTest {
     public void createTextDetail_emptyLabel() {
         // prepare an asset
         Asset root = prepareRootAsset();
-        final Asset asset = Asset.create(ASSET_NAME1, root);
+        final Asset asset = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset);
 
         try {
@@ -205,7 +227,7 @@ public class DataManagerTest {
 
         // prepare an asset
         Asset root = prepareRootAsset();
-        final Asset asset = Asset.create(ASSET_NAME1, root);
+        final Asset asset = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset);
 
         try {
@@ -236,7 +258,7 @@ public class DataManagerTest {
         try {
             // prepare an asset
             Asset root = prepareRootAsset();
-            final Asset asset = Asset.create(ASSET_NAME1, root);
+            final Asset asset = Asset.createAsMisc(ASSET_NAME1, root);
             mockAssets.add(asset);
 
             dataManager.createTextDetail(asset, TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
@@ -271,7 +293,8 @@ public class DataManagerTest {
         verify(mockFileHelper).serialiseAsset(argThat(new ArgumentMatcher<Asset>() {
             @Override
             public boolean matches(Asset argument) {
-                return areIdenticalAssets(argument, rootId, ROOT_ASSET_NAME, null, null, null);
+                return areIdenticalAssets(argument, rootId, ROOT_ASSET_NAME, null,
+                        CategoryType.None, null, null);
             }
         }));
     }
@@ -307,9 +330,9 @@ public class DataManagerTest {
     @Test
     public void getAllAssetsAsync_getAllAssets() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
-        final Asset asset2 = Asset.create(ASSET_NAME2, root);
-        final Asset asset3 = Asset.create(ASSET_NAME3, asset2);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, root);
+        final Asset asset3 = Asset.createAsMisc(ASSET_NAME3, asset2);
         mockAssets.add(asset1);
         mockAssets.add(asset2);
         mockAssets.add(asset3);
@@ -350,9 +373,9 @@ public class DataManagerTest {
     @Test
     public void getRecycledAssetsAsync_getRecycledAssets() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
-        final Asset asset2 = Asset.create(ASSET_NAME2, root);
-        final Asset asset3 = Asset.create(ASSET_NAME3, asset2);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, root);
+        final Asset asset3 = Asset.createAsMisc(ASSET_NAME3, asset2);
 
         //recycling
         asset1.recycle();
@@ -391,9 +414,9 @@ public class DataManagerTest {
     @Test
     public void getRecycledAssetsAsync_noRecycledAssets() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
-        final Asset asset2 = Asset.create(ASSET_NAME2, root);
-        final Asset asset3 = Asset.create(ASSET_NAME3, asset2);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, root);
+        final Asset asset3 = Asset.createAsMisc(ASSET_NAME3, asset2);
         mockAssets.add(asset1);
         mockAssets.add(asset2);
         mockAssets.add(asset3);
@@ -426,9 +449,9 @@ public class DataManagerTest {
     @Test
     public void getContentAssetsAsync_getContentAssets() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
-        final Asset asset2 = Asset.create(ASSET_NAME2, root);
-        final Asset asset3 = Asset.create(ASSET_NAME3, asset2);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, root);
+        final Asset asset3 = Asset.createAsMisc(ASSET_NAME3, asset2);
         mockAssets.add(asset1);
         mockAssets.add(asset2);
         mockAssets.add(asset3);
@@ -491,9 +514,9 @@ public class DataManagerTest {
     @Test
     public void getParentAssetsAsync_getParentAssets() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
-        final Asset asset2 = Asset.create(ASSET_NAME2, asset1);
-        final Asset asset3 = Asset.create(ASSET_NAME3, asset2);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, asset1);
+        final Asset asset3 = Asset.createAsMisc(ASSET_NAME3, asset2);
         mockAssets.add(asset1);
         mockAssets.add(asset2);
         mockAssets.add(asset3);
@@ -526,9 +549,9 @@ public class DataManagerTest {
     @Test
     public void getParentAssetsAsync_getParentOfRoot() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
-        final Asset asset2 = Asset.create(ASSET_NAME2, asset1);
-        final Asset asset3 = Asset.create(ASSET_NAME3, asset2);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, asset1);
+        final Asset asset3 = Asset.createAsMisc(ASSET_NAME3, asset2);
         mockAssets.add(asset1);
         mockAssets.add(asset2);
         mockAssets.add(asset3);
@@ -560,7 +583,7 @@ public class DataManagerTest {
     @Test
     public void getAssetAsync_getAsset() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         // test get asset1 by id
@@ -610,7 +633,7 @@ public class DataManagerTest {
     @Test
     public void getDetailsAsync_getDetails() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
         TextDetail td1 = TextDetail.createTextDetail(
                 asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
@@ -661,7 +684,7 @@ public class DataManagerTest {
     @Test
     public void getDetailsAsync_loadFromLocalFileAtFirstTime() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
         TextDetail td1 = TextDetail.createTextDetail(
                 asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
@@ -685,7 +708,7 @@ public class DataManagerTest {
     @Test
     public void updateAssetName_assetNameUpdatedAndSaveToJsonFile() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         Assert.assertNotEquals(ASSET_NAME1, ASSET_NAME2);
@@ -701,7 +724,7 @@ public class DataManagerTest {
             @Override
             public boolean matches(Asset argument) {
                 boolean nameChanged = areIdenticalAssets(argument, asset1.getId(),
-                        ASSET_NAME2, asset1.getContainerId(),
+                        ASSET_NAME2, asset1.getContainerId(), asset1.getCategoryType(),
                         asset1.getCreateTimestamp(), null);
                 if(!nameChanged) return false;
 
@@ -731,7 +754,7 @@ public class DataManagerTest {
     @Test
     public void updateAssetName_illegalNewName() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         boolean passTest = false;
@@ -759,7 +782,7 @@ public class DataManagerTest {
     @Test
     public void updateAssetName_updateLocalJsonFileFailed() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         when(mockFileHelper.serialiseAsset(any(Asset.class))).thenReturn(false);
@@ -779,8 +802,8 @@ public class DataManagerTest {
     @Test
     public void moveAsset_assetMovedAndSaveToJsonFile() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
-        final Asset asset2 = Asset.create(ASSET_NAME2, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, root);
         mockAssets.add(asset1);
         mockAssets.add(asset2);
 
@@ -790,7 +813,7 @@ public class DataManagerTest {
             @Override
             public boolean matches(Asset argument) {
                 boolean assetMoved = areIdenticalAssets(argument, asset1.getId(),
-                        ASSET_NAME1, asset2.getId(),
+                        ASSET_NAME1, asset2.getId(), asset1.getCategoryType(),
                         asset1.getCreateTimestamp(), null);
                 if(!assetMoved) return false;
 
@@ -815,7 +838,7 @@ public class DataManagerTest {
     @Test
     public void moveAsset_assetNotExists() {
         final Asset root = prepareRootAsset();
-        final Asset asset2 = Asset.create(ASSET_NAME2, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, root);
         mockAssets.add(asset2);
 
         dataManager.moveAsset("NoSuchAssetId", asset2.getId());
@@ -836,7 +859,7 @@ public class DataManagerTest {
     @Test
     public void moveAsset_containerIdNotExists() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         dataManager.moveAsset(asset1, "NoSuchContainerId");
@@ -858,8 +881,8 @@ public class DataManagerTest {
     public void moveAsset_moveAssetToChildrenContainer() {
         // asset2 is contained by (the child of) asset1
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
-        final Asset asset2 = Asset.create(ASSET_NAME2, asset1);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, asset1);
         mockAssets.add(asset1);
         mockAssets.add(asset2);
 
@@ -892,7 +915,7 @@ public class DataManagerTest {
     @Test
     public void moveAsset_moveRootAsset() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         dataManager.moveAsset(root, root.getId());
@@ -924,8 +947,8 @@ public class DataManagerTest {
     @Test
     public void moveAsset_updateLocalJsonFileFailed() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
-        final Asset asset2 = Asset.create(ASSET_NAME2, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, root);
         mockAssets.add(asset1);
         mockAssets.add(asset2);
 
@@ -947,11 +970,11 @@ public class DataManagerTest {
     @Test
     public void recycleAsset_assetRecycledAndSaveToJsonFile() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         // check whether serialised
-        dataManager.recycleAsset(asset1);
+        dataManager.recycleAssetRecursively(asset1);
 
         final ArgumentMatcher<Asset> matchRecycledAsset = new ArgumentMatcher<Asset>() {
             @Override
@@ -995,7 +1018,7 @@ public class DataManagerTest {
     public void recycleAsset_assetNotExists() {
         final Asset root = prepareRootAsset();
 
-        dataManager.recycleAsset("NoSuchAssetId");
+        dataManager.recycleAssetRecursively("NoSuchAssetId");
         // check whether serialised
         verify(mockFileHelper, never()).serialiseAsset(any(Asset.class));
 
@@ -1013,7 +1036,7 @@ public class DataManagerTest {
     public void recycleAsset_recycleRootAsset() {
         final Asset root = prepareRootAsset();
 
-        dataManager.recycleAsset(root);
+        dataManager.recycleAssetRecursively(root);
 
         // check whether serialised
         verify(mockFileHelper, never()).serialiseAsset(any(Asset.class));
@@ -1033,13 +1056,13 @@ public class DataManagerTest {
     @Test
     public void recycleAsset_updateLocalJsonFileFailed() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         when(mockFileHelper.serialiseAsset(any(Asset.class))).thenReturn(false);
 
         try {
-            dataManager.recycleAsset(asset1);
+            dataManager.recycleAssetRecursively(asset1);
         } catch (UpdateLocalStorageFailedException e) {
             return;
         }
@@ -1073,7 +1096,7 @@ public class DataManagerTest {
     @Test
     public void removeDetail_detailRemovedAndSaveToJsonFile() throws InterruptedException {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         // td1 and td2 belong to asset1
@@ -1093,7 +1116,7 @@ public class DataManagerTest {
             @Override
             public boolean matches(Asset argument) {
                 boolean identical = areIdenticalAssets(argument, asset1.getId(), asset1.getName(),
-                        root.getId(), asset1.getCreateTimestamp(), null);
+                        root.getId(), asset1.getCategoryType(), asset1.getCreateTimestamp(), null);
                 if(!identical) return false;
 
                 // updateTimestamp should be changed when get recycled
@@ -1121,8 +1144,8 @@ public class DataManagerTest {
     @Test
     public void removeDetail_notFromOwnerAsset() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
-        final Asset asset2 = Asset.create(ASSET_NAME2, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, root);
         mockAssets.add(asset1);
         mockAssets.add(asset2);
 
@@ -1150,7 +1173,7 @@ public class DataManagerTest {
     @Test
     public void removeDetail_detailNotExists() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
@@ -1177,7 +1200,7 @@ public class DataManagerTest {
     @Test
     public void removeDetail_updateLocalJsonFileFailed() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
@@ -1202,7 +1225,7 @@ public class DataManagerTest {
     @Test
     public void updateTextDetail_detailUpdatedAndSaveToJsonFile() throws InterruptedException {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         // td1 and td2 belong to asset1
@@ -1219,7 +1242,7 @@ public class DataManagerTest {
             @Override
             public boolean matches(Asset argument) {
                 boolean identical = areIdenticalAssets(argument, asset1.getId(), asset1.getName(),
-                        root.getId(), asset1.getCreateTimestamp(), null);
+                        root.getId(), asset1.getCategoryType(), asset1.getCreateTimestamp(), null);
                 if(!identical) return false;
 
                 // updateTimestamp should be changed when get recycled
@@ -1249,8 +1272,8 @@ public class DataManagerTest {
     @Test
     public void updateTextDetail_notForOwnerAsset() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
-        final Asset asset2 = Asset.create(ASSET_NAME2, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, root);
         mockAssets.add(asset1);
         mockAssets.add(asset2);
 
@@ -1278,7 +1301,7 @@ public class DataManagerTest {
     @Test
     public void updateTextDetail_detailNotExists() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
@@ -1305,7 +1328,7 @@ public class DataManagerTest {
     @Test
     public void updateTextDetail_illegalArguments() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
@@ -1353,7 +1376,7 @@ public class DataManagerTest {
     @Test
     public void updateTextDetail_updateLocalJsonFileFailed() {
         final Asset root = prepareRootAsset();
-        final Asset asset1 = Asset.create(ASSET_NAME1, root);
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
 
         final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
@@ -1415,6 +1438,8 @@ public class DataManagerTest {
 
     private List<Detail> mockDetails;
 
+    private List<Category> mockCategories;
+
     @Mock
     private IFileHelper mockFileHelper;
 
@@ -1438,6 +1463,26 @@ public class DataManagerTest {
         mockAssets.add(root);
         when(mockFileHelper.rootExists()).thenReturn(true);
         return root;
+    }
+
+    private void prepareCategories() {
+        Category misc = Category.create(CategoryType.Miscellaneous.toString());
+        Category food = Category.create(CategoryType.Food.toString());
+
+        Detail notes = TextDetail.createTextDetail("dummyAssetId",
+                CategoryType.BasicDetail.NOTES, "");
+        Detail photo = ImageDetail.create("dummyAssetId",
+                CategoryType.BasicDetail.PHOTO, mockResLoader.getDefaultPhoto());
+        misc.addDetail(notes);
+        misc.addDetail(photo);
+        food.addDetail(notes);
+        food.addDetail(photo);
+
+        Detail expiryDate = TextDetail.createDateDetail("dummyAssetId", "Expiry Date", "");
+        food.addDetail(expiryDate);
+
+        mockCategories.add(misc);
+        mockCategories.add(food);
     }
 
     private String getStringWithLength(int length) {

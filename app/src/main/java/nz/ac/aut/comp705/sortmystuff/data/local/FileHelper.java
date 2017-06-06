@@ -16,11 +16,14 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Category;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.util.JsonDetailAdapter;
 import nz.ac.aut.comp705.sortmystuff.util.Log;
@@ -159,6 +162,22 @@ public class FileHelper implements IFileHelper {
      * {@inheritDoc}
      */
     @Override
+    public List<Category> deserialiseCategories() {
+        String json = resLoader.getCategoriesJson();
+        Category[] categories = gBuilder.create().fromJson(json, Category[].class);
+        for(Category cat : categories) {
+            for(Detail d : cat.getDetails()) {
+                if(d.getType().equals(DetailType.Image))
+                    d.setField(resLoader.getDefaultPhoto());
+            }
+        }
+        return Arrays.asList(categories);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public boolean serialiseAsset(final Asset asset) {
         Preconditions.checkNotNull(asset);
 
@@ -190,24 +209,14 @@ public class FileHelper implements IFileHelper {
     public boolean serialiseDetails(List<Detail> details, boolean imageUpdated) {
         Preconditions.checkNotNull(details);
         Preconditions.checkArgument(!details.contains(null), "details should not contain null.");
-        if (details.isEmpty())
+        if (details.isEmpty() || !checkBelongToSameAsset(details))
             return false;
 
-        String assetId = null;
-        for (Detail d : details) {
-            if (assetId == null) {
-                assetId = d.getAssetId();
-            } else {
-                if (!assetId.equals(d.getAssetId())) {
-                    Log.e(getClass().getName(), "Details must belong to a same asset.");
-                    return false;
-                }
-            }
-        }
-
+        String assetId = details.get(0).getAssetId();
         final File assetDir, detailFile, assetFile;
         assetDir = fc.createFile(userDir, assetId);
         assetFile = fc.createFile(assetDir, ASSET_FILENAME);
+
         if (!assetDir.exists() || !assetFile.exists()) {
             Log.e(getClass().getName(), "Asset \"" + assetId + "\" not exists");
             return false;
@@ -299,6 +308,21 @@ public class FileHelper implements IFileHelper {
 
         Asset asset = readJsonFile(file, Asset.class);
         return asset;
+    }
+
+    private boolean checkBelongToSameAsset(List<Detail> details) {
+        String assetId = null;
+        for (Detail d : details) {
+            if (assetId == null) {
+                assetId = d.getAssetId();
+            } else {
+                if (!assetId.equals(d.getAssetId())) {
+                    Log.e(getClass().getName(), "Details must belong to a same asset.");
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     /**
@@ -476,10 +500,9 @@ public class FileHelper implements IFileHelper {
             ImageDetail imageDetail = (ImageDetail) d;
             File imageFile = imageFile(d.getAssetId(), d.getId());
 
-            // if set back to default photo, then remove the customised image file
-            if(imageDetail.getField().sameAs(resLoader.getDefaultPhoto())
-                    && imageFile.exists()) {
-                if(!imageFile.delete())
+            if(imageDetail.getField().sameAs(resLoader.getDefaultPhoto())) {
+                // if set back to default photo, then remove the customised image file
+                if(imageFile.exists() && !imageFile.delete())
                     return false;
             }
             // if the image is customised, then save it to the local storage

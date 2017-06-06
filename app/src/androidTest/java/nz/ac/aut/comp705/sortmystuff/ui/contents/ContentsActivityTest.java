@@ -9,6 +9,7 @@ import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.Display;
 import android.view.View;
 
 import com.google.common.base.Preconditions;
@@ -18,6 +19,7 @@ import junit.framework.Assert;
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
 import org.junit.After;
 import org.junit.Before;
@@ -38,6 +40,7 @@ import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 
 import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.longClick;
 import static android.support.test.espresso.action.ViewActions.replaceText;
@@ -47,10 +50,13 @@ import static android.support.test.espresso.matcher.ViewMatchers.isChecked;
 import static android.support.test.espresso.matcher.ViewMatchers.isDescendantOfA;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.isNotChecked;
+import static android.support.test.espresso.matcher.ViewMatchers.withChild;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
+import static android.support.test.espresso.matcher.ViewMatchers.withContentDescription;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.is;
@@ -391,7 +397,168 @@ public class ContentsActivityTest {
         }
     }
 
+    @Test
+    public void moveAsset_seleteNothing() {
+        //add some assets following such structure:
+        //dining room > table big, table small
+        //living room > (empty)
+        prepareAssetsToMove();
 
+        //enter selection mode by long-click an item
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(0).perform(longClick());
+
+        //select nothing and click MOVE button
+        onView(withId(R.id.move_button)).perform(click());
+
+        //two tables should stay where they were
+        onView(withChild(withText(ASSET_TABLE_BIG))).check(matches(isDisplayed()));
+        onView(withChild(withText(ASSET_TABLE_SMALL))).check(matches(isDisplayed()));
+
+        //and the living room should still be empty
+        onView(withId(R.id.pathbar_root)).perform(click());
+        clickAsset(1);
+        onView(withChild(withText(ASSET_TABLE_BIG))).check(doesNotExist());
+        onView(withChild(withText(ASSET_TABLE_SMALL))).check(doesNotExist());
+
+    }
+
+    @Test
+    public void moveAsset_seleteSomeAssets() {
+        //add some assets following such structure:
+        //dining room > table big, table small
+        //living room > (empty)
+        prepareAssetsToMove();
+
+        //enter selection mode by long-click an item
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(0).perform(longClick());
+
+        //select two tables and click MOVE button
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(0).perform(click());
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(1).perform(click());
+        onView(withId(R.id.move_button)).perform(click());
+
+        //go to the living room where tables will be moved
+        onView(withId(R.id.pathbar_root)).perform(click());
+        clickAsset(1);
+
+        //click CONFIRM button
+        onView(withId(R.id.confirm_move_button)).perform(click());
+
+        //now the living room should contain two tables
+        onView(withChild(withText(ASSET_TABLE_BIG))).check(matches(isDisplayed()));
+        onView(withChild(withText(ASSET_TABLE_SMALL))).check(matches(isDisplayed()));
+
+        //and two tables should disappear from the dining room
+        onView(withId(R.id.pathbar_root)).perform(click());
+        clickAsset(0);
+        onView(withChild(withText(ASSET_TABLE_BIG))).check(doesNotExist());
+        onView(withChild(withText(ASSET_TABLE_SMALL))).check(doesNotExist());
+
+    }
+
+    @Test
+    public void deleteAsset_deleteCurrentAsset() {
+        addAsset(ASSET1_NAME);
+        clickAsset(0);
+
+        // check if the current asset is asset1
+        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.toolbarMain);
+        Assert.assertEquals(ASSET1_NAME, toolbar.getTitle());
+
+        openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
+        onView(withText("Delete Asset")).perform(click());
+        onView(withText("Confirm")).perform(click());
+
+        // current asset set back to the container (in this case the Root) asset and asset1 no
+        // longer exists
+        Assert.assertEquals(ROOT_ASSET_NAME, toolbar.getTitle());
+        onView(withChild(withText(ASSET1_NAME))).check(doesNotExist());
+    }
+
+    @Test
+    public void deleteAsset_cancelDeleteCurrentAsset() {
+        addAsset(ASSET1_NAME);
+        clickAsset(0);
+
+        // check if the current asset is asset1
+        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.toolbarMain);
+        Assert.assertEquals(ASSET1_NAME, toolbar.getTitle());
+
+        openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
+        onView(withText("Delete Asset")).perform(click());
+        onView(withText("Cancel")).perform(click());
+
+        // current asset should still be asset1
+        Assert.assertEquals(ASSET1_NAME, toolbar.getTitle());
+    }
+
+    @Test
+    public void deleteAsset_deleteRootAsset() {
+        addAsset(ASSET1_NAME);
+
+        openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
+        onView(withText("Delete Asset")).perform(click());
+
+        // delete asset dialog should not pop up
+        onView(withText("Confirm")).check(doesNotExist());
+
+        // Root asset cannot be deleted
+        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.toolbarMain);
+        Assert.assertEquals(ROOT_ASSET_NAME, toolbar.getTitle());
+        onView(withChild(withText(ASSET1_NAME))).check(matches(isDisplayed()));
+    }
+
+    @Test
+    public void deleteAsset_deleteMultipleAssets() {
+        addAsset(ASSET1_NAME);
+        addAsset(ASSET2_NAME);
+        addAsset(ASSET3_NAME);
+
+        // enter selection mode
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(0).perform(longClick());
+
+        // delete asset1 and asset2
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(0).perform(click());
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(1).perform(click());
+
+        onView(withId(R.id.delete_button)).perform(click());
+        onView(withText("Confirm")).perform(click());
+
+        // asset1 and asset2 should be deleted while asset3 is still there
+        onView(withChild(withText(ASSET1_NAME))).check(doesNotExist());
+        onView(withChild(withText(ASSET2_NAME))).check(doesNotExist());
+        onView(withChild(withText(ASSET3_NAME))).check(matches(isDisplayed()));
+    }
+
+    @Test
+    public void deleteAsset_cancelDeleteMultipleAssets() {
+        addAsset(ASSET1_NAME);
+        addAsset(ASSET2_NAME);
+
+        // enter selection mode
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(0).perform(longClick());
+
+        // delete asset1 and asset2
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(0).perform(click());
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(1).perform(click());
+
+        onView(withId(R.id.delete_button)).perform(click());
+        onView(withText("Cancel")).perform(click());
+
+        // if cancel deleting, nothing should be deleted
+        onView(withChild(withText(ASSET1_NAME))).check(matches(isDisplayed()));
+        onView(withChild(withText(ASSET2_NAME))).check(matches(isDisplayed()));
+    }
 
     //region PRIVATE STUFF
 
@@ -408,6 +575,10 @@ public class ContentsActivityTest {
     private static final String ASSET1_NAME = "ASSET1_NAME";
     private static final String ASSET2_NAME = "ASSET2_NAME";
     private static final String ASSET3_NAME = "ASSET3_NAME";
+    private static final String ASSET_LIVING_ROOM = "Living Room";
+    private static final String ASSET_DINING_ROOM = "Dining Room";
+    private static final String ASSET_TABLE_BIG = "table big";
+    private static final String ASSET_TABLE_SMALL = "table small";
     private static final String PATH_BAR_0_PREFIX = "  ";
     private static final String PATH_BAR_PREFIX = " >  ";
 
@@ -437,6 +608,19 @@ public class ContentsActivityTest {
                 description.appendText("is isDescendantOfA Pathbar layout with text " + itemText);
             }
         };
+    }
+
+    private void prepareAssetsToMove() {
+        // add two rooms
+        addAsset(ASSET_DINING_ROOM);
+        addAsset(ASSET_LIVING_ROOM);
+
+        //go the the dining room
+        clickAsset(0);
+
+        //add two tables
+        addAsset(ASSET_TABLE_BIG);
+        addAsset(ASSET_TABLE_SMALL);
     }
 
     @Deprecated

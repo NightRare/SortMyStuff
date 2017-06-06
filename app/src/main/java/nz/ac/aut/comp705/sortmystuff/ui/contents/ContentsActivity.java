@@ -2,6 +2,7 @@ package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -20,6 +21,8 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
@@ -45,6 +48,8 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
         // init UI components
         fab = (FloatingActionButton) findViewById(R.id.addAssetButton);
+        fabCancelMoveButton = (FloatingActionButton) findViewById(R.id.cancel_move_button);
+        fabConfirmMoveButton = (FloatingActionButton) findViewById(R.id.confirm_move_button);
 
         assetListView = (ListView) findViewById(R.id.index_list);
 
@@ -58,7 +63,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         // register all the listeners
         registerListeners();
 
-        selectedAssetIds = new ArrayList<>();
+        selectedAssets = new ArrayList<>();
 
         // Create the presenter
         IDataManager dm = ((SortMyStuffApp) getApplication()).getFactory().getDataManager();
@@ -75,7 +80,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         presenter.start();
     }
 
-   @Override
+    @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putString(CURRENT_ASSET_ID, presenter.getCurrentAssetId());
         super.onSaveInstanceState(outState);
@@ -83,6 +88,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        this.menu = menu;
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.contents_menu, menu);
         return true;
@@ -95,6 +101,12 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         return super.onOptionsItemSelected(item);
     }
 
+    //Show or hide the toolbar menu.
+    public void toggleMenuDisplay(boolean showMenu) {
+        if (menu == null)
+            return;
+        menu.setGroupVisible(R.id.main_menu_group, showMenu);
+    }
 
     //endregion
 
@@ -130,7 +142,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         adapter = new AssetListAdapter(assets, getApplicationContext(), false);
         assetListView.setAdapter(adapter);
 
-        if(enableEditMode)
+        if (enableEditMode)
             displayInEditMode(assets);
         else
             displayWithoutEditMode(assets);
@@ -168,11 +180,10 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     @Override
     public void showDeleteDialog(boolean deletingCurrentAsset) {
         String message;
-        if(deletingCurrentAsset) {
+        if (deletingCurrentAsset) {
             message = "Deleting \'" + getTitle().toString() + "\'\n" +
                     "and its children assets.";
-        }
-        else {
+        } else {
             message = "Deleting selected assets\n" +
                     "and their children assets.";
         }
@@ -187,18 +198,22 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
     private IContentsPresenter presenter;
 
-    private List<String> selectedAssetIds;
+    private List<Asset> selectedAssets;
 
     //region UI Components
 
+    private Menu menu;
+
     private FloatingActionButton fab;
+    private FloatingActionButton fabCancelMoveButton;
+    private FloatingActionButton fabConfirmMoveButton;
 
     private Toolbar toolbar;
     private TextView pathBarRoot;
     private RecyclerView pathBar;
 
     private ListView assetListView;
-    private Button selectAll_btn, selectNone_btn, cancel_btn;
+    private Button cancel_btn, selectAll_btn, move_btn, delete_btn;
     private AssetListAdapter adapter;
 
     //endregion
@@ -206,18 +221,22 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     private void displayInEditMode(List<Asset> assets) {
         adapter = new AssetListAdapter(assets, getApplicationContext(), true);
         assetListView.setAdapter(adapter);
-        selectNone_btn.setVisibility(View.VISIBLE);
-        selectAll_btn.setVisibility(View.VISIBLE);
         cancel_btn.setVisibility(View.VISIBLE);
+        selectAll_btn.setVisibility(View.VISIBLE);
+        delete_btn.setVisibility(View.VISIBLE);
+        move_btn.setVisibility(View.VISIBLE);
+
         fab.setVisibility(View.GONE);
     }
 
     private void displayWithoutEditMode(List<Asset> assets) {
         adapter = new AssetListAdapter(assets, getApplicationContext(), false);
         assetListView.setAdapter(adapter);
-        selectNone_btn.setVisibility(View.GONE);
-        selectAll_btn.setVisibility(View.GONE);
         cancel_btn.setVisibility(View.GONE);
+        selectAll_btn.setVisibility(View.GONE);
+        delete_btn.setVisibility(View.GONE);
+        move_btn.setVisibility(View.GONE);
+
         fab.setVisibility(View.VISIBLE);
     }
 
@@ -226,6 +245,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
      * Build a dialog box format for adding assets
      * that enables a single line input
      * and has a functional save and cancel button
+     *
      * @return builder the dialog box format
      */
     private AlertDialog.Builder getAddAssetDialogBuilder() {
@@ -263,10 +283,10 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         builder.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                if(deletingCurrentAsset)
+                if (deletingCurrentAsset)
                     presenter.recycleCurrentAssetRecursively();
                 else
-                    presenter.recycleAssetsRecursively(selectedAssetIds);
+                    presenter.recycleAssetsRecursively(selectedAssets);
             }
         });
         //creates the Cancel button and what happens when clicked
@@ -294,11 +314,13 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     private void initEditModeButtons() {
         cancel_btn = (Button) findViewById(R.id.cancel_button);
         selectAll_btn = (Button) findViewById(R.id.select_all_button);
-        selectNone_btn = (Button) findViewById(R.id.select_none_button);
+        delete_btn = (Button) findViewById(R.id.delete_button);
+        move_btn = (Button) findViewById(R.id.move_button);
 
-        selectNone_btn.setVisibility(View.GONE);
-        selectAll_btn.setVisibility(View.GONE);
         cancel_btn.setVisibility(View.GONE);
+        selectAll_btn.setVisibility(View.GONE);
+        delete_btn.setVisibility(View.GONE);
+        move_btn.setVisibility(View.GONE);
     }
 
     /**
@@ -310,6 +332,32 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
             @Override
             public void onClick(View v) {
                 showAddDialog();
+            }
+        });
+        fabCancelMoveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toggleMenuDisplay(true);
+                fab.setVisibility(View.VISIBLE);
+                fabCancelMoveButton.setVisibility(View.GONE);
+                fabConfirmMoveButton.setVisibility(View.GONE);
+            }
+        });
+
+        fabConfirmMoveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (selectedAssets.isEmpty()) {
+                    Toast.makeText(ContentsActivity.this,
+                            "You haven't selected any items.", Toast.LENGTH_SHORT).show();
+                } else {
+                    presenter.moveAssets(selectedAssets);
+                    presenter.loadCurrentContents(false);
+                }
+                toggleMenuDisplay(true);
+                fab.setVisibility(View.VISIBLE);
+                fabCancelMoveButton.setVisibility(View.GONE);
+                fabConfirmMoveButton.setVisibility(View.GONE);
             }
         });
 
@@ -329,9 +377,9 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
                 if (adapter.isCheckboxShowed()) {
                     AssetListAdapter.ViewHolder holder = (AssetListAdapter.ViewHolder) view.getTag();
                     holder.checkbox.toggle();
-                    AssetListAdapter.getSelectStatusMap().put(position, holder.checkbox.isChecked());
-                }
-                else {
+                    adapter.getSelectStatusMap().put(position, holder.checkbox.isChecked());
+                    //adapter.notifyDataSetChanged();
+                } else {
                     //fetches the selected asset in the list
                     Asset a = (Asset) parent.getItemAtPosition(position);
                     //sets the selected asset's ID as the current asset (to be viewed)
@@ -375,29 +423,44 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
                                 + " items selected", Toast.LENGTH_SHORT).show();
                         break;
 
-                    case R.id.select_none_button:
-                        selectNone();
-                        Toast.makeText(ContentsActivity.this, "0 items selected", Toast.LENGTH_SHORT).show();
+                    case R.id.delete_button:
+                        selectedAssets = adapter.getSelectedAssetList();
+                        showDeleteDialog(false);
+                        presenter.quitEditMode();
                         break;
+
+                    case R.id.move_button:
+                        //get the selected assets before quitting edit mode,
+                        //or else the selectedAssetList will be empty
+                        selectedAssets = adapter.getSelectedAssetList();
+
+                        presenter.quitEditMode();
+                        toggleMenuDisplay(false);
+                        fab.setVisibility(View.GONE);
+                        fabCancelMoveButton.setVisibility(View.VISIBLE);
+                        fabConfirmMoveButton.setVisibility(View.VISIBLE);
+                        break;
+
                 }
             }
         };
 
         cancel_btn.setOnClickListener(selectionModeListener);
         selectAll_btn.setOnClickListener(selectionModeListener);
-        selectNone_btn.setOnClickListener(selectionModeListener);
+        delete_btn.setOnClickListener(selectionModeListener);
+        move_btn.setOnClickListener(selectionModeListener);
     }
 
     private void selectAll() {
         for (int i = 0; i < adapter.getCount(); i++) {
-            AssetListAdapter.getSelectStatusMap().put(i, true);
+            adapter.getSelectStatusMap().put(i, true);
         }
         adapter.notifyDataSetChanged();
     }
 
     private void selectNone() {
         for (int i = 0; i < adapter.getCount(); i++) {
-            AssetListAdapter.getSelectStatusMap().put(i, false);
+            adapter.getSelectStatusMap().put(i, false);
         }
         adapter.notifyDataSetChanged();
     }

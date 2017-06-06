@@ -3,6 +3,7 @@ package nz.ac.aut.comp705.sortmystuff.testutils;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 
@@ -16,34 +17,34 @@ public class TestUtil {
 
     public static boolean areIdenticalAssets(Asset asset1, Asset asset2) {
         return areIdenticalAssets(asset1, asset2.getId(), asset2.getName(), asset2.getContainerId(),
-                asset2.getCreateTimestamp(), asset2.getModifyTimestamp());
+                asset2.getCategoryType(), asset2.getCreateTimestamp(), asset2.getModifyTimestamp());
     }
 
     public static boolean areIdenticalAssets(Asset asset, String id, String name,
-                                       String containerId, Long createTS, Long modifyTS) {
-        if (id != null) {
-            if (!asset.getId().equals(id))
-                return false;
+                                             String containerId, CategoryType categoryType,
+                                             Long createTS, Long modifyTS) {
+        if (id != null && !asset.getId().equals(id)) {
+            return false;
         }
 
-        if (name != null) {
-            if (!asset.getName().equals(name))
-                return false;
+        if (name != null && !asset.getName().equals(name)) {
+            return false;
         }
 
-        if (containerId != null) {
-            if (!asset.getContainerId().equals(containerId))
-                return false;
+        if (containerId != null && !asset.getContainerId().equals(containerId)) {
+            return false;
         }
 
-        if (createTS != null) {
-            if (!asset.getCreateTimestamp().equals(createTS))
-                return false;
+        if(categoryType != null && !asset.getCategoryType().equals(categoryType)) {
+            return false;
         }
 
-        if (modifyTS != null) {
-            if (!asset.getModifyTimestamp().equals(modifyTS))
-                return false;
+        if (createTS != null && !asset.getCreateTimestamp().equals(createTS)) {
+            return false;
+        }
+
+        if (modifyTS != null && !asset.getModifyTimestamp().equals(modifyTS)) {
+            return false;
         }
 
         return true;

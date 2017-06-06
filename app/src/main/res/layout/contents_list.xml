@@ -9,35 +9,35 @@
         android:id="@+id/index_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/pathbar_layout"
-        android:layout_above="@+id/action_buttons"/>
+        android:layout_above="@+id/action_buttons"
+        android:layout_below="@id/pathbar_layout" />
 
     <LinearLayout
         android:id="@id/action_buttons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_alignParentBottom="true">
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal">
 
         <Button
             android:id="@+id/cancel_button"
-            android:text="Cancel"
-            style="@style/action_button_style" />
-
-        <!--<Button-->
-            <!--android:id="@+id/select_button"-->
-            <!--android:text="Select"-->
-            <!--style="@style/action_button_style" />-->
+            style="@style/action_button_style"
+            android:text="Cancel" />
 
         <Button
             android:id="@+id/select_all_button"
-            android:text="ALL"
-            style="@style/action_button_style" />
+            style="@style/action_button_style"
+            android:text="ALL" />
 
         <Button
-            android:id="@+id/select_none_button"
-            android:text="NONE"
-            style="@style/action_button_style" />
+            android:id="@+id/delete_button"
+            style="@style/action_button_style"
+            android:text="DELETE" />
+
+        <Button
+            android:id="@+id/move_button"
+            style="@style/action_button_style"
+            android:text="Move" />
 
     </LinearLayout>
 

@@ -12,10 +12,13 @@ public class AppConstraints {
 
     public final static int ASSET_NAME_CAP = 40;
 
+    public final static String ROOT_ASSET_ID = "RootAsset";
 
     //********************************************
     // DETAIL
     //********************************************
+
+    public final static int CATEGORY_NAME_CAP = 40;
 
     public final static int DETAIL_LABEL_CAP = 40;
 

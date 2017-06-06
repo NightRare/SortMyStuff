@@ -32,7 +32,8 @@ public class JsonDetailAdapter implements JsonSerializer<Detail>, JsonDeserializ
         Map<String, Class<?>> map = new HashMap<>();
 
         map.put(DetailType.Text.toString(), TextDetail.class);
-
+        map.put(DetailType.Date.toString(), TextDetail.class);
+        map.put(DetailType.Image.toString(), ImageDetail.class);
         return map;
     }
 

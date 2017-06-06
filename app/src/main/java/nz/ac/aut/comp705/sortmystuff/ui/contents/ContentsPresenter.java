@@ -2,12 +2,13 @@ package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
 import android.content.Intent;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.CheckBox;
 import android.widget.Toast;
+
+import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.prefs.PreferenceChangeEvent;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
@@ -138,6 +139,28 @@ public class ContentsPresenter implements IContentsPresenter {
         loadCurrentContents(false);
     }
 
+    @Override
+    public void moveAssets(List<Asset> assets) {
+        Preconditions.checkNotNull(assets, "The assets to move cannot be null.");
+        Preconditions.checkArgument(!assets.isEmpty(), "The assets to move cannot be empty");
+
+        //reject the attempt to move to current directory
+        if (assets.get(0).getContainerId().equals(currentAssetId)) {
+            Toast.makeText(activity, "The assets are already here:)", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        for (Asset a : assets) {
+            dm.moveAsset(a, currentAssetId);
+        }
+
+        int size = assets.size();
+        String msg = " asset moved.";
+        if (size > 1)
+            msg = " assets moved.";
+        Toast.makeText(activity, size + msg, Toast.LENGTH_SHORT).show();
+    }
+
     /**
      * {@inheritDoc}
      *
@@ -168,26 +191,21 @@ public class ContentsPresenter implements IContentsPresenter {
                 enableEditMode();
                 return true;
 
-            case R.id.delete_asset_button:
+            case R.id.delete_current_asset_button:
                 if (currentAssetId.equals(dm.getRootAsset().getId())) {
                     Toast.makeText(activity, "Cannot delete Root", Toast.LENGTH_LONG).show();
                     return false;
-        }
-                view.showDeleteDialog(false);
+                }
+                view.showDeleteDialog(true);
                 return true;
 
 
 
             default:
-        return false;
-    }
+                return false;
+        }
     }
 
-    @Override
-    public void quitEditMode() {
-        editModeEnabled = false;
-        loadCurrentContents(false);
-    }
 
     @Override
     public void recycleCurrentAssetRecursively() {
@@ -198,13 +216,24 @@ public class ContentsPresenter implements IContentsPresenter {
     }
 
     @Override
-    public void recycleAssetsRecursively(List<String> assetIds) {
-        // TODO recycleAssetsRecursively to be implemented
+    public void recycleAssetsRecursively(List<Asset> assets) {
+        Preconditions.checkNotNull(assets);
+        for(Asset a : assets) {
+            dm.recycleAssetRecursively(a);
+        }
+        loadCurrentContents(true);
     }
+
 
     @Override
     public void enableEditMode() {
         editModeEnabled = true;
+        loadCurrentContents(false);
+    }
+
+    @Override
+    public void quitEditMode() {
+        editModeEnabled = false;
         loadCurrentContents(false);
     }
 
@@ -262,14 +291,6 @@ public class ContentsPresenter implements IContentsPresenter {
 
             }
         });
-    }
-
-
-    private void setCheckboxStatus(View view, boolean checked) {
-        CheckBox checkBox = (CheckBox) view.findViewById(R.id.asset_checkbox);
-        checkBox.setVisibility(View.VISIBLE);
-        if (checkBox != null)
-            checkBox.setChecked(checked);
     }
 
     //endregion

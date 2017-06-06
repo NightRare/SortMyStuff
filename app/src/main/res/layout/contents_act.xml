@@ -15,6 +15,26 @@
         app:backgroundTint="@android:color/holo_orange_light"
         app:srcCompat="@drawable/ic_add_white_48dp"/>
 
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/cancel_move_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_margin="@dimen/fab_margin"
+        app:backgroundTint="@android:color/darker_gray"
+        app:srcCompat="@drawable/ic_cancel_move"
+        android:visibility="gone"/>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/confirm_move_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/fab_margin"
+        app:backgroundTint="@android:color/holo_green_light"
+        app:srcCompat="@drawable/ic_confirm_move"
+        android:visibility="gone"/>
+
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

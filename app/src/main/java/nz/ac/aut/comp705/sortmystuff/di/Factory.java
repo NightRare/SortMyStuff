@@ -22,8 +22,6 @@ public class Factory implements IFactory {
 
     public Factory (Application app) {
         this.app = app;
-
-        initialise();
     }
 
     @Override
@@ -42,7 +40,8 @@ public class Factory implements IFactory {
         File userDir = new File(
                 app.getFilesDir().getPath() + File.separator + "default-user");
 
-        fileHelper = new FileHelper(getLocalResourceLoader(), userDir, new GsonBuilder(), new FileHelper.FileCreator());
+        fileHelper = new FileHelper(getLocalResourceLoader(), userDir, new GsonBuilder(),
+                new FileHelper.FileCreator());
         return fileHelper;
     }
 
@@ -55,10 +54,6 @@ public class Factory implements IFactory {
         return resLoader;
     }
 
-    private void initialise() {
-        getFileHelper();
-        getDataManager();
-    }
 
     //region Private stuff
 

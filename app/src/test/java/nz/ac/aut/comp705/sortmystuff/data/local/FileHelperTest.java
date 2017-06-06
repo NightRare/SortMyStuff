@@ -76,7 +76,7 @@ public class FileHelperTest {
     @Test
     public void deserialiseAsset_assetDeserialisedFromLocalStorage() throws IOException {
         Asset root = prepareRootAsset();
-        Asset asset1 = Asset.create(ASSET_NAME1, root);
+        Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         fh.serialiseAsset(asset1);
 
         Asset desAsset = fh.deserialiseAsset(asset1.getId());
@@ -85,7 +85,7 @@ public class FileHelperTest {
 
     @Test
     public void deserialiseAsset_rootAssetNotExists() {
-        Asset asset1 = Asset.create(ASSET_NAME1, Asset.createRoot());
+        Asset asset1 = Asset.createAsMisc(ASSET_NAME1, Asset.createRoot());
         fh.serialiseAsset(asset1);
 
         Asset desAsset = fh.deserialiseAsset(asset1.getId());
@@ -116,9 +116,9 @@ public class FileHelperTest {
     public void deserialiseAllAssets_allAssetsDeserialisedFromLocalStorage() {
         Asset root = prepareRootAsset();
         List<Asset> assets = new ArrayList<>();
-        assets.add(Asset.create(ASSET_NAME1, root));
-        assets.add(Asset.create(ASSET_NAME2, root));
-        assets.add(Asset.create(ASSET_NAME3, assets.get(0)));
+        assets.add(Asset.createAsMisc(ASSET_NAME1, root));
+        assets.add(Asset.createAsMisc(ASSET_NAME2, root));
+        assets.add(Asset.createAsMisc(ASSET_NAME3, assets.get(0)));
 
         for (Asset a : assets) {
             fh.serialiseAsset(a);
@@ -137,9 +137,9 @@ public class FileHelperTest {
         // root asset not serialised
         Asset root = Asset.createRoot();
         Asset[] assets = new Asset[3];
-        assets[0] = Asset.create(ASSET_NAME1, root);
-        assets[1] = Asset.create(ASSET_NAME2, root);
-        assets[2] = Asset.create(ASSET_NAME3, assets[0]);
+        assets[0] = Asset.createAsMisc(ASSET_NAME1, root);
+        assets[1] = Asset.createAsMisc(ASSET_NAME2, root);
+        assets[2] = Asset.createAsMisc(ASSET_NAME3, assets[0]);
 
         for (Asset a : assets) {
             fh.serialiseAsset(a);
@@ -162,7 +162,7 @@ public class FileHelperTest {
     @Test
     public void deserialiseDetails_detailsDeserialisedFromLocalStorage() {
         Asset root = prepareRootAsset();
-        Asset asset1 = Asset.create(ASSET_NAME1, root);
+        Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
 
         List<Detail> details = new ArrayList<>();
         Detail detail1 = TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
@@ -179,7 +179,7 @@ public class FileHelperTest {
     @Test
     public void deserialiseDetails_assetNotExists() {
         Asset root = prepareRootAsset();
-        Asset asset1 = Asset.create(ASSET_NAME1, root);
+        Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
 
         List<Detail> details = new ArrayList<>();
         Detail detail1 = TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
@@ -197,7 +197,7 @@ public class FileHelperTest {
     public void serialiseAsset_assetSerialisedToLocalStorage() throws IOException {
         Gson gson = customiseGsonBuilder().create();
         Asset root = Asset.createRoot();
-        Asset asset1 = Asset.create(ASSET_NAME1, root);
+        Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
 
         assertTrue(fh.serialiseAsset(root));
         assertTrue(fh.serialiseAsset(asset1));
@@ -220,7 +220,7 @@ public class FileHelperTest {
     @Test
     public void serialiseAsset_rootAssetNotExists() throws IOException {
         Asset root = Asset.createRoot();
-        Asset asset1 = Asset.create(ASSET_NAME1, root);
+        Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
 
         // root asset is not serialised
         // should not serialise
@@ -237,7 +237,7 @@ public class FileHelperTest {
     public void serialiseDetails_detailsSerialisedToLocalStorage() throws IOException {
         Gson gson = customiseGsonBuilder().create();
         Asset root = Asset.createRoot();
-        Asset asset1 = Asset.create(ASSET_NAME1, root);
+        Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
 
         List<Detail> details = new ArrayList<>();
         details.add(TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1));
@@ -259,8 +259,8 @@ public class FileHelperTest {
     @Test
     public void serialiseDetails_detailsWithDifferentAssetIds() throws IOException {
         Asset root = Asset.createRoot();
-        Asset asset1 = Asset.create(ASSET_NAME1, root);
-        Asset asset2 = Asset.create(ASSET_NAME2, root);
+        Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        Asset asset2 = Asset.createAsMisc(ASSET_NAME2, root);
 
         // detail1 and detail2 have different asset ids
         List<Detail> details = new ArrayList<>();
@@ -284,7 +284,7 @@ public class FileHelperTest {
     @Test
     public void serialiseDetails_emptyDetailsList() {
         Asset root = Asset.createRoot();
-        Asset asset1 = Asset.create(ASSET_NAME1, root);
+        Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
 
         List<Detail> details = new ArrayList<>();
 
@@ -305,7 +305,7 @@ public class FileHelperTest {
     @Test
     public void serialiseDetails_imageUpdated() throws IOException {
         Asset root = Asset.createRoot();
-        Asset asset1 = Asset.create(ASSET_NAME1, root);
+        Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
 
         FileInputStream fis = new FileInputStream(TEST_IMAGE_1);
         Bitmap image = BitmapFactory.decodeStream(fis);
