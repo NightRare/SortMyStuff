@@ -3,6 +3,8 @@ package nz.ac.aut.comp705.sortmystuff.ui.details;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.support.v4.graphics.BitmapCompat;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.widget.EditText;
@@ -12,8 +14,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
+import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.util.Log;
 
 /**
@@ -202,6 +206,23 @@ public class DetailsPresenter implements IDetailsPresenter {
         activity.setTitle(getCurrentAssetName());
     }
 
+    public void updateImage(final Bitmap newImage) {
+        dm.getDetailsAsync(currentAsset, new IDataManager.LoadDetailsCallback() {
+            @Override
+            public void onDetailsLoaded(List<Detail> details) {
+                for(Detail d : details) {
+                    if(d.getLabel().equals(CategoryType.BasicDetail.PHOTO)) {
+                        dm.updateImageDetail((ImageDetail) d, d.getLabel(), newImage);
+                    }
+                }
+            }
+
+            @Override
+            public void dataNotAvailable(int errorCode) {
+
+            }
+        });
+    }
 
 
 
