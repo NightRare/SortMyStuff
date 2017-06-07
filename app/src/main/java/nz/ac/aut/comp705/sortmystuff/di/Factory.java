@@ -40,8 +40,7 @@ public class Factory implements IFactory {
         File userDir = new File(
                 app.getFilesDir().getPath() + File.separator + "default-user");
 
-        fileHelper = new FileHelper(getLocalResourceLoader(), userDir, new GsonBuilder(),
-                new FileHelper.FileCreator());
+        fileHelper = new FileHelper(getLocalResourceLoader(), userDir, new GsonBuilder());
         return fileHelper;
     }
 

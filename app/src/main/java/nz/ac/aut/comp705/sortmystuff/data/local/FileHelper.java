@@ -45,18 +45,15 @@ public class FileHelper implements IFileHelper {
      *
      * @param userDir  the directory of the current user
      * @param gBuilder the GsonBuilder
-     * @param fc       the FileCreator
      * @throws NullPointerException if any argument is {@code null}
      */
     @Deprecated
-    public FileHelper(File userDir, GsonBuilder gBuilder, FileCreator fc) {
+    public FileHelper(File userDir, GsonBuilder gBuilder) {
         Preconditions.checkNotNull(userDir);
         Preconditions.checkNotNull(gBuilder);
-        Preconditions.checkNotNull(fc);
 
         this.gBuilder = gBuilder;
         this.userDir = userDir;
-        this.fc = fc;
 
         this.gBuilder.serializeNulls();
         this.gBuilder.setPrettyPrinting();
@@ -66,13 +63,12 @@ public class FileHelper implements IFileHelper {
             this.userDir.mkdirs();
     }
 
-    public FileHelper(LocalResourceLoader resLoader, File userDir, GsonBuilder gBuilder, FileCreator fc) {
+    public FileHelper(LocalResourceLoader resLoader, File userDir, GsonBuilder gBuilder) {
         Preconditions.checkNotNull(resLoader);
         Preconditions.checkNotNull(userDir);
 
         this.gBuilder = gBuilder;
         this.userDir = userDir;
-        this.fc = fc;
 
         this.gBuilder.serializeNulls();
         this.gBuilder.setPrettyPrinting();
@@ -125,7 +121,7 @@ public class FileHelper implements IFileHelper {
             if (!isValidAssetDir(assetDir))
                 continue;
 
-            Asset asset = deserialiseAssetFromFile(fc.createFile(assetDir, ASSET_FILENAME));
+            Asset asset = deserialiseAssetFromFile(new File(assetDir, ASSET_FILENAME));
             if (asset != null && !assets.contains(asset)) {
                 assets.add(asset);
             }
@@ -198,7 +194,7 @@ public class FileHelper implements IFileHelper {
             assetDir = prepareAssetDir(asset.getId());
         }
 
-        file = fc.createFile(assetDir, ASSET_FILENAME);
+        file = new File(assetDir, ASSET_FILENAME);
 
         return writeJsonFile(asset, file, Asset.class);
     }
@@ -215,8 +211,8 @@ public class FileHelper implements IFileHelper {
 
         String assetId = details.get(0).getAssetId();
         final File assetDir, detailFile, assetFile;
-        assetDir = fc.createFile(userDir, assetId);
-        assetFile = fc.createFile(assetDir, ASSET_FILENAME);
+        assetDir = new File(userDir, assetId);
+        assetFile = new File(assetDir, ASSET_FILENAME);
 
         if (!assetDir.exists() || !assetFile.exists()) {
             Log.e(getClass().getName(), "Asset \"" + assetId + "\" not exists");
@@ -230,7 +226,7 @@ public class FileHelper implements IFileHelper {
             }
         }
 
-        detailFile = fc.createFile(assetDir, DETAILS_FILENAME);
+        detailFile = new File(assetDir, DETAILS_FILENAME);
 
         final Detail[] dArray = details.toArray(new Detail[details.size()]);
         return writeJsonFile(dArray, detailFile, Detail[].class);
@@ -262,28 +258,28 @@ public class FileHelper implements IFileHelper {
 
     //region Inner classes
 
-    /**
-     * A wrapper class for File constructors so that they can be mocked.
-     */
-    public static class FileCreator {
-
-        public File createFile(String pathname) {
-            return new File(pathname);
-        }
-
-
-        public File createFile(File parent, String child) {
-            return new File(parent, child);
-        }
-
-        public FileReader createFileReader(File file) throws FileNotFoundException {
-            return new FileReader(file);
-        }
-
-        public FileWriter createFileWriter(File file) throws IOException {
-            return new FileWriter(file);
-        }
-    }
+//    /**
+//     * A wrapper class for File constructors so that they can be mocked.
+//     */
+//    public static class FileCreator {
+//
+//        public File createFile(String pathname) {
+//            return new File(pathname);
+//        }
+//
+//
+//        public File createFile(File parent, String child) {
+//            return new File(parent, child);
+//        }
+//
+//        public FileReader createFileReader(File file) throws FileNotFoundException {
+//            return new FileReader(file);
+//        }
+//
+//        public FileWriter createFileWriter(File file) throws IOException {
+//            return new FileWriter(file);
+//        }
+//    }
 
     //endregion
 
@@ -295,7 +291,7 @@ public class FileHelper implements IFileHelper {
 
     private GsonBuilder gBuilder;
 
-    private FileCreator fc;
+//    private FileCreator fc;
 
     /**
      * Deserialises asset from file according to the given file name.
@@ -368,11 +364,11 @@ public class FileHelper implements IFileHelper {
      * @return the dir File of the asset
      */
     private File prepareAssetDir(String assetFolderName) {
-        File assetDir = fc.createFile(userDir, assetFolderName);
+        File assetDir = new File(userDir, assetFolderName);
         if (!assetDir.exists())
             assetDir.mkdirs();
-        File assetFile = fc.createFile(assetDir, ASSET_FILENAME);
-        File detailsFile = fc.createFile(assetDir, DETAILS_FILENAME);
+        File assetFile = new File(assetDir, ASSET_FILENAME);
+        File detailsFile = new File(assetDir, DETAILS_FILENAME);
         try {
             if (!assetFile.exists())
                 assetFile.createNewFile();
@@ -396,7 +392,7 @@ public class FileHelper implements IFileHelper {
     private <T> boolean writeJsonFile(T srcObj, File file, Class<T> klass) {
         Writer writer = null;
         try {
-            writer = fc.createFileWriter(file);
+            writer = new FileWriter(file);
             gBuilder.create().toJson(srcObj, klass, writer);
             return true;
         } catch (IOException e) {
@@ -424,7 +420,7 @@ public class FileHelper implements IFileHelper {
     private <T> T readJsonFile(File file, Class<T> klass) {
         Reader reader = null;
         try {
-            reader = fc.createFileReader(file);
+            reader = new FileReader(file);
             return gBuilder.create().fromJson(reader, klass);
         } catch (IOException e) {
             Log.e(Log.GSON_READ_FAILED, "IOException", e);
@@ -537,21 +533,21 @@ public class FileHelper implements IFileHelper {
     }
 
     private File assetJsonFile(String assetId) {
-        return fc.createFile(userDir + File.separator + assetId + File.separator + ASSET_FILENAME);
+        return new File(userDir + File.separator + assetId + File.separator + ASSET_FILENAME);
     }
 
     private File rootAssetJsonFile() {
-        return fc.createFile(userDir + File.separator + ROOT_ASSET_DIR + File.separator +
+        return new File(userDir + File.separator + ROOT_ASSET_DIR + File.separator +
                 ASSET_FILENAME);
     }
 
     private File detailsJsonFile(String assetId) {
-        return fc.createFile(userDir.getPath() + File.separator + assetId + File.separator +
+        return new File(userDir.getPath() + File.separator + assetId + File.separator +
                 DETAILS_FILENAME);
     }
 
     private File imageFile(String assetId, String detailId) {
-        return fc.createFile(userDir + File.separator + assetId + File.separator + detailId +
+        return new File(userDir + File.separator + assetId + File.separator + detailId +
                 LocalResourceLoader.IMAGE_DETAIL_FORMAT);
     }
 

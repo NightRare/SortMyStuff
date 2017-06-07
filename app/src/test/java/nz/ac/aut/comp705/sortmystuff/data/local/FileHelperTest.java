@@ -60,8 +60,7 @@ public class FileHelperTest {
         when(mockResLoader.getDefaultPhoto()).thenReturn(defaultPhoto);
 
         userDir = new File(TEST_USER_DIR);
-        fh = new FileHelper(mockResLoader, userDir, new GsonBuilder(),
-                new FileHelper.FileCreator());
+        fh = new FileHelper(mockResLoader, userDir, new GsonBuilder());
     }
 
     @After
