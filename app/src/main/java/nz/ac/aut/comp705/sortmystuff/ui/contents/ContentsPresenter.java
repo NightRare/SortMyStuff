@@ -50,7 +50,7 @@ public class ContentsPresenter implements IContentsPresenter {
         if (currentAssetId == null) {
             currentAssetId = dm.getRootAsset().getId();
         }
-        loadCurrentContents(false);
+        loadCurrentContents(true);
     }
 
     /**
