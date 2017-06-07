@@ -49,6 +49,11 @@ public interface IFileHelper {
      */
     List<Detail> deserialiseDetails(final String assetId);
 
+    /**
+     * Deserialise the built-in categories.
+     *
+     * @return the list of built-in category instances
+     */
     List<Category> deserialiseCategories();
 
     /**

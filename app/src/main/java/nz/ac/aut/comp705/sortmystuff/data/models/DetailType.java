@@ -3,10 +3,13 @@ package nz.ac.aut.comp705.sortmystuff.data.models;
 import android.graphics.Bitmap;
 
 /**
+ * All the types of the details.
+ *
  * Created by Yuan on 2017/4/24.
  */
 
 public enum DetailType {
+
     Text (TextDetail.class, String.class),
     Date (TextDetail.class, String.class),
     Image (ImageDetail.class, Bitmap.class);

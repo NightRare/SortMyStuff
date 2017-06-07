@@ -5,7 +5,11 @@ import android.support.annotation.NonNull;
 
 import com.google.common.base.Preconditions;
 
+import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
+
 /**
+ * ImageDetail has a field as Bitmap instance.
+ * <p>
  * Created by Yuan on 2017/5/16.
  */
 
@@ -18,6 +22,17 @@ public class ImageDetail extends Detail<Bitmap> {
 
     //region STATIC FACTORIES
 
+    /**
+     * Static factory to instantiates an ImageDetail.
+     *
+     * @param assetId the id of the owner asset
+     * @param label   the label of the detail
+     * @param field   the field of the detail
+     * @return the ImageDetail instance
+     * @throws NullPointerException     if any argument is {@code null}
+     * @throws IllegalArgumentException if assetId is empty; or if label is empty or longer than
+     *                                  {@link AppConstraints#DETAIL_LABEL_CAP}
+     */
     public static ImageDetail create(String assetId, String label, Bitmap field) {
         Preconditions.checkNotNull(field);
 
@@ -41,9 +56,7 @@ public class ImageDetail extends Detail<Bitmap> {
     //region MUTATORS
 
     /**
-     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
-     * <p>
-     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     * {@inheritDoc}
      */
     @Deprecated
     @Override

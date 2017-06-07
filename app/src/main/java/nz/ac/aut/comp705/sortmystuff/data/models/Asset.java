@@ -26,7 +26,6 @@ public final class Asset {
 
     //region DATA FIELDS
 
-    // the identifier of the asset
     @NonNull
     private final String id;
 
@@ -38,13 +37,17 @@ public final class Asset {
 
     private CategoryType categoryType;
 
-    // value of System.currentTimeMillis() when the asset is created
+    /**
+     * Value of System.currentTimeMillis() when the asset is created.
+     */
     @NonNull
     private long createTimestamp;
 
-    // value of System.currentTimeMillis() when the asset is modified
-    // changing the container and adding contents does not count as modifications
-    // to the Asset
+    /**
+     * Value of System.currentTimeMillis() when the asset is modified
+     * changing the container and adding contents does not count as modifications
+     * to the Asset.
+     */
     @NonNull
     private long modifyTimestamp;
 
@@ -57,15 +60,20 @@ public final class Asset {
     //region STATIC FACTORIES
 
     /**
+     * <p><em>
+     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
+     * </em></p>
+     * <p>
      * Static factory to create an asset with the given name and has a categoryType type as given.
      *
-     * @param name
-     * @param container
-     * @param category
+     * @param name      the name of the Asset
+     * @param container the container of the asset
+     * @param category  the CategoryType of the asset (name of the Category)
      * @return an Asset instance
      * @throws NullPointerException     if name or container is {@code null}
      * @throws IllegalArgumentException if name is empty or exceeds the length limit
      */
+    @Deprecated
     public static Asset create(String name, Asset container, CategoryType category) {
         checkIllegalName(name);
         Preconditions.checkNotNull(container);
@@ -85,6 +93,10 @@ public final class Asset {
     }
 
     /**
+     * <p><em>
+     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
+     * </em></p>
+     * <p>
      * Static factory to create an asset with the given name and has a categoryType type as "Miscellaneous".
      *
      * @param name      the name of the asset.
@@ -93,15 +105,21 @@ public final class Asset {
      * @throws NullPointerException     if name or container is {@code null}
      * @throws IllegalArgumentException if name is empty or exceeds the length limit
      */
+    @Deprecated
     public static Asset createAsMisc(String name, Asset container) {
         return create(name, container, CategoryType.Miscellaneous);
     }
 
     /**
+     * <p><em>
+     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
+     * </em></p>
+     * <p>
      * Static factory to create a Root Asset.
      *
      * @return the Root Asset instance
      */
+    @Deprecated
     public static Asset createRoot() {
         String id = AppConstraints.ROOT_ASSET_ID;
 
@@ -114,30 +132,97 @@ public final class Asset {
 
     //region ACCESSORS
 
+    /**
+     * Gets the unique id.
+     *
+     * @return the id.
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Gets the name.
+     *
+     * @return the name.
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Gets the unique id of the asset's container.
+     *
+     * @return the container's id
+     */
     public String getContainerId() {
         return containerId;
     }
 
+    /**
+     * Gets the status whether the asset has been recycled.
+     *
+     * @return true if is recycled
+     */
     public boolean isRecycled() {
         return isRecycled;
     }
 
+    /**
+     * Checks whether the asset is a root asset.
+     *
+     * @return true if the asset is a root asset
+     */
     public boolean isRoot() {
         return isRoot;
     }
 
     /**
-     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * Gets the timestamp of creating as a Long object storing the milliseconds
+     *
+     * @return the creating timestamp
+     */
+    @NonNull
+    public Long getCreateTimestamp() {
+        return createTimestamp;
+    }
+
+    /**
+     * Gets the timestamp of latest modifying as a Long object storing the milliseconds
+     *
+     * @return the latest modifying timestamp
+     */
+    @NonNull
+    public Long getModifyTimestamp() {
+        return modifyTimestamp;
+    }
+
+    /**
+     * Gets the photo of the asset.
+     *
+     * @return the photo
+     */
+    public Bitmap getPhoto() {
+        return photo;
+    }
+
+    /**
+     * Gets the name of the category of the asset as a CategoryType instance.
+     *
+     * @return the name of the category this asset was classified as
+     */
+    public CategoryType getCategoryType() {
+        return categoryType;
+    }
+
+    /**
+     * <p><em>
+     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
+     * </em></p>
      * <p>
-     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     * Gets the container asset.
+     *
+     * @return the container asset
      */
     @Deprecated
     @Nullable
@@ -146,38 +231,29 @@ public final class Asset {
     }
 
     /**
-     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p><em>
+     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
+     * </em></p>
      * <p>
-     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     * Gets the contents assets of the assets.
+     *
+     * @return the list of contents assets
      */
     @Deprecated
     public List<Asset> getContents() {
         return new ArrayList<>(contents);
     }
 
-    @NonNull
-    public Long getCreateTimestamp() {
-        return createTimestamp;
-    }
-
-    @NonNull
-    public Long getModifyTimestamp() {
-        return modifyTimestamp;
-    }
-
-    public Bitmap getPhoto() {
-        return photo;
-    }
-
-    public CategoryType getCategoryType() {
-        return categoryType;
-    }
 
     //endregion
 
     //region MODIFIERS
 
     /**
+     * <p><em>
+     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
+     * </em></p>
+     * <p>
      * Sets the name of the asset.
      *
      * @param name the new name.
@@ -195,6 +271,10 @@ public final class Asset {
     }
 
     /**
+     * <p><em>
+     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
+     * </em></p>
+     * <p>
      * Moves this asset to a new container.
      *
      * @param containerObj the new container asset.
@@ -218,9 +298,16 @@ public final class Asset {
     }
 
     /**
-     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p><em>
+     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
+     * </em></p>
      * <p>
-     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     * Attaches the asset to its container to form a tree structure of assets. The tree structure
+     * is not recorded in data storage, therefore in order to be used as an Asset instance,
+     * they should be "attached" to its containers and contents after the assets have been retrieved
+     *
+     * @param containerObj the container asset
+     * @true if attach successfully
      */
     @Deprecated
     public boolean attachToTree(@Nullable Asset containerObj) {
@@ -242,9 +329,11 @@ public final class Asset {
     }
 
     /**
-     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p><em>
+     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
+     * </em></p>
      * <p>
-     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     * Updates the {@link #modifyTimestamp } to {@link System#currentTimeMillis()}.
      */
     @Deprecated
     public void updateTimeStamp() {
@@ -253,46 +342,55 @@ public final class Asset {
     }
 
     /**
-     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p><em>
+     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
+     * </em></p>
      * <p>
-     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     * Marks the Asset as being recycled.
      */
     @Deprecated
     public void recycle() {
-        if (isRoot()) return;
-        isRecycled = true;
+        if (!isRoot()) {
+            isRecycled = true;
+        }
     }
 
     /**
-     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p><em>
+     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
+     * </em></p>
      * <p>
-     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     * Marks the asset as not being recycled.
      */
     @Deprecated
     public void restore() {
-        if (isRoot()) return;
-        isRecycled = false;
+        if (!isRoot()) {
+            isRecycled = false;
+        }
     }
 
     /**
-     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p><em>
+     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
+     * </em></p>
      * <p>
-     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     * Sets the photo.
      */
     @Deprecated
     public void setPhoto(Bitmap photo) {
         this.photo = photo;
     }
 
-    @Deprecated
-    public void setCategoryType(CategoryType categoryType) {
-        this.categoryType = categoryType;
-    }
-
     //endregion
 
     //region OBJECT METHODS OVERRIDING
 
+    /**
+     * Compares the id of the asset.
+     *
+     * @param o the object to be compared with
+     * @return true if the ids are equal
+     */
     @Override
     public boolean equals(Object o) {
         if (o instanceof Asset) {
@@ -303,11 +401,21 @@ public final class Asset {
         return false;
     }
 
+    /**
+     * Hashes by the asset's id.
+     *
+     * @return the hashcode of the id.
+     */
     @Override
     public int hashCode() {
         return id.hashCode();
     }
 
+    /**
+     * Returns the name of the asset.
+     *
+     * @return the name of the asset
+     */
     @Override
     public String toString() {
         return name;
@@ -329,16 +437,6 @@ public final class Asset {
     @Nullable
     private transient Bitmap photo;
 
-    private boolean isParentOf(Asset asset) {
-        if (asset.container == null || asset.id.equals(id)) {
-            return false;
-        }
-        if (asset.containerId.equals(id)) {
-            return true;
-        }
-        return isParentOf(asset.container);
-    }
-
     private Asset(@NonNull String id, @NonNull String name, @NonNull String containerId,
                   CategoryType categoryType, @Nullable Asset container, boolean isRoot, @NonNull List<Asset> contents,
                   @NonNull Long createdTimestamp, @NonNull Long modifiedTimestamp,
@@ -356,7 +454,27 @@ public final class Asset {
         this.photo = photo;
     }
 
+    /**
+     * Checks if this asset is the parent of the given asset.
+     *
+     * @param asset the asset to be checked
+     * @return true if this asset is the parent of the given asset
+     */
+    private boolean isParentOf(Asset asset) {
+        if (asset.container == null || asset.id.equals(id)) {
+            return false;
+        }
+        if (asset.containerId.equals(id)) {
+            return true;
+        }
+        return isParentOf(asset.container);
+    }
 
+    /**
+     * Checks if the given name is illegal.
+     *
+     * @param name
+     */
     private static void checkIllegalName(String name) {
         Preconditions.checkNotNull(name);
         if (name.isEmpty())
