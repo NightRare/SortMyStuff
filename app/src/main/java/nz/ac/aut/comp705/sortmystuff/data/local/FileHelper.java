@@ -37,9 +37,7 @@ import nz.ac.aut.comp705.sortmystuff.util.Log;
 public class FileHelper implements IFileHelper {
 
     public static final String ASSET_FILENAME = "asset.json";
-
     public static final String DETAILS_FILENAME = "details.json";
-
     public static final String ROOT_ASSET_DIR = "root";
 
     /**
@@ -48,10 +46,13 @@ public class FileHelper implements IFileHelper {
      * @param userDir  the directory of the current user
      * @param gBuilder the GsonBuilder
      * @param fc       the FileCreator
+     * @throws NullPointerException if any argument is {@code null}
      */
     @Deprecated
     public FileHelper(File userDir, GsonBuilder gBuilder, FileCreator fc) {
         Preconditions.checkNotNull(userDir);
+        Preconditions.checkNotNull(gBuilder);
+        Preconditions.checkNotNull(fc);
 
         this.gBuilder = gBuilder;
         this.userDir = userDir;
@@ -165,9 +166,9 @@ public class FileHelper implements IFileHelper {
     public List<Category> deserialiseCategories() {
         String json = resLoader.getCategoriesJson();
         Category[] categories = gBuilder.create().fromJson(json, Category[].class);
-        for(Category cat : categories) {
-            for(Detail d : cat.getDetails()) {
-                if(d.getType().equals(DetailType.Image))
+        for (Category cat : categories) {
+            for (Detail d : cat.getDetails()) {
+                if (d.getType().equals(DetailType.Image))
                     d.setField(resLoader.getDefaultPhoto());
             }
         }
@@ -222,9 +223,9 @@ public class FileHelper implements IFileHelper {
             return false;
         }
 
-        if(imageUpdated) {
+        if (imageUpdated) {
             // if serialising image files fails
-            if(!serialiseImageFiles(details)) {
+            if (!serialiseImageFiles(details)) {
                 return false;
             }
         }
@@ -250,7 +251,7 @@ public class FileHelper implements IFileHelper {
 
         // check whether the file corrupt
         Asset asset = deserialiseAssetFromFile(rootAssetJsonFile());
-        if(asset == null) {
+        if (asset == null) {
             Log.e(Log.LOCAL_FILE_CORRUPT, "Root json file corrupted.");
             return false;
         }
@@ -440,16 +441,15 @@ public class FileHelper implements IFileHelper {
     }
 
     /**
-     *
      * @param image
      * @param file
      * @return
      */
     private boolean writeToImageFile(Bitmap image, File file) {
         FileOutputStream fos = null;
-        try{
-            if(!file.exists()) {
-                if(!file.createNewFile())
+        try {
+            if (!file.exists()) {
+                if (!file.createNewFile())
                     return false;
             }
             fos = new FileOutputStream(file);
@@ -458,7 +458,7 @@ public class FileHelper implements IFileHelper {
             Log.e(Log.BITMAP_WRITE_FAILED, "IOException", e);
             return false;
         } finally {
-            if(fos != null) {
+            if (fos != null) {
                 try {
                     fos.flush();
                     fos.close();
@@ -470,19 +470,19 @@ public class FileHelper implements IFileHelper {
     }
 
     private Bitmap readFromImageFile(File file) {
-        if(!file.exists()) {
+        if (!file.exists()) {
             return null;
         }
 
         FileInputStream fis = null;
-        try{
+        try {
             fis = new FileInputStream(file);
             return BitmapFactory.decodeStream(fis);
         } catch (IOException e) {
             Log.e(Log.BITMAP_WRITE_FAILED, "IOException", e);
             return null;
         } finally {
-            if(fis != null) {
+            if (fis != null) {
                 try {
                     fis.close();
                 } catch (Exception e) {
@@ -500,14 +500,14 @@ public class FileHelper implements IFileHelper {
             ImageDetail imageDetail = (ImageDetail) d;
             File imageFile = imageFile(d.getAssetId(), d.getId());
 
-            if(imageDetail.getField().sameAs(resLoader.getDefaultPhoto())) {
+            if (imageDetail.getField().sameAs(resLoader.getDefaultPhoto())) {
                 // if set back to default photo, then remove the customised image file
-                if(imageFile.exists() && !imageFile.delete())
+                if (imageFile.exists() && !imageFile.delete())
                     return false;
             }
             // if the image is customised, then save it to the local storage
             else {
-                if(!writeToImageFile(imageDetail.getField(), imageFile))
+                if (!writeToImageFile(imageDetail.getField(), imageFile))
                     return false;
             }
         }
@@ -525,10 +525,10 @@ public class FileHelper implements IFileHelper {
             Bitmap image = null;
 
             // if there is not customised image file, then set to the default file
-            if(imageFile.exists()) {
+            if (imageFile.exists()) {
                 image = readFromImageFile(imageFile);
             }
-            if(image == null) {
+            if (image == null) {
                 image = resLoader.getDefaultPhoto();
             }
             imageDetail.setField(image);
