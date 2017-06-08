@@ -71,7 +71,8 @@ public class SearchActivity extends AppCompatActivity implements ISearchView {
 
     @Override
     public void showResultList(List<Asset> resultList) {
-        result.setAdapter(new ArrayAdapter<Asset>(this, android.R.layout.simple_list_item_1, resultList));
+        result.setAdapter(new ArrayAdapter<Asset>(this,
+                android.R.layout.simple_list_item_1, resultList));
     }
 
     /**
