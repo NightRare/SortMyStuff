@@ -195,6 +195,7 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
                         Bitmap croppedBmp = BitmapFactory.decodeStream
                                 (getContentResolver().openInputStream(imageUri));
                         presenter.updateImage(croppedBmp);
+                        presenter.start();
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
                     }
@@ -217,8 +218,8 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
             cropIntent.putExtra("outputX", 1000);
             cropIntent.putExtra("outputY", 600);
             cropIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-            startActivityForResult(cropIntent, 2);
 
+            startActivityForResult(cropIntent, 2);
         } catch (ActivityNotFoundException e) {
             Toast.makeText(this,
                     "Sorry, your device doesn't support the crop action.",
