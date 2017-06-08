@@ -35,8 +35,6 @@ import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
-import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
-import nz.ac.aut.comp705.sortmystuff.data.models.Category;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
@@ -85,7 +83,7 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
      */
     @Override
     public void showDetails(List<Detail> detailList) {
-        details.setAdapter(new DetailAdapter(this, R.layout.two_lines_list, detailList));
+        details.setAdapter(new DetailAdapter(this, R.layout.details_two_lines_list, detailList));
     }
 
     /**
@@ -146,11 +144,9 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
             final Detail item = detailList.get(position);
 
             TextView labelView = (TextView) v.findViewById(android.R.id.text1);
-            //The label "Photo" and its screen space is hidden
-            labelView.setText(item.getLabel());
-
             TextView textFieldView = (TextView) v.findViewById(android.R.id.text2);
             ImageView imageFieldView = (ImageView) v.findViewById(R.id.asset_image);
+            labelView.setText(item.getLabel());
 
             if (item.getType().equals(DetailType.Date) || item.getType().equals(DetailType.Text)) {
                 textFieldView.setText((String) item.getField());
@@ -158,9 +154,10 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
 
             } else if (item.getLabel().equals(CategoryType.BasicDetail.PHOTO)
                     && item.getType().equals(DetailType.Image)) {
+                //The label "Photo" and its screen space is hidden
                 imageFieldView.setImageBitmap((Bitmap) item.getField());
                 textFieldView.setText(null);
-                labelView.setVisibility(View.GONE);
+                labelView.setText(null);
 
                 //Set a click listener on asset image to launch camera
                 imageFieldView.setOnClickListener(new View.OnClickListener() {
