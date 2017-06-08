@@ -97,6 +97,7 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
     private FloatingActionButton addDetilButton;
 
     public static final int TAKE_PHOTO = 1;
+    public static final int CROP_PHOTO = 2;
     private Uri imageUri;
 
 
@@ -152,6 +153,7 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
 
                 textFieldView.setText(null);
 
+                //Set a click listener on asset image to launch camera
                 imageFieldView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -168,7 +170,7 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
 
                         if (Build.VERSION.SDK_INT >= 24) {
                             imageUri = FileProvider.getUriForFile(DetailsActivity.this,
-                                    "com.example.cameratest.fileprovider", outputImage);
+                                    "sortmystuff.fileprovider", outputImage);
                         } else {
                             imageUri = Uri.fromFile(outputImage);
                         }
@@ -183,6 +185,9 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
         }
     }
 
+    /**
+     * Handle photo cropping or update a cropped photo.
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
@@ -190,7 +195,7 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
                 case TAKE_PHOTO:
                     performCrop(imageUri);
                     break;
-                case 2:
+                case CROP_PHOTO:
                     try {
                         Bitmap croppedBmp = BitmapFactory.decodeStream
                                 (getContentResolver().openInputStream(imageUri));
@@ -207,9 +212,12 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
         }
     }
 
+    /**
+     * Call the standard crop action intent (the user device may not support it)
+     * @param imageUri
+     */
     private void performCrop(Uri imageUri) {
         try {
-            //call the standard crop action intent (the user device may not support it)
             Intent cropIntent = new Intent("com.android.camera.action.CROP");
             cropIntent.setDataAndType(imageUri, "image/*");
             cropIntent.putExtra("crop", "true");
@@ -218,8 +226,7 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
             cropIntent.putExtra("outputX", 1000);
             cropIntent.putExtra("outputY", 600);
             cropIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-
-            startActivityForResult(cropIntent, 2);
+            startActivityForResult(cropIntent, CROP_PHOTO);
         } catch (ActivityNotFoundException e) {
             Toast.makeText(this,
                     "Sorry, your device doesn't support the crop action.",
