@@ -242,7 +242,6 @@ public class DetailsPresenter implements IDetailsPresenter {
                     if(d.getLabel().equals(CategoryType.BasicDetail.PHOTO)) {
                         dm.updateImageDetail((ImageDetail) d, d.getLabel(), newImage);
                         view.showDetails(details);
-                        dm.refreshFromLocal();
                     }
                 }
             }

@@ -813,8 +813,14 @@ public class DataManager implements IDataManager {
                 detail.setLabel(label);
                 detail.setField(field);
 
-                if (d.getType().equals(DetailType.Image))
+                if (d.getType().equals(DetailType.Image)) {
                     updateImage = true;
+                    // if it is the "Photo" detail of an asset, need to set the
+                    // photo of asset as well
+                    if(d.getLabel().equals(CategoryType.BasicDetail.PHOTO)) {
+                        cachedAssets.get(assetId).setPhoto((Bitmap) field);
+                    }
+                }
                 break;
             }
         }
