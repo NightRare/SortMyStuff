@@ -10,8 +10,11 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
+import com.google.common.base.Preconditions;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
@@ -206,13 +209,21 @@ public class DetailsPresenter implements IDetailsPresenter {
         activity.setTitle(getCurrentAssetName());
     }
 
+
+    /**
+     * {@inheritDoc}
+     * @param newImage
+     */
+    @Override
     public void updateImage(final Bitmap newImage) {
+        Preconditions.checkNotNull(newImage, "The image cannot be null");
         dm.getDetailsAsync(currentAsset, new IDataManager.LoadDetailsCallback() {
             @Override
             public void onDetailsLoaded(List<Detail> details) {
                 for(Detail d : details) {
                     if(d.getLabel().equals(CategoryType.BasicDetail.PHOTO)) {
                         dm.updateImageDetail((ImageDetail) d, d.getLabel(), newImage);
+                        dm.refreshFromLocal();
                     }
                 }
             }

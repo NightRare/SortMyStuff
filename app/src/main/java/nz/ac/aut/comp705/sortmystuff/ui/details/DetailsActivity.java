@@ -23,6 +23,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.common.base.Preconditions;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -30,6 +32,7 @@ import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
+import nz.ac.aut.comp705.sortmystuff.data.models.Category;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
@@ -138,7 +141,12 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
             final Detail item = detailList.get(position);
 
             TextView labelView = (TextView) v.findViewById(android.R.id.text1);
-            labelView.setText(item.getLabel());
+            //The label "Photo" and its screen space is hidden
+            if (item.getLabel().equals(CategoryType.BasicDetail.PHOTO)) {
+                labelView.setVisibility(View.GONE);
+            }
+            else labelView.setText(item.getLabel());
+
 
             TextView textFieldView = (TextView) v.findViewById(android.R.id.text2);
             ImageView imageFieldView = (ImageView) v.findViewById(R.id.asset_image);
@@ -217,6 +225,7 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
      * @param imageUri
      */
     private void performCrop(Uri imageUri) {
+        Preconditions.checkNotNull(imageUri, "The image Uri cannot be null");
         try {
             Intent cropIntent = new Intent("com.android.camera.action.CROP");
             cropIntent.setDataAndType(imageUri, "image/*");
