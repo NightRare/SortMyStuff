@@ -113,8 +113,9 @@ public class SearchActivityTest {
     public void search_noResult(){
         search("Ba");
         //Message: "No results found." should display
-        onData(anything()).inAdapterView(withId(R.id.result_list))
-                .atPosition(0).check(matches(withText("No results found.")));
+//        onData(anything()).inAdapterView(withId(R.id.result_list))
+//                .atPosition(0).check(matches(withText("No results found.")));
+        onView (withId (R.id.result_list)).check(ViewAssertions.matches(withListSize(0)));
     }
 
     @Test

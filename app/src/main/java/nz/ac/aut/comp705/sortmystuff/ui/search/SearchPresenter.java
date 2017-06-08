@@ -2,6 +2,7 @@ package nz.ac.aut.comp705.sortmystuff.ui.search;
 
 import android.content.Intent;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Toast;
 
@@ -18,7 +19,6 @@ import nz.ac.aut.comp705.sortmystuff.ui.details.DetailsActivity;
 
 public class SearchPresenter implements ISearchPresenter{
 
-    final String MSG_NO_ASSET_FOUND = "No results found.";
     /**
      * When the corresponding activity is on created, this method will be invoked.
      */
@@ -41,18 +41,18 @@ public class SearchPresenter implements ISearchPresenter{
         return queryList;
     }
 
-    private List search(String query){
+    private List<Asset> search(String query){
         String regex = "(?i).*"+query+".*";
-        final ArrayList resultList = new ArrayList();
+        final ArrayList<Asset> resultList = new ArrayList<Asset>();
         for(Asset asset: assetList){
             if(!asset.isRoot() && asset.getName().matches(regex)){
                 resultList.add(asset);
             }
         }
-        if(resultList.isEmpty()){resultList.add(MSG_NO_ASSET_FOUND);}
+        if(resultList.isEmpty()){ showMessage("No results found.");}
         if(query =="" || query.length()==0){
             resultList.clear();
-            Toast.makeText(activity,"Please enter a keyword.",Toast.LENGTH_LONG);
+            showMessage("Please enter a valid keyword.");
         }
         return resultList;
     }
@@ -68,6 +68,12 @@ public class SearchPresenter implements ISearchPresenter{
         goToDetail.putExtra("AssetID", assetId);
         activity.startActivity(goToDetail);
 
+    }
+
+    private void showMessage(String message){
+        Toast msg = Toast.makeText(activity,message,Toast.LENGTH_LONG);
+        msg.setGravity(Gravity.CENTER, 0, 0);
+        msg.show();
     }
 
 

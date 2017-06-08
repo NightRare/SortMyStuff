@@ -9,6 +9,7 @@
     tools:showIn="@layout/details_act"
     android:padding="15dp">
 
+
     <ListView
         android:id="@+id/detail_list"
         android:layout_width="wrap_content"

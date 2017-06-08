@@ -9,19 +9,23 @@ import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-
+import android.widget.TextView;
 import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
+import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.util.Log;
+
+import static android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
 
 /**
  * Created by DonnaCello on 30 Apr 2017.
@@ -55,6 +59,7 @@ public class DetailsPresenter implements IDetailsPresenter {
         Intent intent = activity.getIntent();
         setCurrentAsset(intent.getStringExtra("AssetID"));
         setTitleOnToolbar();
+        setAsset();
         view.showDetails(loadDetails());
     }
 
@@ -111,8 +116,9 @@ public class DetailsPresenter implements IDetailsPresenter {
         dm.getDetailsAsync(getCurrentAssetID(), new IDataManager.LoadDetailsCallback() {
             @Override
             public void onDetailsLoaded(List<Detail> details) {
-                if(details.isEmpty()){ addBasicDetail(); }
-                for(Detail d: details){ detailList.add(d); }
+                for(Detail d: details){
+                        detailList.add(d);
+                }
             }
 
             @Override
@@ -128,17 +134,26 @@ public class DetailsPresenter implements IDetailsPresenter {
      * @param view
      */
     @Override
-    public void showDialogBox(View view){
-        getAddDetailDialogBox(view).create().show();
+    public void showDialogBox(View view, Detail detail){
+        getEditDetailDialogBox(view, detail).create().show();
+    }
+
+    private void setAsset(){
+        TextView assetName = (TextView) activity.findViewById(R.id.assetName_detail);
+        assetName.setText(getCurrentAssetName());
+        TextView assetCategory = (TextView) activity.findViewById(R.id.assetCategory_detail);
+        assetCategory.setText(getCategory().toUpperCase());
     }
 
     /**
-     * Add detail to current asset
+     * Edit selected detail of current asset
+     * @param  detailId
      * @param label
      * @param field
      */
-    private void addDetail(String label, String field) {
-        dm.createTextDetail(getCurrentAssetID(), label, field);
+    private void editDetail(String detailId, String label, String field) {
+        //dm.createTextDetail(getCurrentAssetID(), label, field);
+        dm.updateTextDetail(getCurrentAssetID(),detailId,label,field);
     }
 
     /**
@@ -149,25 +164,27 @@ public class DetailsPresenter implements IDetailsPresenter {
      * @param view
      * @return dialog
      */
-    private AlertDialog.Builder getAddDetailDialogBox(View view){
+    private AlertDialog.Builder getEditDetailDialogBox(View view, final Detail detail){
         AlertDialog.Builder dialog = new AlertDialog.Builder(view.getContext());
-        dialog.setTitle("Add Detail for "+ getCurrentAssetName());
+        dialog.setTitle(detail.getLabel());
         //dialog box setup
         Context context = view.getContext();
         LinearLayout layout = new LinearLayout(context);
         layout.setOrientation(LinearLayout.VERTICAL);
         //label text configuration
-        final EditText labelText = createEditText("Label",context,layout);
+//        final EditText labelText = createEditText("Label",context,layout);
+//        labelText.setText(detail.getLabel());
         //field text configuration
         final EditText fieldText = createEditText("Field",context,layout);
+        fieldText.setText(detail.getField().toString());
         //button setup
         dialog.setView(layout)
                 .setPositiveButton("Save", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        addDetail(labelText.getText().toString(),fieldText.getText().toString());
+                        editDetail(detail.getId(),detail.getLabel(),fieldText.getText().toString());
                         activity.showDetails(loadDetails());
-                        activity.showMessage("Added " + labelText.getText().toString() + "detail");
+                        activity.showMessage("Edited " + detail.getLabel());
                     }
                 })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -188,25 +205,26 @@ public class DetailsPresenter implements IDetailsPresenter {
     private EditText createEditText(String description, Context context, LinearLayout layout){
         final EditText editText = new EditText(context);
         editText.setSingleLine();
-        editText.setHint("Label");
+        //editText.setHint(description);
+        editText.setInputType(TYPE_TEXT_FLAG_CAP_SENTENCES);
         layout.addView(editText);
         return editText;
     }
 
-    /**
-     * Add basic details to the current asset as
-     * with the label of "Name" and the current
-     * asset name as the field
-     */
-    private void addBasicDetail() {
-        addDetail("Name",getCurrentAssetName());
-    }
+//    /**
+//     * Add basic details to the current asset as
+//     * with the label of "Name" and the current
+//     * asset name as the field
+//     */
+//    private void addBasicDetail() {
+//        addDetail("Name",getCurrentAssetName());
+//    }
 
     /**
      * Set toolbar title
      */
     private void setTitleOnToolbar(){
-        activity.setTitle(getCurrentAssetName());
+        activity.setTitle("Detail: " + getCurrentAssetName());
     }
 
 
@@ -257,5 +275,20 @@ public class DetailsPresenter implements IDetailsPresenter {
         });
     }
 
+    private String getCategory(){
+        final String[] name = new String[1];
+        dm.getAssetAsync(getCurrentAssetID(), new IDataManager.GetAssetCallback() {
+            @Override
+            public void onAssetLoaded(Asset asset) {
+                name[0] = asset.getCategoryType().toString();
+            }
+
+            @Override
+            public void dataNotAvailable(int errorCode) {
+                Log.e("Data not found ","Error: "+errorCode);
+            }
+        });
+        return name[0];
+    }
 
 }

@@ -46,10 +46,10 @@ public interface IDetailsPresenter extends IPresenter {
 
     /**
      * Show the dialog box associated
-     * with adding details
+     * with editing details
      * @param view
      */
-    void showDialogBox(View view);
+    void showDialogBox(View view, Detail detail);
 
     /**
      * Update the image of an asset given an Bitmap type image

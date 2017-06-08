@@ -19,6 +19,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -34,6 +35,7 @@ import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.Category;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
@@ -56,11 +58,11 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
 
         startPresenter();
 
-        addDetilButton = (FloatingActionButton) findViewById(R.id.fab);
-        addDetilButton.setOnClickListener(new View.OnClickListener() {
+        details.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onClick(View view) {
-                presenter.showDialogBox(view);
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Detail detail = (Detail) parent.getItemAtPosition(position);
+                presenter.showDialogBox(view, detail);
             }
         });
 
@@ -145,11 +147,7 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
 
             TextView labelView = (TextView) v.findViewById(android.R.id.text1);
             //The label "Photo" and its screen space is hidden
-            if (item.getLabel().equals(CategoryType.BasicDetail.PHOTO)) {
-                labelView.setVisibility(View.GONE);
-            }
-            else labelView.setText(item.getLabel());
-
+            labelView.setText(item.getLabel());
 
             TextView textFieldView = (TextView) v.findViewById(android.R.id.text2);
             ImageView imageFieldView = (ImageView) v.findViewById(R.id.asset_image);
@@ -161,13 +159,15 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
             } else if (item.getLabel().equals(CategoryType.BasicDetail.PHOTO)
                     && item.getType().equals(DetailType.Image)) {
                 imageFieldView.setImageBitmap((Bitmap) item.getField());
-
                 textFieldView.setText(null);
+                labelView.setVisibility(View.GONE);
 
                 //Set a click listener on asset image to launch camera
                 imageFieldView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+//                    Toast.makeText(DetailsActivity.this,"clicked",Toast.LENGTH_SHORT).show();
+
                         File outputImage = new File(getExternalCacheDir(),
                                 "output_image.jpg");
                         try {

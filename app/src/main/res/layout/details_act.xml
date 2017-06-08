@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -9,7 +9,8 @@
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/AppTheme.AppBarOverlay">
+        android:theme="@style/AppTheme.AppBarOverlay"
+        android:id="@+id/detail_appBarLayout">
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar"
@@ -20,18 +21,39 @@
 
     </android.support.design.widget.AppBarLayout>
 
+    <TextView
+        android:id="@+id/assetName_detail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/detail_appBarLayout"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@+id/assetCategory_detail"
+        android:layout_toStartOf="@+id/assetCategory_detail"
+        android:layout_marginLeft="15dp"
+        android:layout_marginStart="15dp"
+        android:textColor="@color/colorPrimary"
+        android:textSize="34sp"/>
 
-
-
-    <include layout="@layout/details_list" />
-
-
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab"
+    <TextView
+        android:id="@+id/assetCategory_detail"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        app:srcCompat="@android:drawable/ic_menu_edit" />
+        android:layout_above="@+id/detailList_layout"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginEnd="15dp"
+        android:layout_marginRight="15dp"
+        android:layout_marginBottom="4dp"
+        android:background="@drawable/rounded_rectangle"
+        android:textColor="@color/white"
+        android:textSize="12sp"
+        android:padding="6dp"/>
 
-</android.support.design.widget.CoordinatorLayout>
+    <include layout="@layout/details_list"
+        android:layout_below="@id/assetName_detail"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:id="@+id/detailList_layout"/>
+
+</RelativeLayout>
