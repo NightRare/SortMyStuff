@@ -1,5 +1,6 @@
 package nz.ac.aut.comp705.sortmystuff.ui.details;
 
+import android.graphics.Bitmap;
 import android.view.View;
 
 import java.util.List;
@@ -49,5 +50,6 @@ public interface IDetailsPresenter extends IPresenter {
      */
     void showDialogBox(View view);
 
+    void updateImage(Bitmap image);
 
 }

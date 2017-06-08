@@ -335,25 +335,18 @@ public class FileHelper implements IFileHelper {
             return false;
         }
 
-        File[] files = dir.listFiles();
-        if (files.length != 2) {
+        File assetFile = new File(dir, ASSET_FILENAME);
+        File detailsFile = new File(dir, DETAILS_FILENAME);
+        if(!assetFile.exists() || !assetFile.isFile()) {
             Log.e(Log.LOCAL_FILE_CORRUPT, msg);
             return false;
         }
 
-        for (File file : files) {
-            if (!file.isFile()) {
-                Log.e(Log.LOCAL_FILE_CORRUPT, msg);
-                return false;
-            }
-
-            boolean nameIsLegal = file.getName().equals(ASSET_FILENAME)
-                    || file.getName().equals(DETAILS_FILENAME);
-            if (!nameIsLegal) {
-                Log.e(Log.LOCAL_FILE_CORRUPT, msg);
-                return false;
-            }
+        if(!detailsFile.exists() || !detailsFile.isFile()) {
+            Log.e(Log.LOCAL_FILE_CORRUPT, msg);
+            return false;
         }
+
         return true;
     }
 
