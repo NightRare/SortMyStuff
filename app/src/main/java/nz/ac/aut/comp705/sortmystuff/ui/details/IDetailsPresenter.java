@@ -50,6 +50,10 @@ public interface IDetailsPresenter extends IPresenter {
      */
     void showDialogBox(View view);
 
+    /**
+     * Update the image of an asset given an Bitmap type image
+     * @param image
+     */
     void updateImage(Bitmap image);
 
 }

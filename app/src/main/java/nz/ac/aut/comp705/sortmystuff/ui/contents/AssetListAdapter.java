@@ -1,6 +1,7 @@
 package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -90,7 +91,12 @@ public class AssetListAdapter extends BaseAdapter {
         else
             holder.checkbox.setVisibility(View.GONE);
 
-        holder.imageView.setImageResource(R.drawable.folder_icon);
+        Bitmap photo = asset.getPhoto();
+        if (photo == null)
+            holder.imageView.setImageResource(R.drawable.placeholder);
+        else
+            holder.imageView.setImageBitmap(photo);
+
         holder.textView.setText(asset.getName());
         holder.checkbox.setChecked(selectStatusMap.get(position));
 
