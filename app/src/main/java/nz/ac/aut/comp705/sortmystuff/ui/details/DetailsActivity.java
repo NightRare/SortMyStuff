@@ -1,6 +1,7 @@
 package nz.ac.aut.comp705.sortmystuff.ui.details;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -150,11 +151,10 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
                 imageFieldView.setImageBitmap((Bitmap) item.getField());
 
                 textFieldView.setText(null);
+
                 imageFieldView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-//                    Toast.makeText(DetailsActivity.this,"clicked",Toast.LENGTH_SHORT).show();
-
                         File outputImage = new File(getExternalCacheDir(),
                                 "output_image.jpg");
                         try {
@@ -168,7 +168,7 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
 
                         if (Build.VERSION.SDK_INT >= 24) {
                             imageUri = FileProvider.getUriForFile(DetailsActivity.this,
-                                    "SortMyStuff.fileprovider", outputImage);
+                                    "com.example.cameratest.fileprovider", outputImage);
                         } else {
                             imageUri = Uri.fromFile(outputImage);
                         }
@@ -185,21 +185,44 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case TAKE_PHOTO:
-//                if (requestCode == RESULT_OK) {
-                try {
-                    Bitmap bitmap = BitmapFactory.decodeStream
-                            (getContentResolver().openInputStream(imageUri));
-                    presenter.updateImage(bitmap);
+        if (resultCode == RESULT_OK) {
+            switch (requestCode) {
+                case TAKE_PHOTO:
+                    performCrop(imageUri);
+                    break;
+                case 2:
+                    try {
+                        Bitmap croppedBmp = BitmapFactory.decodeStream
+                                (getContentResolver().openInputStream(imageUri));
+                        presenter.updateImage(croppedBmp);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
 
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-//                }
-                break;
-            default:
-                break;
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    private void performCrop(Uri imageUri) {
+        try {
+            //call the standard crop action intent (the user device may not support it)
+            Intent cropIntent = new Intent("com.android.camera.action.CROP");
+            cropIntent.setDataAndType(imageUri, "image/*");
+            cropIntent.putExtra("crop", "true");
+            cropIntent.putExtra("aspectX", 10);
+            cropIntent.putExtra("aspectY", 6);
+            cropIntent.putExtra("outputX", 1000);
+            cropIntent.putExtra("outputY", 600);
+            cropIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+            startActivityForResult(cropIntent, 2);
+
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(this,
+                    "Sorry, your device doesn't support the crop action.",
+                    Toast.LENGTH_SHORT).show();
         }
     }
 
