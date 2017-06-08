@@ -19,6 +19,7 @@ import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
+import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.util.Log;
 
@@ -113,7 +114,11 @@ public class DetailsPresenter implements IDetailsPresenter {
         dm.getDetailsAsync(getCurrentAssetID(), new IDataManager.LoadDetailsCallback() {
             @Override
             public void onDetailsLoaded(List<Detail> details) {
-                for(Detail d: details){ detailList.add(d); }
+                for(Detail d: details){
+                    if(d.getType()!= DetailType.Image){
+                        detailList.add(d);
+                    }
+                }
             }
 
             @Override
