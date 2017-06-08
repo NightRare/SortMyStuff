@@ -3,6 +3,7 @@ package nz.ac.aut.comp705.sortmystuff.ui.details;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -12,6 +13,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.FileProvider;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
@@ -37,6 +39,7 @@ import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
+import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 
 public class DetailsActivity extends AppCompatActivity implements IDetailsView {
 
@@ -188,7 +191,35 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
                         startActivityForResult(intent, TAKE_PHOTO);
                     }
                 });
+
+                //Set a long-click listener on asset image to delete photo
+                imageFieldView.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View v) {
+                        AlertDialog.Builder dialog = new AlertDialog.Builder(DetailsActivity.this);
+                        dialog.setTitle("Remove Photo");
+                        dialog.setMessage("Are you sure of removing this photo?");
+                        dialog.setCancelable(true);
+                        dialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                presenter.resetImage((ImageDetail)item);
+                            }
+                        });
+                        dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Toast.makeText(DetailsActivity.this,
+                                        "Removing photo cancelled.", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        dialog.show();
+
+                        return true;
+                    }
+                });
             }
+
             return v;
         }
     }
@@ -208,7 +239,6 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
                         Bitmap croppedBmp = BitmapFactory.decodeStream
                                 (getContentResolver().openInputStream(imageUri));
                         presenter.updateImage(croppedBmp);
-                        presenter.start();
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
                     }

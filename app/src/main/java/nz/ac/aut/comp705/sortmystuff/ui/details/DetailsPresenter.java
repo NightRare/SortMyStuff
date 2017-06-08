@@ -223,6 +223,7 @@ public class DetailsPresenter implements IDetailsPresenter {
                 for(Detail d : details) {
                     if(d.getLabel().equals(CategoryType.BasicDetail.PHOTO)) {
                         dm.updateImageDetail((ImageDetail) d, d.getLabel(), newImage);
+                        view.showDetails(details);
                         dm.refreshFromLocal();
                     }
                 }
@@ -235,6 +236,26 @@ public class DetailsPresenter implements IDetailsPresenter {
         });
     }
 
+    /**
+     * {@inheritDoc}
+     * @param imageDetail
+     */
+    @Override
+    public void resetImage(ImageDetail imageDetail) {
+        Preconditions.checkNotNull(imageDetail, "The image detail cannot be null");
+        dm.resetImageDetail(imageDetail);
+        dm.getDetailsAsync(currentAsset, new IDataManager.LoadDetailsCallback() {
+            @Override
+            public void onDetailsLoaded(List<Detail> details) {
+                view.showDetails(details);
+            }
+
+            @Override
+            public void dataNotAvailable(int errorCode) {
+
+            }
+        });
+    }
 
 
 }
