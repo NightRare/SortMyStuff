@@ -5,6 +5,7 @@ import android.view.MenuItem;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.ui.IPresenter;
 
 /**
@@ -51,11 +52,11 @@ public interface IContentsPresenter extends IPresenter {
     String getCurrentAssetId();
 
     /**
-     * Adds a new asset whose name is as given.
+     * Creates a new asset whose name is as given.
      *
      * @param assetName the name of the new asset.
      */
-    void addAsset(String assetName);
+    void createAsset(String assetName, CategoryType category);
 
     /**
      * Move a list of assets to a new container.

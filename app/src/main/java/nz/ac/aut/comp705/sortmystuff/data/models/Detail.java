@@ -9,10 +9,17 @@ import java.util.UUID;
 import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 
 /**
+ * A detail of an asset is a particular record/information of as asset. Each detail has a label and
+ * a field.
+ * <p>
+ * The label of a detail is like the name, identifying the detail whereas the field is an object
+ * storing the value of the detail. For example, for a Book asset, there could be a detail whose
+ * label is "Author" and field as "J.R.R. Tolkien".
+ * <p>
+ * This abstract class is a base of all types of details.
  *
- * @author Yuan
+ * @param <T> the type of the field
  */
-
 public abstract class Detail<T> {
 
     //region DATA FIELDS
@@ -32,8 +39,19 @@ public abstract class Detail<T> {
 
     //region STATIC FACTORIES
 
+    /**
+     * Initialises the detail according to the given arguments.
+     *
+     * @param assetId the id of the owner asset
+     * @param type the {@link DetailType} of the detail
+     * @param label the label of the detail
+     * @throws NullPointerException     if any argument is {@code null}
+     * @throws IllegalArgumentException if assetId is empty; or if label is empty or longer than
+     *                                  {@link AppConstraints#DETAIL_LABEL_CAP}
+     */
     protected Detail(String assetId, DetailType type, String label) {
         checkIllegalAssetId(assetId);
+        Preconditions.checkNotNull(type);
         checkIllegalLabel(label);
 
         id = UUID.randomUUID().toString();
@@ -46,25 +64,50 @@ public abstract class Detail<T> {
 
     //region ACCESSORS
 
+    /**
+     * Gets the unique id.
+     *
+     * @return the id
+     */
     @NonNull
     public String getId() {
         return id;
     }
 
+    /**
+     * Gets the id of the owner asset.
+     *
+     * @return the id of the owner asset
+     */
     @NonNull
     public String getAssetId() {
         return assetId;
     }
 
+    /**
+     * Gets the label.
+     *
+     * @return the label
+     */
     @NonNull
     public String getLabel() {
         return label;
     }
 
+    /**
+     * Gets the type of the detail.
+     *
+     * @return the DetailType
+     */
     public DetailType getType() {
         return type;
     }
 
+    /**
+     * Gets the field of the detail.
+     *
+     * @return the field
+     */
     public abstract T getField();
 
     //endregion
@@ -83,9 +126,14 @@ public abstract class Detail<T> {
     }
 
     /**
-     * IMPORTANT: FOR DATA LAYER COMPONENTS USE ONLY.
+     * <p><em>
+     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
+     * </em></p>
      * <p>
-     * DO NOT CALL OUTSIDE {@link nz.ac.aut.comp705.sortmystuff.data} PACKAGE
+     * Sets the field to the given value.
+     *
+     * @param field the field to be set.
+     * @throws NullPointerException if field is {@code null}
      */
     @Deprecated
     public abstract void setField(@NonNull T field);
@@ -94,21 +142,33 @@ public abstract class Detail<T> {
 
     //region OBJECT METHODS OVERRIDING
 
+    /**
+     * Compares by the id.
+     *
+     * @param o the object to be compared
+     * @return true if the ids are equal
+     */
     @Override
     public boolean equals(Object o) {
-        if(o instanceof Detail) {
+        if (o instanceof Detail) {
             Detail d = (Detail) o;
-            if(d.id.equals(id))
+            if (d.id.equals(id))
                 return true;
         }
         return false;
     }
 
+    /**
+     * @return the hashcode of its id
+     */
     @Override
     public int hashCode() {
         return id.hashCode();
     }
 
+    /**
+     * @return the label of the detail
+     */
     @Override
     public String toString() {
         return label;
@@ -120,15 +180,15 @@ public abstract class Detail<T> {
 
     private static void checkIllegalLabel(String label) {
         Preconditions.checkNotNull(label);
-        if(label.isEmpty())
+        if (label.isEmpty())
             throw new IllegalArgumentException("cannot be empty");
-        if(label.length() > AppConstraints.DETAIL_LABEL_CAP)
+        if (label.length() > AppConstraints.DETAIL_LABEL_CAP)
             throw new IllegalArgumentException("string length exceeds cap");
     }
 
     private static void checkIllegalAssetId(String assetId) {
         Preconditions.checkNotNull(assetId);
-        if(assetId.isEmpty())
+        if (assetId.isEmpty())
             throw new IllegalArgumentException("cannot be empty");
     }
 

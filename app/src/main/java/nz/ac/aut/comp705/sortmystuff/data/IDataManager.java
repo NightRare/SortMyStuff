@@ -41,8 +41,8 @@ public interface IDataManager {
      * Create an asset and save it to the local storage.
      * The default details of the asset are generated according to the given category.
      *
-     * @param name        the name
-     * @param containerId the id of the container asset
+     * @param name         the name
+     * @param containerId  the id of the container asset
      * @param categoryType the CategoryType
      * @return the id of the created asset; {@code null} if failed
      * @throws NullPointerException              if any argument is {@code null};
@@ -291,12 +291,6 @@ public interface IDataManager {
      */
     void recycleAssetRecursively(@NonNull Asset asset);
 
-    // Not Implemented yet
-    void restoreAsset(@NonNull Asset asset);
-
-    // Not Implemented yet
-    void restoreAsset(@NonNull String assetId);
-
     /**
      * Update the TextDetail according to the given arguments.
      *
@@ -346,6 +340,12 @@ public interface IDataManager {
      */
     void updateImageDetail(@NonNull ImageDetail detail, @NonNull String label, @NonNull Bitmap field);
 
+    /*
+    TODO methods to be added in the future
+    void restoreAsset(@NonNull Asset asset);
+
+    void restoreAsset(@NonNull String assetId);
+     */
 
     //endregion
 
@@ -379,10 +379,10 @@ public interface IDataManager {
      */
     void refreshFromLocal();
 
-    /**
-     * Clear all the data of recycled assets from local storage.
-     */
+    /*
+    TODO methods to be added in the future
     void clearRecycledAsset();
+     */
 
     //endregion
 

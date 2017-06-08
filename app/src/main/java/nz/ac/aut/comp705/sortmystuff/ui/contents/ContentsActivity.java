@@ -2,7 +2,6 @@ package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -13,21 +12,24 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
+import nz.ac.aut.comp705.sortmystuff.data.models.Category;
+import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 
 /**
  * The Activity class for "Contents View" (a.k.a. Index Page) where the contained assets of the
@@ -153,7 +155,13 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
      */
     @Override
     public void showAddDialog() {
-        getAddAssetDialogBuilder().create().show();
+        getAddAssetDialog().show();
+//        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+//        lp.copyFrom(addAssetDialog.getWindow().getAttributes());
+//        lp.width = WindowManager.LayoutParams.WRAP_CONTENT;
+//        lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
+//        addAssetDialog.getWindow().setAttributes(lp);
+//        addAssetDialog.show();
     }
 
     /**
@@ -248,19 +256,23 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
      *
      * @return builder the dialog box format
      */
-    private AlertDialog.Builder getAddAssetDialogBuilder() {
+    private AlertDialog getAddAssetDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Add Asset");
 
-        final EditText input = new EditText(this);
-        input.setSingleLine();
-        builder.setView(input);
+        final View addAssetLayout = getLayoutInflater().inflate(R.layout.contents_add_asset, null);
+        builder.setView(addAssetLayout);
+
+        initCategorySpinner(addAssetLayout);
+        final EditText input = (EditText) addAssetLayout.findViewById(R.id.asset_name_input);
 
         builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                Spinner spinner = (Spinner) addAssetLayout.findViewById(R.id.category_spinner);
+                CategoryType category = (CategoryType) spinner.getSelectedItem();
                 // get user input and add input as asset
-                presenter.addAsset(input.getText().toString());
+                presenter.createAsset(input.getText().toString(), category);
                 // show success message
                 showMessageOnScreen("Successfully added " + input.getText().toString());
             }
@@ -272,7 +284,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
             }
         });
 
-        return builder;
+        return builder.create();
     }
 
     private AlertDialog.Builder getConfirmDeleteDialogBuilder(final boolean deletingCurrentAsset,
@@ -321,6 +333,23 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         selectAll_btn.setVisibility(View.GONE);
         delete_btn.setVisibility(View.GONE);
         move_btn.setVisibility(View.GONE);
+    }
+
+    private void initCategorySpinner(View contextView) {
+        Spinner spinner = (Spinner) contextView.findViewById(R.id.category_spinner);
+
+        List<CategoryType> categories = new ArrayList();
+        for(CategoryType cy : CategoryType.values()) {
+            if(cy.equals(CategoryType.None))
+                continue;
+            categories.add(cy);
+        }
+        ArrayAdapter<CategoryType> adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, categories);
+
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+        spinner.setSelection(adapter.getPosition(CategoryType.Miscellaneous));
     }
 
     /**

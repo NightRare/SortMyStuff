@@ -494,26 +494,6 @@ public class DataManager implements IDataManager {
 
     /**
      * {@inheritDoc}
-     *
-     * @param asset
-     */
-    @Override
-    public void restoreAsset(@NonNull Asset asset) {
-        // TODO restoreAsset
-        throw new IllegalStateException("Method not implemented");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void restoreAsset(@NonNull String assetId) {
-        // TODO restoreAsset
-        throw new IllegalStateException("Method not implemented");
-    }
-
-    /**
-     * {@inheritDoc}
      */
     @Override
     public void removeDetail(@NonNull Detail detail) {
@@ -623,15 +603,6 @@ public class DataManager implements IDataManager {
     public void refreshFromLocal() {
         dirtyCachedAssets = true;
         dirtyCachedDetails = true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void clearRecycledAsset() {
-        // TODO clearRecycledAsset
-        throw new IllegalStateException("Method not implemented");
     }
 
     //endregion
