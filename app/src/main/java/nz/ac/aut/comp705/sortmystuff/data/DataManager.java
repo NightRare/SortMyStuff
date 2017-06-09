@@ -38,13 +38,6 @@ import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.UNEXPECTED_ERROR;
 
 public class DataManager implements IDataManager {
 
-    @Deprecated
-    public DataManager(IFileHelper fileHelper) {
-        this.fileHelper = fileHelper;
-        dirtyCachedAssets = true;
-        dirtyCachedDetails = true;
-    }
-
     public DataManager(IFileHelper fileHelper, LocalResourceLoader resLoader) {
         this.fileHelper = fileHelper;
         this.resLoader = resLoader;
@@ -143,24 +136,6 @@ public class DataManager implements IDataManager {
             }
         }
         return cachedRootAsset;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getRootAssetAsync(@NonNull GetAssetCallback callback) {
-        Preconditions.checkNotNull(callback);
-
-        if (dirtyCachedAssets || cachedRootAsset == null) {
-            int code = loadCachedAssetsFromLocal();
-            if (code != OK) {
-                callback.dataNotAvailable(code);
-                return;
-            }
-        }
-
-        callback.onAssetLoaded(cachedRootAsset);
     }
 
     /**
@@ -610,21 +585,15 @@ public class DataManager implements IDataManager {
     //region PRIVATE STUFF
 
     private IFileHelper fileHelper;
-
     private LocalResourceLoader resLoader;
-
     private Map<CategoryType, Category> categories;
 
     private Asset cachedRootAsset;
-
     private Map<String, Asset> cachedAssets;
-
     private Map<String, List<Detail>> cachedDetails;
-
     private Map<String, Asset> cachedRecycledAssets;
 
     private boolean dirtyCachedAssets;
-
     private boolean dirtyCachedDetails;
 
     private Category getCategory(CategoryType categoryType) {
@@ -838,32 +807,6 @@ public class DataManager implements IDataManager {
         }
 
         return detail;
-    }
-
-    private static boolean identicalAssets(Asset a1, Asset a2) {
-        if (!a1.equals(a2))
-            return false;
-
-        if (!a1.getName().equals(a2.getName()))
-            return false;
-
-        if (!a1.getModifyTimestamp().equals(a2.getModifyTimestamp()))
-            return false;
-
-        if (!a1.getCreateTimestamp().equals(a2.getCreateTimestamp()))
-            return false;
-
-        if (!a1.getContainerId().equals(a2.getContainerId()))
-            return false;
-
-        return true;
-    }
-
-    private void wipeAllCache() {
-        cachedDetails = null;
-        cachedRootAsset = null;
-        cachedAssets = null;
-        cachedRecycledAssets = null;
     }
 
     //endregion
