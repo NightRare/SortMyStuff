@@ -10,9 +10,11 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
@@ -115,9 +117,7 @@ public class DetailsPresenter implements IDetailsPresenter {
             @Override
             public void onDetailsLoaded(List<Detail> details) {
                 for(Detail d: details){
-                    if(d.getType()!= DetailType.Image){
                         detailList.add(d);
-                    }
                 }
             }
 
@@ -222,15 +222,44 @@ public class DetailsPresenter implements IDetailsPresenter {
         activity.setTitle("Detail: " + getCurrentAssetName());
     }
 
+
+    /**
+     * {@inheritDoc}
+     * @param newImage
+     */
+    @Override
     public void updateImage(final Bitmap newImage) {
+        Preconditions.checkNotNull(newImage, "The image cannot be null");
         dm.getDetailsAsync(currentAsset, new IDataManager.LoadDetailsCallback() {
             @Override
             public void onDetailsLoaded(List<Detail> details) {
                 for(Detail d : details) {
                     if(d.getLabel().equals(CategoryType.BasicDetail.PHOTO)) {
                         dm.updateImageDetail((ImageDetail) d, d.getLabel(), newImage);
+                        view.showDetails(details);
                     }
                 }
+            }
+
+            @Override
+            public void dataNotAvailable(int errorCode) {
+
+            }
+        });
+    }
+
+    /**
+     * {@inheritDoc}
+     * @param imageDetail
+     */
+    @Override
+    public void resetImage(ImageDetail imageDetail) {
+        Preconditions.checkNotNull(imageDetail, "The image detail cannot be null");
+        dm.resetImageDetail(imageDetail);
+        dm.getDetailsAsync(currentAsset, new IDataManager.LoadDetailsCallback() {
+            @Override
+            public void onDetailsLoaded(List<Detail> details) {
+                view.showDetails(details);
             }
 
             @Override

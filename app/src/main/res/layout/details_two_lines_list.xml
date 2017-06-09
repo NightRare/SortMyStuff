@@ -34,7 +34,6 @@
         android:layout_below="@android:id/text1"
         android:layout_alignStart="@android:id/text1"
         android:layout_alignLeft="@android:id/text1"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="10dp"/>
+        android:layout_marginBottom="50dp"/>
 
 </TwoLineListItem>

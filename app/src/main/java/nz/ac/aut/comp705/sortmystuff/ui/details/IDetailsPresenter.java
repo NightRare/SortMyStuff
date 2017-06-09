@@ -6,6 +6,7 @@ import android.view.View;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.ui.IPresenter;
 
 /**
@@ -50,6 +51,15 @@ public interface IDetailsPresenter extends IPresenter {
      */
     void showDialogBox(View view, Detail detail);
 
+    /**
+     * Update the image of an asset given an Bitmap type image
+     * @param image
+     */
     void updateImage(Bitmap image);
 
+    /**
+     * Reset the image of an asset to default placeholder
+     * @param imageDetail
+     */
+    void resetImage(ImageDetail imageDetail);
 }
