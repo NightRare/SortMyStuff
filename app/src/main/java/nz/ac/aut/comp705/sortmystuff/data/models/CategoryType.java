@@ -13,7 +13,8 @@ public enum CategoryType {
     Books,
     Collectibles,
     Food,
-    Miscellaneous;
+    Miscellaneous,
+    Places;
 
     /**
      * A class defining the labels of the basic details.
