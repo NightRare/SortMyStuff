@@ -171,11 +171,8 @@ public class DetailsPresenter implements IDetailsPresenter {
         Context context = view.getContext();
         LinearLayout layout = new LinearLayout(context);
         layout.setOrientation(LinearLayout.VERTICAL);
-        //label text configuration
-//        final EditText labelText = createEditText("Label",context,layout);
-//        labelText.setText(detail.getLabel());
         //field text configuration
-        final EditText fieldText = createEditText("Field",context,layout);
+        final EditText fieldText = createEditText(context,layout);
         fieldText.setText(detail.getField().toString());
         //button setup
         dialog.setView(layout)
@@ -197,15 +194,13 @@ public class DetailsPresenter implements IDetailsPresenter {
 
     /**
      * Creates an editable text area for the dialog box
-     * @param description
      * @param context
      * @param layout
      * @return editText
      */
-    private EditText createEditText(String description, Context context, LinearLayout layout){
+    private EditText createEditText(Context context, LinearLayout layout){
         final EditText editText = new EditText(context);
         editText.setSingleLine();
-        //editText.setHint(description);
         editText.setInputType(TYPE_TEXT_FLAG_CAP_SENTENCES);
         layout.addView(editText);
         return editText;

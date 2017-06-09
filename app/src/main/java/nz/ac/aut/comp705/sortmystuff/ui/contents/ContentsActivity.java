@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.InputType;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -265,6 +266,8 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
         initCategorySpinner(addAssetLayout);
         final EditText input = (EditText) addAssetLayout.findViewById(R.id.asset_name_input);
+        input.setInputType(InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+        input.setSingleLine();
 
         builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
             @Override
