@@ -5,12 +5,14 @@ import android.content.Context;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.contrib.RecyclerViewActions;
 import android.support.test.espresso.matcher.BoundedMatcher;
+import android.support.test.espresso.matcher.RootMatchers;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Display;
 import android.view.View;
+import android.widget.EditText;
 
 import com.google.common.base.Preconditions;
 
@@ -37,6 +39,8 @@ import java.util.List;
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
+import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
+import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 
 import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
@@ -54,11 +58,15 @@ import static android.support.test.espresso.matcher.ViewMatchers.withChild;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withContentDescription;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static android.support.test.espresso.matcher.ViewMatchers.withSpinnerText;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.anything;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.hasToString;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
@@ -106,8 +114,7 @@ public class ContentsActivityTest {
     public void onLaunch_displayRootAssetTitle() {
         onView(withId(R.id.toolbarMain)).check(matches(isDisplayed()));
 
-        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.toolbarMain);
-        Assert.assertTrue(toolbar.getTitle().equals(ROOT_ASSET_NAME));
+        Assert.assertTrue(getToolbarTitle().equals(ROOT_ASSET_NAME));
     }
 
     @Test
@@ -149,9 +156,8 @@ public class ContentsActivityTest {
         addAsset(ASSET1_NAME);
         clickAsset(0);
         onView(withId(R.id.toolbarMain)).check(matches(isDisplayed()));
-        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.toolbarMain);
         //check that the name on the toolbar is the name of the selected asset
-        Assert.assertTrue(toolbar.getTitle().toString().equals(ASSET1_NAME));
+        Assert.assertTrue(getToolbarTitle().equals(ASSET1_NAME));
     }
 
     @Test
@@ -224,14 +230,13 @@ public class ContentsActivityTest {
                 .check(matches(isDisplayed()));
 
         // make sure its directed to asset1's contents view
-        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.toolbarMain);
-        Assert.assertTrue(toolbar.getTitle().equals(ASSET1_NAME));
+        Assert.assertTrue(getToolbarTitle().equals(ASSET1_NAME));
 
         onView(withId(R.id.pathbar_root)).perform(click());
 
         // after click on Root asset on path bar
         // should direct back to Root's contents view and asset1 removed from path bar
-        Assert.assertTrue(toolbar.getTitle().equals(ROOT_ASSET_NAME));
+        Assert.assertTrue(getToolbarTitle().equals(ROOT_ASSET_NAME));
         onView(withItemTextOnPathBar(PATH_BAR_0_PREFIX + ASSET1_NAME))
                 .check(doesNotExist());
     }
@@ -250,15 +255,14 @@ public class ContentsActivityTest {
                 .check(matches(isDisplayed()));
 
         // make sure its directed to asset2's contents view
-        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.toolbarMain);
-        Assert.assertTrue(toolbar.getTitle().equals(ASSET2_NAME));
+        Assert.assertTrue(getToolbarTitle().equals(ASSET2_NAME));
 
         // click on asset1 while in asset2's contents view
         onView(withItemTextOnPathBar(PATH_BAR_0_PREFIX + ASSET1_NAME))
                 .perform(click());
 
         // should direct back to asset1's contents view and asset2 removed from path bar
-        Assert.assertTrue(toolbar.getTitle().equals(ASSET1_NAME));
+        Assert.assertTrue(getToolbarTitle().equals(ASSET1_NAME));
         onView(withItemTextOnPathBar(PATH_BAR_PREFIX + ASSET2_NAME))
                 .check(doesNotExist());
     }
@@ -275,8 +279,7 @@ public class ContentsActivityTest {
         }
 
         // make sure its directed to asset2's contents view
-        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.toolbarMain);
-        Assert.assertTrue(toolbar.getTitle().equals(names.get(4)));
+        Assert.assertTrue(getToolbarTitle().equals(names.get(4)));
 
         // swipe the path bar to the first asset (asset0), then the first asset shall be displayed
         onView(withId(R.id.pathbar_pathview))
@@ -286,8 +289,7 @@ public class ContentsActivityTest {
 
         // should direct back to asset0's contents view and all other assets
         // should be removed from path bar
-        toolbar = (Toolbar) activity.findViewById(R.id.toolbarMain);
-        Assert.assertTrue(toolbar.getTitle().equals(names.get(0)));
+        Assert.assertTrue(getToolbarTitle().equals(names.get(0)));
         onView(withItemTextOnPathBar(PATH_BAR_PREFIX + names.get(1)))
                 .check(doesNotExist());
     }
@@ -466,8 +468,7 @@ public class ContentsActivityTest {
         clickAsset(0);
 
         // check if the current asset is asset1
-        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.toolbarMain);
-        Assert.assertEquals(ASSET1_NAME, toolbar.getTitle());
+        Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
 
         openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
         onView(withText("Delete Asset")).perform(click());
@@ -475,7 +476,7 @@ public class ContentsActivityTest {
 
         // current asset set back to the container (in this case the Root) asset and asset1 no
         // longer exists
-        Assert.assertEquals(ROOT_ASSET_NAME, toolbar.getTitle());
+        Assert.assertEquals(ROOT_ASSET_NAME, getToolbarTitle());
         onView(withChild(withText(ASSET1_NAME))).check(doesNotExist());
     }
 
@@ -485,15 +486,14 @@ public class ContentsActivityTest {
         clickAsset(0);
 
         // check if the current asset is asset1
-        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.toolbarMain);
-        Assert.assertEquals(ASSET1_NAME, toolbar.getTitle());
+        Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
 
         openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
         onView(withText("Delete Asset")).perform(click());
         onView(withText("Cancel")).perform(click());
 
         // current asset should still be asset1
-        Assert.assertEquals(ASSET1_NAME, toolbar.getTitle());
+        Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
     }
 
     @Test
@@ -507,8 +507,7 @@ public class ContentsActivityTest {
         onView(withText("Confirm")).check(doesNotExist());
 
         // Root asset cannot be deleted
-        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.toolbarMain);
-        Assert.assertEquals(ROOT_ASSET_NAME, toolbar.getTitle());
+        Assert.assertEquals(ROOT_ASSET_NAME, getToolbarTitle());
         onView(withChild(withText(ASSET1_NAME))).check(matches(isDisplayed()));
     }
 
@@ -560,14 +559,70 @@ public class ContentsActivityTest {
         onView(withChild(withText(ASSET2_NAME))).check(matches(isDisplayed()));
     }
 
+    @Test
+    public void category_specifyCategoryWhenAddingAsset() {
+        onView(withId(R.id.addAssetButton)).perform(click());
+        onView(allOf(is(instanceOf(EditText.class)), withText(is(""))))
+                .perform(replaceText(ASSET1_NAME));
+        onView(withId(R.id.category_spinner)).perform(click());
+
+        // select "Food" category
+        onData(allOf(is(instanceOf(CategoryType.class)), is(CategoryType.Food)))
+                .inRoot(RootMatchers.isPlatformPopup()).perform(click());
+
+        // check if the "Food" has been selected
+        onView(withId(R.id.category_spinner))
+                .check(matches(withSpinnerText(containsString(CategoryType.Food.toString()))));
+        onView(withText("Save")).perform(click());
+
+        clickAsset(0);
+        Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
+        clickViewDetail();
+        Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
+
+        // check if the category is displayed correctly
+        onView(withId(R.id.assetCategory_detail))
+                .check(matches(withText(CategoryType.Food.toString().toUpperCase())));
+
+        // check if all the details of "Food" are there
+        onData(allOf(is(instanceOf(Detail.class)), hasToString("Notes")))
+                .check(matches(isDisplayed()));
+        onData(allOf(is(instanceOf(Detail.class)), hasToString("Expiry Date")))
+                .check(matches(isDisplayed()));
+        onData(allOf(is(instanceOf(Detail.class)), hasToString("Purchased From")))
+                .check(matches(isDisplayed()));
+    }
+
+    @Test
+    public void category_defaultCategoryAsMiscellaneous() {
+        onView(withId(R.id.addAssetButton)).perform(click());
+        onView(allOf(is(instanceOf(EditText.class)), withText(is(""))))
+                .perform(replaceText(ASSET1_NAME));
+
+        // check if the "Miscellaneous" has been selected by default
+        onView(withId(R.id.category_spinner))
+                .check(matches(withSpinnerText(containsString(CategoryType.Miscellaneous.toString()))));
+        onView(withText("Save")).perform(click());
+
+        clickAsset(0);
+        Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
+        clickViewDetail();
+        Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
+
+        // check if the category is displayed correctly
+        onView(withId(R.id.assetCategory_detail))
+                .check(matches(withText(CategoryType.Miscellaneous.toString().toUpperCase())));
+
+        // check if all the details of "Food" are there
+        onData(allOf(is(instanceOf(Detail.class)), hasToString("Notes")))
+                .check(matches(isDisplayed()));
+    }
+
     //region PRIVATE STUFF
 
     private Context context;
-
     private SortMyStuffApp app;
-
     private Activity activity;
-
     private IDataManager dm;
 
     private static final String ROOT_ASSET_NAME = "Root";
@@ -584,14 +639,37 @@ public class ContentsActivityTest {
 
     private void addAsset(String assetName) {
         onView(withId(R.id.addAssetButton)).perform(click());
-        onView(allOf(withClassName(endsWith("EditText")), withText(is(""))))
+        onView(allOf(is(instanceOf(EditText.class)), withText(is(""))))
                 .perform(replaceText(assetName));
+        onView(withText("Save")).perform(click());
+    }
+
+    private void addAsset(String assetName, CategoryType category) {
+        onView(withId(R.id.addAssetButton)).perform(click());
+        onView(allOf(is(instanceOf(EditText.class)), withText(is(""))))
+                .perform(replaceText(ASSET1_NAME));
+        onView(withId(R.id.category_spinner)).perform(click());
+
+        // select "Food" category
+        onData(allOf(is(instanceOf(CategoryType.class)), hasToString(category.toString())))
+                .inRoot(RootMatchers.isPlatformPopup()).perform(click());
+
         onView(withText("Save")).perform(click());
     }
 
     private void clickAsset(int num) {
         onData(anything()).inAdapterView(withId(R.id.index_list))
                 .atPosition(num).perform(click());
+    }
+
+    private String getToolbarTitle() {
+        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.toolbarMain);
+        return toolbar.getTitle().toString();
+    }
+
+    private void clickViewDetail() {
+        openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
+        onView(withText("View Detail")).perform(click());
     }
 
     private static Matcher<View> withItemTextOnPathBar(final String itemText) {
@@ -622,31 +700,6 @@ public class ContentsActivityTest {
         addAsset(ASSET_TABLE_BIG);
         addAsset(ASSET_TABLE_SMALL);
     }
-
-    @Deprecated
-    private static Matcher<View> withPathBarTextViewAtPosition(
-            final int position, final Matcher<View> itemMatcher) {
-
-        return new BoundedMatcher<View, RecyclerView>(RecyclerView.class) {
-            @Override
-            public void describeTo(Description description) {
-                description.appendText("has item at position " + position + ": ");
-                itemMatcher.describeTo(description);
-            }
-
-            @Override
-            protected boolean matchesSafely(final RecyclerView view) {
-                PathBarAdapter.ViewHolder viewHolder = (PathBarAdapter.ViewHolder)
-                        view.findViewHolderForAdapterPosition(position);
-                if (viewHolder == null) {
-                    // has no item on such position
-                    return false;
-                }
-                return itemMatcher.matches(viewHolder.getNameView());
-            }
-        };
-    }
-
     //endregion
 
 }
