@@ -8,7 +8,6 @@ import com.google.gson.GsonBuilder;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -43,29 +42,15 @@ public class FileHelper implements IFileHelper {
     /**
      * Initialises a FileHelper.
      *
+     * @param resLoader the local resource loader
      * @param userDir  the directory of the current user
      * @param gBuilder the GsonBuilder
      * @throws NullPointerException if any argument is {@code null}
      */
-    @Deprecated
-    public FileHelper(File userDir, GsonBuilder gBuilder) {
-        Preconditions.checkNotNull(userDir);
-        Preconditions.checkNotNull(gBuilder);
-
-        this.gBuilder = gBuilder;
-        this.userDir = userDir;
-
-        this.gBuilder.serializeNulls();
-        this.gBuilder.setPrettyPrinting();
-        this.gBuilder.registerTypeAdapter(Detail.class, new JsonDetailAdapter());
-
-        if (!this.userDir.exists())
-            this.userDir.mkdirs();
-    }
-
     public FileHelper(LocalResourceLoader resLoader, File userDir, GsonBuilder gBuilder) {
         Preconditions.checkNotNull(resLoader);
         Preconditions.checkNotNull(userDir);
+        Preconditions.checkNotNull(gBuilder);
 
         this.gBuilder = gBuilder;
         this.userDir = userDir;
@@ -80,7 +65,7 @@ public class FileHelper implements IFileHelper {
         this.resLoader = resLoader;
     }
 
-    //region IJSonHelper methods
+    //region IJSonHelper METHODS
 
     /**
      * {@inheritDoc}
@@ -256,34 +241,7 @@ public class FileHelper implements IFileHelper {
 
     //endregion
 
-    //region Inner classes
-
-//    /**
-//     * A wrapper class for File constructors so that they can be mocked.
-//     */
-//    public static class FileCreator {
-//
-//        public File createFile(String pathname) {
-//            return new File(pathname);
-//        }
-//
-//
-//        public File createFile(File parent, String child) {
-//            return new File(parent, child);
-//        }
-//
-//        public FileReader createFileReader(File file) throws FileNotFoundException {
-//            return new FileReader(file);
-//        }
-//
-//        public FileWriter createFileWriter(File file) throws IOException {
-//            return new FileWriter(file);
-//        }
-//    }
-
-    //endregion
-
-    //region Private stuff
+    //region PRIVATE STUFF
 
     private LocalResourceLoader resLoader;
 

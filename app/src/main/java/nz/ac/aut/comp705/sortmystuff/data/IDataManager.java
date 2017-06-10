@@ -22,7 +22,7 @@ import nz.ac.aut.comp705.sortmystuff.util.exceptions.*;
 
 public interface IDataManager {
 
-    //region Create data methods
+    //region CREATE DATA METHODS
 
     /**
      * Create an asset and save it to the local storage.
@@ -86,7 +86,7 @@ public interface IDataManager {
 
     //endregion
 
-    //region Read data methods
+    //region READ DATA METHODS
 
     /**
      * Get the Root asset from the local data source.
@@ -94,15 +94,6 @@ public interface IDataManager {
      * @return the Root asset of the current user
      */
     Asset getRootAsset();
-
-    /**
-     * Get the Root asset from the data sources.
-     *
-     * @param callback see {@link GetAssetCallback}
-     * @throws NullPointerException if callback is {@code null}
-     */
-    @Deprecated
-    void getRootAssetAsync(@NonNull GetAssetCallback callback);
 
     /**
      * Get all the non-recycled assets (including root asset).
@@ -225,7 +216,7 @@ public interface IDataManager {
 
     //endregion
 
-    //region Update data methods
+    //region UPDATE DATA METHODS
 
     /**
      * Update the name of the asset in memory and local storage.
