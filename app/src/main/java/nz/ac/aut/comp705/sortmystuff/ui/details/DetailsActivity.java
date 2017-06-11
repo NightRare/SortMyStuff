@@ -163,7 +163,6 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
                 imageFieldView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-//                    Toast.makeText(DetailsActivity.this,"clicked",Toast.LENGTH_SHORT).show();
 
                         File outputImage = new File(getExternalCacheDir(),
                                 "output_image.jpg");
