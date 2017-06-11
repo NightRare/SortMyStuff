@@ -1,13 +1,12 @@
 [
   {
-    "name":"None",
-    "details":[
+    "name": "None",
+    "details": [
     ]
   },
-
   {
-    "name":"Appliances",
-    "details":[
+    "name": "Appliances",
+    "details": [
       {
         "assetId": "DUMMY_ASSET_ID",
         "id": "BASIC_DUMMY_DETAIL_ID_1",
@@ -57,10 +56,9 @@
       }
     ]
   },
-
   {
-    "name":"Books",
-    "details":[
+    "name": "Books",
+    "details": [
       {
         "assetId": "DUMMY_ASSET_ID",
         "id": "BASIC_DUMMY_DETAIL_ID_1",
@@ -97,10 +95,9 @@
       }
     ]
   },
-
   {
-    "name":"Collectibles",
-    "details":[
+    "name": "Collectibles",
+    "details": [
       {
         "assetId": "DUMMY_ASSET_ID",
         "id": "BASIC_DUMMY_DETAIL_ID_1",
@@ -123,10 +120,9 @@
       }
     ]
   },
-
   {
-    "name":"Food",
-    "details":[
+    "name": "Food",
+    "details": [
       {
         "assetId": "DUMMY_ASSET_ID",
         "id": "BASIC_DUMMY_DETAIL_ID_1",
@@ -156,10 +152,9 @@
       }
     ]
   },
-
   {
-    "name":"Miscellaneous",
-    "details":[
+    "name": "Miscellaneous",
+    "details": [
       {
         "assetId": "DUMMY_ASSET_ID",
         "id": "BASIC_DUMMY_DETAIL_ID_1",
@@ -175,11 +170,9 @@
       }
     ]
   },
-
-
   {
-    "name":"Places",
-    "details":[
+    "name": "Places",
+    "details": [
       {
         "assetId": "DUMMY_ASSET_ID",
         "id": "BASIC_DUMMY_DETAIL_ID_1",

@@ -14,6 +14,7 @@ import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 public class TestUtil {
 
     public static final String TEST_DEFAULT_PHOTO = "testimages/default.png";
+    public static final String TEST_IMAGE_1 = "testimages/1.png";
 
     public static boolean areIdenticalAssets(Asset asset1, Asset asset2) {
         return areIdenticalAssets(asset1, asset2.getId(), asset2.getName(), asset2.getContainerId(),
