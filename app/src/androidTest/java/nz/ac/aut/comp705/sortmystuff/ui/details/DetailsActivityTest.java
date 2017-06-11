@@ -10,7 +10,10 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.intent.rule.IntentsTestRule;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
+import android.support.v7.widget.Toolbar;
 import android.widget.EditText;
+
+import junit.framework.Assert;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -33,13 +36,17 @@ import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.replaceText;
+import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.intent.Intents.intended;
 import static android.support.test.espresso.intent.Intents.intending;
 import static android.support.test.espresso.intent.matcher.IntentMatchers.hasAction;
+import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anything;
+import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 
@@ -107,6 +114,25 @@ public class DetailsActivityTest {
         });
     }
 
+    @Test
+    public void checkAddDetail_success(){
+        startTest();
+        addEditDetail("","Test text");
+        onData(anything()).inAdapterView(withId(R.id.detail_list))
+                .atPosition(1).onChildView(withId(android.R.id.text2))
+                .check(matches(withText("Test text")));
+    }
+
+    @Test
+    public void checkEditDetail_success(){
+        startTest();
+        addEditDetail("","Test text");
+        addEditDetail("Test text","Text test");
+        onData(anything()).inAdapterView(withId(R.id.detail_list))
+                .atPosition(1).onChildView(withId(android.R.id.text2))
+                .check(matches(withText("Text test")));
+    }
+
     //region PRIVATE STUFF
 
     private Context context;
@@ -158,7 +184,41 @@ public class DetailsActivityTest {
 
     }
 
+    private void startTest(){
+        addAsset("Mouse");
+        Intent intent = new Intent(mActivityRule.getActivity(), DetailsActivity.class);
+        intent.putExtra("AssetID", getAssetID("Mouse"));
+        mIntentsRule.launchActivity(intent);
+        onView(withId(R.id.toolbar)).check(matches(isDisplayed()));
+    }
 
+    private String getAssetID(final String assetName){
+        final String[] assetID = {""};
+        dm.getAllAssetsAsync(new IDataManager.LoadAssetsCallback() {
+            @Override
+            public void onAssetsLoaded(List<Asset> assets) {
+                for(Asset a : assets) {
+                    if(a.getName().equals(assetName)) {
+                        assetID[0] = a.getId();
+                    }
+                }
+            }
+
+            @Override
+            public void dataNotAvailable(int errorCode) {
+
+            }
+        });
+        return assetID[0];
+    }
+
+    private void addEditDetail(String fromName, String newDetail){
+        onData(anything()).inAdapterView(withId(R.id.detail_list))
+                .atPosition(1).perform(click());
+        onView(allOf(withClassName(endsWith("EditText")), withText(is(fromName))))
+                .perform(replaceText(newDetail));
+        onView(withText("Save")).perform(click());
+    }
 
 
     //endregion
