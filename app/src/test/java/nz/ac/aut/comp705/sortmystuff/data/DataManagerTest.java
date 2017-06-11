@@ -580,7 +580,7 @@ public class DataManagerTest {
     }
 
     @Test
-    public void getParentAssetDescAsync_getParentAssetsDesc() {
+    public void getParentAssetsDescAsync_getParentAssetsDesc() {
         final Asset root = prepareRootAsset();
         final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, asset1);
