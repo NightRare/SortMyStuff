@@ -19,6 +19,7 @@ import org.robolectric.annotation.Config;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -28,7 +29,9 @@ import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.BuildConfig;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Category;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.testutils.TestUtil;
@@ -40,6 +43,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -159,13 +164,30 @@ public class FileHelperTest {
     }
 
     @Test
-    public void deserialiseDetails_detailsDeserialisedFromLocalStorage() {
+    public void deserialiseDetails_assetNotExists() {
         Asset root = prepareRootAsset();
         Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
 
         List<Detail> details = new ArrayList<>();
-        Detail detail1 = TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
-        Detail detail2 = TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL2, TEXTDETAIL_FIELD2);
+        Detail detail1 = TextDetail.createTextDetail(asset1.getId(), DETAIL_LABEL1, TEXTDETAIL_FIELD1);
+        Detail detail2 = TextDetail.createTextDetail(asset1.getId(), DETAIL_LABEL2, TEXTDETAIL_FIELD2);
+        Collections.addAll(details, detail1, detail2);
+
+        // asset1 is not serialised
+        fh.serialiseDetails(details, false);
+
+        List<Detail> desDetails = fh.deserialiseDetails(asset1.getId());
+        assertEquals(null, desDetails);
+    }
+
+    @Test
+    public void deserialiseDetails_deserialiseTextDetail() {
+        Asset root = prepareRootAsset();
+        Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+
+        List<Detail> details = new ArrayList<>();
+        Detail detail1 = TextDetail.createTextDetail(asset1.getId(), DETAIL_LABEL1, TEXTDETAIL_FIELD1);
+        Detail detail2 = TextDetail.createTextDetail(asset1.getId(), DETAIL_LABEL2, TEXTDETAIL_FIELD2);
         Collections.addAll(details, detail1, detail2);
 
         fh.serialiseAsset(asset1);
@@ -176,20 +198,62 @@ public class FileHelperTest {
     }
 
     @Test
-    public void deserialiseDetails_assetNotExists() {
+    public void deserialiseDetails_deserialiseDateDetail() {
         Asset root = prepareRootAsset();
         Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
 
         List<Detail> details = new ArrayList<>();
-        Detail detail1 = TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
-        Detail detail2 = TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL2, TEXTDETAIL_FIELD2);
+        Detail detail1 = TextDetail.createDateDetail(asset1.getId(), DETAIL_LABEL1, TEXTDETAIL_FIELD1);
+        Detail detail2 = TextDetail.createDateDetail(asset1.getId(), DETAIL_LABEL2, TEXTDETAIL_FIELD2);
         Collections.addAll(details, detail1, detail2);
 
-        // asset1 is not serialised
+        fh.serialiseAsset(asset1);
         fh.serialiseDetails(details, false);
 
         List<Detail> desDetails = fh.deserialiseDetails(asset1.getId());
-        assertEquals(null, desDetails);
+        assertTrue(areIdenticalDetails(details, desDetails));
+    }
+
+    @Test
+    public void deserialiseDetails_deserialiseImageDetailWithDefaultPhoto() {
+        Asset root = prepareRootAsset();
+        Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+
+        List<Detail> details = new ArrayList<>();
+        Detail detail1 = ImageDetail.create(asset1.getId(), DETAIL_LABEL1, mockResLoader.getDefaultPhoto());
+        details.add(detail1);
+
+        fh.serialiseAsset(asset1);
+        fh.serialiseDetails(details, true);
+
+        List<Detail> desDetails = fh.deserialiseDetails(asset1.getId());
+        assertTrue(areIdenticalDetails(desDetails.get(0), detail1.getId(), detail1.getAssetId(),
+                DetailType.Image, detail1.getLabel(), null));
+        Bitmap actualPhoto = (Bitmap) detail1.getField();
+        assertTrue(mockResLoader.getDefaultPhoto().sameAs(actualPhoto));
+    }
+
+    @Test
+    public void deserialiseDetails_deserialiseImageDetailWithCustomisedPhoto() throws IOException {
+        FileInputStream fis = new FileInputStream(TestUtil.TEST_IMAGE_1);
+        Bitmap customisedPhoto = BitmapFactory.decodeStream(fis);
+        fis.close();
+
+        Asset root = prepareRootAsset();
+        Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+
+        List<Detail> details = new ArrayList<>();
+        Detail detail1 = ImageDetail.create(asset1.getId(), DETAIL_LABEL1, customisedPhoto);
+        details.add(detail1);
+
+        fh.serialiseAsset(asset1);
+        fh.serialiseDetails(details, true);
+
+        List<Detail> desDetails = fh.deserialiseDetails(asset1.getId());
+        assertTrue(areIdenticalDetails(desDetails.get(0), detail1.getId(), detail1.getAssetId(),
+                DetailType.Image, detail1.getLabel(), null));
+        Bitmap actualPhoto = (Bitmap) detail1.getField();
+        assertTrue(customisedPhoto.sameAs(actualPhoto));
     }
 
     @Test
@@ -239,8 +303,8 @@ public class FileHelperTest {
         Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
 
         List<Detail> details = new ArrayList<>();
-        details.add(TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1));
-        details.add(TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL2, TEXTDETAIL_FIELD2));
+        details.add(TextDetail.createTextDetail(asset1.getId(), DETAIL_LABEL1, TEXTDETAIL_FIELD1));
+        details.add(TextDetail.createTextDetail(asset1.getId(), DETAIL_LABEL2, TEXTDETAIL_FIELD2));
 
         assertTrue(fh.serialiseAsset(root));
         assertTrue(fh.serialiseAsset(asset1));
@@ -263,8 +327,8 @@ public class FileHelperTest {
 
         // detail1 and detail2 have different asset ids
         List<Detail> details = new ArrayList<>();
-        details.add(TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1));
-        details.add(TextDetail.createTextDetail(asset2.getId(), TEXTDETAIL_LABEL2, TEXTDETAIL_FIELD2));
+        details.add(TextDetail.createTextDetail(asset1.getId(), DETAIL_LABEL1, TEXTDETAIL_FIELD1));
+        details.add(TextDetail.createTextDetail(asset2.getId(), DETAIL_LABEL2, TEXTDETAIL_FIELD2));
 
         assertTrue(fh.serialiseAsset(root));
         assertTrue(fh.serialiseAsset(asset1));
@@ -306,14 +370,14 @@ public class FileHelperTest {
         Asset root = Asset.createRoot();
         Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
 
-        FileInputStream fis = new FileInputStream(TEST_IMAGE_1);
+        FileInputStream fis = new FileInputStream(TestUtil.TEST_IMAGE_1);
         Bitmap image = BitmapFactory.decodeStream(fis);
         fis.close();
 
         ImageDetail imageDetail = ImageDetail.create(asset1.getId(), IMAGEDETAIL_LABEL1, image);
 
         List<Detail> details = new ArrayList<>();
-        details.add(TextDetail.createTextDetail(asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1));
+        details.add(TextDetail.createTextDetail(asset1.getId(), DETAIL_LABEL1, TEXTDETAIL_FIELD1));
         details.add(imageDetail);
 
         assertTrue(fh.serialiseAsset(root));
@@ -342,6 +406,68 @@ public class FileHelperTest {
         assertFalse(fh.rootExists());
     }
 
+    @Test
+    public void deserialiseCategories_categoriesDeserialised() {
+        String categoryStrings = "[\n" +
+                "  {\n" +
+                "    \"name\": \"Collectibles\",\n" +
+                "    \"details\": [\n" +
+                "      {\n" +
+                "        \"assetId\": \"DUMMY_ASSET_ID\",\n" +
+                "        \"id\": \"BASIC_DUMMY_DETAIL_ID_1\",\n" +
+                "        \"label\": \"Photo\",\n" +
+                "        \"type\": \"Image\"\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"field\": \"\",\n" +
+                "        \"assetId\": \"DUMMY_ASSET_ID\",\n" +
+                "        \"id\": \"BASIC_DUMMY_DETAIL_ID_2\",\n" +
+                "        \"label\": \"Notes\",\n" +
+                "        \"type\": \"Text\"\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"field\": \"\",\n" +
+                "        \"assetId\": \"DUMMY_ASSET_ID\",\n" +
+                "        \"id\": \"EXTENDED_DUMMY_DETAIL_ID_1\",\n" +
+                "        \"label\": \"Purchase Date\",\n" +
+                "        \"type\": \"Date\"\n" +
+                "      }\n" +
+                "    ]\n" +
+                "  }\n" +
+                "]";
+
+        when(mockResLoader.getCategoriesJson()).thenReturn(categoryStrings);
+        List<Category> categories = fh.deserialiseCategories();
+        assertEquals(1, categories.size());
+        verify(mockResLoader, times(1)).getCategoriesJson();
+        verify(mockResLoader, times(1)).getDefaultPhoto();
+
+        Category collectibles = categories.get(0);
+        assertEquals("Collectibles", collectibles.getName());
+
+        List<Detail> details = collectibles.getDetails();
+        for(int i = 0; i < details.size(); i++) {
+            switch (i) {
+                case 0:
+                    assertTrue(TestUtil.areIdenticalDetails(details.get(i), "BASIC_DUMMY_DETAIL_ID_1",
+                            "DUMMY_ASSET_ID", DetailType.Image, "Photo", null));
+                    Bitmap actualPhoto = (Bitmap) details.get(0).getField();
+                    assertTrue(mockResLoader.getDefaultPhoto().sameAs(actualPhoto));
+                    break;
+
+                case 1:
+                    assertTrue(TestUtil.areIdenticalDetails(details.get(i), "BASIC_DUMMY_DETAIL_ID_2",
+                            "DUMMY_ASSET_ID", DetailType.Text, "Notes", ""));
+                    break;
+
+                case 2:
+                    assertTrue(TestUtil.areIdenticalDetails(details.get(i), "EXTENDED_DUMMY_DETAIL_ID_1",
+                            "DUMMY_ASSET_ID", DetailType.Date, "Purchase Date", ""));
+                    break;
+            }
+        }
+    }
+
     //endregion
 
     //region Private stuff
@@ -349,14 +475,13 @@ public class FileHelperTest {
     private static final String ASSET_NAME1 = "Asset_1";
     private static final String ASSET_NAME2 = "Asset_2";
     private static final String ASSET_NAME3 = "Asset_3";
-    private static final String TEXTDETAIL_LABEL1 = "TextDetail_1";
+    private static final String DETAIL_LABEL1 = "TextDetail_1";
     private static final String TEXTDETAIL_FIELD1 = "TextDetail_Field_1";
-    private static final String TEXTDETAIL_LABEL2 = "TextDetail_2";
+    private static final String DETAIL_LABEL2 = "TextDetail_2";
     private static final String TEXTDETAIL_FIELD2 = "TextDetail_Field_2";
     private static final String IMAGEDETAIL_LABEL1 = "ImageDetail_1";
 
-    private static final String TEST_USER_DIR = "src/test/testdata";
-    private static final String TEST_IMAGE_1 = "testimages/1.png";
+    private static final String TEST_USER_DIR = "testdata";
     private static final String ROOT_ASSET_FILE = TEST_USER_DIR + File.separator +
             FileHelper.ROOT_ASSET_DIR + File.separator + FileHelper.ASSET_FILENAME;
 

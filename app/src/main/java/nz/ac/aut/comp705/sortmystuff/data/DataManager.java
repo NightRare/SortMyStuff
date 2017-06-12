@@ -357,18 +357,6 @@ public class DataManager implements IDataManager {
      * {@inheritDoc}
      */
     @Override
-    public void getDetailAsync(@NonNull String detailId, @NonNull GetDetailCallback callback) {
-        Preconditions.checkNotNull(detailId);
-        Preconditions.checkNotNull(!detailId.replaceAll(" ", "").isEmpty());
-
-        // TODO complete getDetailAsync
-        throw new IllegalStateException("Method not completed yet");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void updateAssetName(@NonNull Asset asset, @NonNull String newName) {
         Preconditions.checkNotNull(asset);
 

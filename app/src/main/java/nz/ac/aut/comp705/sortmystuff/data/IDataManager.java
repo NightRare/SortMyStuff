@@ -205,14 +205,9 @@ public interface IDataManager {
      */
     void getDetailsAsync(@NonNull String assetId, @NonNull LoadDetailsCallback callback);
 
-    /**
-     * Get a detail according to the given id.
-     *
-     * @param detailId the id
-     * @param callback see {@link GetDetailCallback}
-     * @throws NullPointerException if any argument is {@code null}
+    /*
+    TODO add getDetailAsync(@NonNull String detailId, @NonNull GetDetailCallback callback) method
      */
-    void getDetailAsync(@NonNull String detailId, @NonNull GetDetailCallback callback);
 
     //endregion
 

@@ -18,7 +18,6 @@ import org.robolectric.annotation.Config;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -37,18 +36,18 @@ import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 import nz.ac.aut.comp705.sortmystuff.util.AppStatusCode;
 import nz.ac.aut.comp705.sortmystuff.util.exceptions.UpdateLocalStorageFailedException;
 
-
+import static nz.ac.aut.comp705.sortmystuff.testutils.TestUtil.areIdenticalAssets;
+import static nz.ac.aut.comp705.sortmystuff.testutils.TestUtil.areIdenticalDetails;
 import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.ASSET_NOT_EXISTS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static nz.ac.aut.comp705.sortmystuff.testutils.TestUtil.areIdenticalAssets;
-import static nz.ac.aut.comp705.sortmystuff.testutils.TestUtil.areIdenticalDetails;
 
 /**
  * Created by Yuan on 2017/4/29.
@@ -181,14 +180,14 @@ public class DataManagerTest {
         final Asset asset = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset);
 
-        final String detailId = dataManager.createTextDetail(asset, TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
+        final String detailId = dataManager.createTextDetail(asset, DETAIL_LABEL1, TEXTDETAIL_FIELD1);
         verify(mockFileHelper).serialiseDetails(argThat(new ArgumentMatcher<List<Detail>>() {
             @Override
             public boolean matches(List<Detail> argument) {
                 if (argument.size() != 1)
                     return false;
                 return areIdenticalDetails(argument.get(0), detailId, asset.getId(), DetailType.Text,
-                        TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
+                        DETAIL_LABEL1, TEXTDETAIL_FIELD1);
             }
         }), anyBoolean());
     }
@@ -199,7 +198,7 @@ public class DataManagerTest {
         Asset root = prepareRootAsset();
 
         final String detailId = dataManager.createTextDetail(
-                "noSuchAssetId", TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
+                "noSuchAssetId", DETAIL_LABEL1, TEXTDETAIL_FIELD1);
         verify(mockFileHelper, never()).serialiseDetails(ArgumentMatchers.<Detail>anyList(), anyBoolean());
         Assert.assertTrue(detailId == null);
     }
@@ -240,7 +239,7 @@ public class DataManagerTest {
 
         try {
             String longField = getStringWithLength(AppConstraints.TEXTDETAIL_FIELD_CAP + 1);
-            dataManager.createTextDetail(asset, TEXTDETAIL_LABEL1, longField);
+            dataManager.createTextDetail(asset, DETAIL_LABEL1, longField);
         } catch (IllegalArgumentException e) {
             // should pass all the test
             testPass = testPass && true;
@@ -261,7 +260,7 @@ public class DataManagerTest {
             final Asset asset = Asset.createAsMisc(ASSET_NAME1, root);
             mockAssets.add(asset);
 
-            dataManager.createTextDetail(asset, TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
+            dataManager.createTextDetail(asset, DETAIL_LABEL1, TEXTDETAIL_FIELD1);
         } catch (UpdateLocalStorageFailedException e) {
             // pass test
             return;
@@ -275,7 +274,7 @@ public class DataManagerTest {
         Asset root = prepareRootAsset();
 
         final String detailId = dataManager.createTextDetail(
-                root, TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
+                root, DETAIL_LABEL1, TEXTDETAIL_FIELD1);
         verify(mockFileHelper, never()).serialiseDetails(ArgumentMatchers.<Detail>anyList(), anyBoolean());
         Assert.assertTrue(detailId == null);
     }
@@ -581,6 +580,42 @@ public class DataManagerTest {
     }
 
     @Test
+    public void getParentAssetsDescAsync_getParentAssetsDesc() {
+        final Asset root = prepareRootAsset();
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        final Asset asset2 = Asset.createAsMisc(ASSET_NAME2, asset1);
+        final Asset asset3 = Asset.createAsMisc(ASSET_NAME3, asset2);
+        mockAssets.add(asset1);
+        mockAssets.add(asset2);
+        mockAssets.add(asset3);
+
+        dataManager.getParentAssetsDescAsync(asset3, mockLoadAssetsCallback);
+        verify(mockLoadAssetsCallback).onAssetsLoaded(argThat(new ArgumentMatcher<List<Asset>>() {
+            @Override
+            public boolean matches(List<Asset> argument) {
+                if (argument.size() != 4)
+                    return false;
+                // order should be
+                // root -> asset1 -> asset2
+                return areIdenticalAssets(root, argument.get(0)) &&
+                        areIdenticalAssets(asset1, argument.get(1)) &&
+                        areIdenticalAssets(asset2, argument.get(2)) &&
+                        areIdenticalAssets(asset3, argument.get(3));
+            }
+        }));
+        verify(mockLoadAssetsCallback, never()).dataNotAvailable(anyInt());
+    }
+
+    @Test
+    public void getParentAssetsDescAsync_assetIdNotExists() {
+        final Asset root = prepareRootAsset();
+
+        dataManager.getParentAssetsDescAsync("NoSuchAssetId", mockLoadAssetsCallback);
+        verify(mockLoadAssetsCallback, never()).onAssetsLoaded(ArgumentMatchers.<Asset>anyList());
+        verify(mockLoadAssetsCallback).dataNotAvailable(ArgumentMatchers.eq(ASSET_NOT_EXISTS));
+    }
+
+    @Test
     public void getAssetAsync_getAsset() {
         final Asset root = prepareRootAsset();
         final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
@@ -636,7 +671,7 @@ public class DataManagerTest {
         final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
         TextDetail td1 = TextDetail.createTextDetail(
-                asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
+                asset1.getId(), DETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
         dataManager.getDetailsAsync(asset1, mockLoadDetailsCallback);
@@ -654,7 +689,7 @@ public class DataManagerTest {
         final Asset root = prepareRootAsset();
 
         TextDetail td1 = TextDetail.createTextDetail(
-                root.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
+                root.getId(), DETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
         dataManager.getDetailsAsync(root, mockLoadDetailsCallback);
@@ -673,7 +708,7 @@ public class DataManagerTest {
         prepareRootAsset();
 
         TextDetail td1 = TextDetail.createTextDetail(
-                "NoSuchAssetId", TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
+                "NoSuchAssetId", DETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
         dataManager.getDetailsAsync("NoSuchAssetId", mockLoadDetailsCallback);
@@ -687,7 +722,7 @@ public class DataManagerTest {
         final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
         mockAssets.add(asset1);
         TextDetail td1 = TextDetail.createTextDetail(
-                asset1.getId(), TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
+                asset1.getId(), DETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
         verify(mockFileHelper, never()).deserialiseAllAssets();
@@ -1101,9 +1136,9 @@ public class DataManagerTest {
 
         // td1 and td2 belong to asset1
         final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
-                TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
+                DETAIL_LABEL1, TEXTDETAIL_FIELD1);
         final TextDetail td2 = TextDetail.createTextDetail(asset1.getId(),
-                TEXTDETAIL_LABEL2, TEXTDETAIL_FIELD2);
+                DETAIL_LABEL2, TEXTDETAIL_FIELD2);
         mockDetails.add(td1);
         mockDetails.add(td2);
 
@@ -1151,7 +1186,7 @@ public class DataManagerTest {
 
 
         final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
-                TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
+                DETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
         dataManager.removeDetail(asset2.getId(), td1.getId());
@@ -1177,7 +1212,7 @@ public class DataManagerTest {
         mockAssets.add(asset1);
 
         final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
-                TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
+                DETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
         dataManager.removeDetail(asset1.getId(), "NoSuchDetailId");
@@ -1204,7 +1239,7 @@ public class DataManagerTest {
         mockAssets.add(asset1);
 
         final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
-                TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
+                DETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
 
@@ -1230,13 +1265,13 @@ public class DataManagerTest {
 
         // td1 and td2 belong to asset1
         final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
-                TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
+                DETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
         // wait 1 ms to update asset1
         Thread.sleep(1);
 
-        dataManager.updateTextDetail(td1, TEXTDETAIL_LABEL2, TEXTDETAIL_FIELD2);
+        dataManager.updateTextDetail(td1, DETAIL_LABEL2, TEXTDETAIL_FIELD2);
 
         final ArgumentMatcher<Asset> matchAsset = new ArgumentMatcher<Asset>() {
             @Override
@@ -1256,7 +1291,7 @@ public class DataManagerTest {
                 if(argument.size() != 1)
                     return false;
                 return areIdenticalDetails(argument.get(0), td1.getId(), asset1.getId(),
-                        DetailType.Text, TEXTDETAIL_LABEL2, TEXTDETAIL_FIELD2);
+                        DetailType.Text, DETAIL_LABEL2, TEXTDETAIL_FIELD2);
             }
         };
 
@@ -1278,11 +1313,11 @@ public class DataManagerTest {
         mockAssets.add(asset2);
 
         final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
-                TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
+                DETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
         dataManager.updateTextDetail(asset2.getId(), td1.getId(),
-                TEXTDETAIL_LABEL2, TEXTDETAIL_FIELD2);
+                DETAIL_LABEL2, TEXTDETAIL_FIELD2);
 
         // check whether been serialised
         verify(mockFileHelper, never()).serialiseAsset(any(Asset.class));
@@ -1305,11 +1340,11 @@ public class DataManagerTest {
         mockAssets.add(asset1);
 
         final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
-                TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
+                DETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
         dataManager.updateTextDetail(asset1.getId(), "NoSuchDetailId",
-                TEXTDETAIL_LABEL2, TEXTDETAIL_FIELD2);
+                DETAIL_LABEL2, TEXTDETAIL_FIELD2);
 
         // check whether been serialised
         verify(mockFileHelper, never()).serialiseAsset(any(Asset.class));
@@ -1332,7 +1367,7 @@ public class DataManagerTest {
         mockAssets.add(asset1);
 
         final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
-                TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
+                DETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
         boolean passTest = false;
@@ -1352,7 +1387,7 @@ public class DataManagerTest {
 
         try {
             String longField = getStringWithLength(AppConstraints.TEXTDETAIL_FIELD_CAP + 1);
-            dataManager.updateTextDetail(td1, TEXTDETAIL_LABEL2, longField);
+            dataManager.updateTextDetail(td1, DETAIL_LABEL2, longField);
         } catch (IllegalArgumentException e) {
             passTest = passTest && true;
         }
@@ -1380,14 +1415,14 @@ public class DataManagerTest {
         mockAssets.add(asset1);
 
         final TextDetail td1 = TextDetail.createTextDetail(asset1.getId(),
-                TEXTDETAIL_LABEL1, TEXTDETAIL_FIELD1);
+                DETAIL_LABEL1, TEXTDETAIL_FIELD1);
         mockDetails.add(td1);
 
 
         when(mockFileHelper.serialiseAsset(any(Asset.class))).thenReturn(false);
 
         try {
-            dataManager.updateTextDetail(td1, TEXTDETAIL_LABEL2, TEXTDETAIL_FIELD2);
+            dataManager.updateTextDetail(td1, DETAIL_LABEL2, TEXTDETAIL_FIELD2);
         } catch (UpdateLocalStorageFailedException e) {
             return;
         }
@@ -1397,6 +1432,111 @@ public class DataManagerTest {
         // not necessary if the calling method does not catch UpdateLocalStorageFailedException
         // TODO implement later: add code to check whether cached data are refreshed when failed
 
+    }
+
+    @Test
+    public void updateImageDetail_detailUpdatedAndSaveToJsonFile() throws InterruptedException, IOException {
+        final Asset root = prepareRootAsset();
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        mockAssets.add(asset1);
+
+        // set default photo image detail
+        final ImageDetail imageDetail = ImageDetail.create(asset1.getId(),
+                DETAIL_LABEL1, mockResLoader.getDefaultPhoto());
+        mockDetails.add(imageDetail);
+
+        // wait 1 ms to update asset1
+        Thread.sleep(1);
+
+        FileInputStream fis = new FileInputStream(TestUtil.TEST_IMAGE_1);
+        final Bitmap newPhoto = BitmapFactory.decodeStream(fis);
+        fis.close();
+        Assert.assertFalse(newPhoto.sameAs(mockResLoader.getDefaultPhoto()));
+
+        dataManager.updateImageDetail(imageDetail, DETAIL_LABEL2, newPhoto);
+
+        final ArgumentMatcher<Asset> matchAsset = new ArgumentMatcher<Asset>() {
+            @Override
+            public boolean matches(Asset argument) {
+                boolean identical = areIdenticalAssets(argument, asset1.getId(), asset1.getName(),
+                        root.getId(), asset1.getCategoryType(), asset1.getCreateTimestamp(), null);
+                if(!identical) return false;
+
+                // updateTimestamp should be changed when get recycled
+                return argument.getModifyTimestamp() > asset1.getCreateTimestamp();
+            }
+        };
+
+        ArgumentMatcher<List<Detail>> matchDetailsList = new ArgumentMatcher<List<Detail>>() {
+            @Override
+            public boolean matches(List<Detail> argument) {
+                if(argument.size() != 1)
+                    return false;
+                if(!areIdenticalDetails(argument.get(0), imageDetail.getId(), asset1.getId(),
+                        DetailType.Image, DETAIL_LABEL2, null))
+                    return false;
+                return newPhoto.sameAs((Bitmap) argument.get(0).getField());
+            }
+        };
+
+        // check whether serialised
+        verify(mockFileHelper).serialiseAsset(argThat(matchAsset));
+        verify(mockFileHelper).serialiseDetails(argThat(matchDetailsList), eq(true));
+
+        // check with the details list from dataManager
+        dataManager.getDetailsAsync(asset1, mockLoadDetailsCallback);
+        verify(mockLoadDetailsCallback).onDetailsLoaded(argThat(matchDetailsList));
+    }
+
+    @Test
+    public void resetImageDetail_imageDetailReset() throws IOException {
+        final Asset root = prepareRootAsset();
+        final Asset asset1 = Asset.createAsMisc(ASSET_NAME1, root);
+        mockAssets.add(asset1);
+
+        FileInputStream fis = new FileInputStream(TestUtil.TEST_IMAGE_1);
+        final Bitmap customisedPhoto = BitmapFactory.decodeStream(fis);
+        fis.close();
+        Assert.assertFalse(customisedPhoto.sameAs(mockResLoader.getDefaultPhoto()));
+
+        // set default photo image detail
+        final ImageDetail imageDetail = ImageDetail.create(asset1.getId(),
+                DETAIL_LABEL1, customisedPhoto);
+        mockDetails.add(imageDetail);
+
+        dataManager.resetImageDetail(imageDetail);
+
+        final ArgumentMatcher<Asset> matchAsset = new ArgumentMatcher<Asset>() {
+            @Override
+            public boolean matches(Asset argument) {
+                boolean identical = areIdenticalAssets(argument, asset1.getId(), asset1.getName(),
+                        root.getId(), asset1.getCategoryType(), asset1.getCreateTimestamp(), null);
+                if(!identical) return false;
+
+                // updateTimestamp should be changed when get recycled
+                return argument.getModifyTimestamp() > asset1.getCreateTimestamp();
+            }
+        };
+
+        ArgumentMatcher<List<Detail>> matchDetailsList = new ArgumentMatcher<List<Detail>>() {
+            @Override
+            public boolean matches(List<Detail> argument) {
+                if(argument.size() != 1)
+                    return false;
+                if(!areIdenticalDetails(argument.get(0), imageDetail.getId(), asset1.getId(),
+                        DetailType.Image, imageDetail.getLabel(), null))
+                    return false;
+                return mockResLoader.getDefaultPhoto().sameAs((Bitmap) argument.get(0).getField());
+            }
+        };
+
+        // check whether serialised
+        verify(mockFileHelper).serialiseAsset(argThat(matchAsset));
+        verify(mockFileHelper).serialiseDetails(argThat(matchDetailsList), eq(true));
+
+        // check with the details list from dataManager
+        dataManager.getDetailsAsync(asset1, mockLoadDetailsCallback);
+        verify(mockLoadDetailsCallback).onDetailsLoaded(argThat(matchDetailsList));
     }
 
     @Test
@@ -1427,9 +1567,9 @@ public class DataManagerTest {
     private static final String ASSET_NAME1 = "Asset_1";
     private static final String ASSET_NAME2 = "Asset_2";
     private static final String ASSET_NAME3 = "Asset_3";
-    private static final String TEXTDETAIL_LABEL1 = "TextDetail_1";
+    private static final String DETAIL_LABEL1 = "TextDetail_1";
     private static final String TEXTDETAIL_FIELD1 = "TextDetail_Field_1";
-    private static final String TEXTDETAIL_LABEL2 = "TextDetail_2";
+    private static final String DETAIL_LABEL2 = "TextDetail_2";
     private static final String TEXTDETAIL_FIELD2 = "TextDetail_Field_2";
 
     private IDataManager dataManager;
