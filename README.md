@@ -15,4 +15,4 @@ This project was created as the culmination of our work for the paper Software D
 
 
 ## Other Notes
-The icon used in this project was created by Scott Hill (Retrieved from: https://dribbble.com/shots/126059-S) and only used for this **non-commercial** project for **educational** purposes, which is a component of the assessments of our Software Development Practice paper.
+The icon used in this project was created by Scott Hill (Retrieved from: https://dribbble.com/shots/126059-S) and only used for this **non-commercial** project for **educational** purposes, which is a component for the assessment of our Software Development Practice paper.
