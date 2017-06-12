@@ -1,12 +1,5 @@
 package nz.ac.aut.comp705.sortmystuff.ui.search;
 
-import android.view.View;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
-import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.ui.IPresenter;
 
 /**

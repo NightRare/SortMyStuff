@@ -157,12 +157,6 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     @Override
     public void showAddDialog() {
         getAddAssetDialog().show();
-//        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
-//        lp.copyFrom(addAssetDialog.getWindow().getAttributes());
-//        lp.width = WindowManager.LayoutParams.WRAP_CONTENT;
-//        lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
-//        addAssetDialog.getWindow().setAttributes(lp);
-//        addAssetDialog.show();
     }
 
     /**

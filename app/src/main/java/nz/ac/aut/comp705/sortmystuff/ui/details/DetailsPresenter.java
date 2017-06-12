@@ -206,15 +206,6 @@ public class DetailsPresenter implements IDetailsPresenter {
         return editText;
     }
 
-//    /**
-//     * Add basic details to the current asset as
-//     * with the label of "Name" and the current
-//     * asset name as the field
-//     */
-//    private void addBasicDetail() {
-//        addDetail("Name",getCurrentAssetName());
-//    }
-
     /**
      * Set toolbar title
      */

@@ -16,11 +16,6 @@ import nz.ac.aut.comp705.sortmystuff.ui.IPresenter;
 public interface IDetailsPresenter extends IPresenter {
 
     /**
-     * {@inheritDoc}
-     */
-    void start();
-
-    /**
      * Set the current asset associated with the given ID
      * @param assetID
      */

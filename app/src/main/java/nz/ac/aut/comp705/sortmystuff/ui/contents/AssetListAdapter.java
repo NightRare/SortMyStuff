@@ -32,12 +32,10 @@ public class AssetListAdapter extends BaseAdapter {
 
     //Whether the checkbox is selected.
     private HashMap<Integer, Boolean> selectStatusMap;
-    private Context context;
     private LayoutInflater inflater;
     private Boolean showCheckbox;
 
     public AssetListAdapter(List<Asset> list, Context context, Boolean showCheckbox) {
-        this.context = context;
         this.assetList = list;
         selectedAssetList = new ArrayList<>();
         inflater = LayoutInflater.from(context);
