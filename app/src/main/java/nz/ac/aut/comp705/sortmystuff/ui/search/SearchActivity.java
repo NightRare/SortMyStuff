@@ -28,16 +28,17 @@ public class SearchActivity extends AppCompatActivity implements ISearchView {
         setContentView(R.layout.search_act);
         setTitle("Search");
 
+        //setup the search toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.search_toolbar);
         setSupportActionBar(toolbar);
 
         startPresenter();
 
+        //initialise the input field and message to search (hint)
         final EditText searchField = (EditText) findViewById(R.id.search_text_bar);
-        searchField.setHint("Type here");
+        searchField.setHint("Input keyword here");
 
-        final String searchString = searchField.getText().toString();
-
+        //setup the search button
         Button searchButton = (Button) findViewById(R.id.search_now_button);
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -46,6 +47,7 @@ public class SearchActivity extends AppCompatActivity implements ISearchView {
             }
         });
 
+        //initialise search result list
         result = (ListView) findViewById(R.id.result_list);
         result.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -57,14 +59,7 @@ public class SearchActivity extends AppCompatActivity implements ISearchView {
 
     }
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.contents_menu, menu);
-//
-//
-//        return true;
-//    }
+    // **** PRIVATE STUFF **** //
 
     private ISearchPresenter presenter;
     private ListView result;
@@ -85,6 +80,9 @@ public class SearchActivity extends AppCompatActivity implements ISearchView {
         this.presenter = presenter;
     }
 
+    /**
+     * Starts the presenter for this activity
+     */
     private void startPresenter(){
         IDataManager dataManager = ((SortMyStuffApp) getApplication()).getFactory().getDataManager();
         presenter = new SearchPresenter(dataManager, this, this);

@@ -14,7 +14,7 @@ import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.ui.details.DetailsActivity;
 
 /**
- * Created by DonnaCello on 23 May 2017.
+ * Created by Donna on 23 May 2017.
  */
 
 public class SearchPresenter implements ISearchPresenter{
@@ -27,6 +27,39 @@ public class SearchPresenter implements ISearchPresenter{
         assetList = getAllAssets();
     }
 
+    /**
+     * Load the result of the query into the activity
+     * @param query
+     */
+    @Override
+    public void loadResult(String query){
+        view.showResultList(search(query));
+    }
+
+    /**
+     * Setup the event to go to detail page
+     * @param assetId
+     */
+    @Override
+    public void goToDetailPage(String assetId) {
+        Intent goToDetail = new Intent(activity, DetailsActivity.class);
+        goToDetail.putExtra("AssetID", assetId);
+        activity.startActivity(goToDetail);
+
+    }
+
+
+    // ***** PRIVATE STUFF ***** //
+
+    private IDataManager dm;
+    private ISearchView view;
+    private SearchActivity activity;
+    private List<Asset> assetList;
+
+    /**
+     * Lists all the assets ready for querying
+     * @return list of all assets
+     */
     private List<Asset> getAllAssets(){
         final ArrayList<Asset> queryList = new ArrayList<Asset>();
         dm.getAllAssetsAsync(new IDataManager.LoadAssetsCallback() {
@@ -41,6 +74,11 @@ public class SearchPresenter implements ISearchPresenter{
         return queryList;
     }
 
+    /**
+     * Search through the assets and find assets being queried
+     * @param query
+     * @return list of assets corresponding to the keyword query
+     */
     private List<Asset> search(String query){
         String regex = "(?i).*"+query+".*";
         final ArrayList<Asset> resultList = new ArrayList<Asset>();
@@ -57,31 +95,15 @@ public class SearchPresenter implements ISearchPresenter{
         return resultList;
     }
 
-    @Override
-    public void loadResult(String query){
-        view.showResultList(search(query));
-    }
-
-    @Override
-    public void goToDetailPage(String assetId) {
-        Intent goToDetail = new Intent(activity, DetailsActivity.class);
-        goToDetail.putExtra("AssetID", assetId);
-        activity.startActivity(goToDetail);
-
-    }
-
+    /**
+     * Show a message in the UI
+     * @param message
+     */
     private void showMessage(String message){
         Toast msg = Toast.makeText(activity,message,Toast.LENGTH_LONG);
         msg.setGravity(Gravity.CENTER, 0, 0);
         msg.show();
     }
-
-
-    //*****PRIVATE STUFF*****//
-    private IDataManager dm;
-    private ISearchView view;
-    private SearchActivity activity;
-    private List<Asset> assetList;
 
     public SearchPresenter(IDataManager dm, ISearchView view, SearchActivity activity){
         this.dm = dm;

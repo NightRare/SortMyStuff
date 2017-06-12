@@ -44,7 +44,7 @@ import nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsActivity;
 import nz.ac.aut.comp705.sortmystuff.util.Log;
 
 /**
- * Created by DonnaCello on 28 May 2017.
+ * Created by Donna on 28 May 2017.
  */
 
 @RunWith(AndroidJUnit4.class)
@@ -83,8 +83,6 @@ public class SearchActivityTest {
     @Rule
     public ActivityTestRule<ContentsActivity> contentsActivityTestRule
             = new ActivityTestRule<>(ContentsActivity.class);
-//      public ActivityTestRule<SearchActivity> searchActivityTestRule
-//            = new ActivityTestRule<>(SearchActivity.class);
 
     @Test
     public void loadSearch_checkComponents(){
@@ -112,9 +110,7 @@ public class SearchActivityTest {
     @Test
     public void search_noResult(){
         search("Ba");
-        //Message: "No results found." should display
-//        onData(anything()).inAdapterView(withId(R.id.result_list))
-//                .atPosition(0).check(matches(withText("No results found.")));
+        //No results shown, result list should be empty
         onView (withId (R.id.result_list)).check(ViewAssertions.matches(withListSize(0)));
     }
 
