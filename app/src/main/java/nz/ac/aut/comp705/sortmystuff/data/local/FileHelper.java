@@ -239,6 +239,14 @@ public class FileHelper implements IFileHelper {
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public File getUserDir() {
+        return userDir;
+    }
+
     //endregion
 
     //region PRIVATE STUFF

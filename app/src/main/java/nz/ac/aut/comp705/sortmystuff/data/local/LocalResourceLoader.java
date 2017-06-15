@@ -27,6 +27,7 @@ public class LocalResourceLoader {
 
     private static final String TAG_DEFAULT_PHOTO = "TAG_DEFAULT_PHOTO";
     private static final String TAG_CATEGORIES_JSON = "TAG_CATEGORIES_JSON";
+    private static final String TAG_DEMO_PHOTOS = "TAG_DEMO_PHOTOS";
 
     /**
      * When change the value of this constant, also need to change the format in
@@ -36,6 +37,8 @@ public class LocalResourceLoader {
     public final static String DEFAULT_PHOTO_FILENAME = "default" + IMAGE_DETAIL_FORMAT;
     public final static String DEFAULT_PHOTO_PATH = "images" + File.separator + DEFAULT_PHOTO_FILENAME;
     public final static String CATEGORIES_FILE_NAME = "categories.json";
+
+    public final static String DEMO_PHOTO_DIR = "images" + File.separator + "demo";
 
     /**
      * Initialises a LocalResourceLoader
@@ -69,6 +72,12 @@ public class LocalResourceLoader {
         return (Bitmap) resDict.get(TAG_DEFAULT_PHOTO);
     }
 
+    public Map<String, Bitmap> getDemoPhotos() {
+        Map<String, Bitmap> m = new HashMap<String, Bitmap>();
+        m.putAll((Map<? extends String, ? extends Bitmap>) resDict.get(TAG_DEMO_PHOTOS));
+        return m;
+    }
+
     /**
      * Reloads all the resources from the local.
      */
@@ -94,6 +103,8 @@ public class LocalResourceLoader {
 
             is = am.open(CATEGORIES_FILE_NAME);
             resDict.put(TAG_CATEGORIES_JSON, IOUtils.toString(is, Charsets.UTF_8));
+
+            resDict.put(TAG_DEMO_PHOTOS, loadPhotosInDir(DEMO_PHOTO_DIR));
         } catch (IOException e) {
             Log.e(Log.ASSETMANAGER_READ_FAILED, "Load application assets failed", e);
         } finally {
@@ -105,6 +116,29 @@ public class LocalResourceLoader {
                 }
             }
         }
+    }
+
+    private Map<String, Bitmap> loadPhotosInDir(String dirPath) {
+        HashMap<String, Bitmap> dict = new HashMap<>();
+        InputStream is = null;
+        try {
+            for (String imageName : am.list(dirPath)) {
+                is = am.open(dirPath + File.separator + imageName);
+                dict.put(imageName, BitmapFactory.decodeStream(is));
+                is.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    Log.e(Log.CLOSING_STREAM_FAILED, "", e);
+                }
+            }
+        }
+        return dict;
     }
 
     //endregion

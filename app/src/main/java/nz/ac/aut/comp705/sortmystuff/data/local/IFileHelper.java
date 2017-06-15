@@ -1,5 +1,6 @@
 package nz.ac.aut.comp705.sortmystuff.data.local;
 
+import java.io.File;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
@@ -90,4 +91,6 @@ public interface IFileHelper {
      * @return true if Root asset exists.
      */
     boolean rootExists();
+
+    File getUserDir();
 }
