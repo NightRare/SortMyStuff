@@ -7,6 +7,7 @@ import java.util.Map;
 
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Category;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.di.Factory;
 import nz.ac.aut.comp705.sortmystuff.di.IFactory;
@@ -45,8 +46,23 @@ public class SortMyStuffApp extends Application {
         String studyRoomId = dm.createAsset("Study Room", root.getId(), CategoryType.Places);
         dd.setPhoto(studyRoomId, photos.get("StudyRoom.png"));
 
+        String bachHouseId = dm.createAsset("Bach House", root.getId(), CategoryType.Places);
+        dd.setPhoto(bachHouseId, photos.get("BachHouse.png"));
+
+        String bedroomId = dm.createAsset("Bedroom", root.getId(), CategoryType.Places);
+
         String bookshelfPhilosophyId = dm.createAsset("Bookshelf Philosophy", studyRoomId, CategoryType.Miscellaneous);
         dd.setPhoto(bookshelfPhilosophyId, photos.get("BookshelfPhilosophy.png"));
+
+        String bookshelfLiteratureId = dm.createAsset("Bookshelf Literature", studyRoomId, CategoryType.Miscellaneous);
+        dd.setPhoto(bookshelfLiteratureId, photos.get("BookshelfLiterature.png"));
+
+        String kindleId = dm.createAsset("Kindle", bedroomId, CategoryType.Appliances);
+        dd.setPhoto(kindleId, photos.get("Kindle.png"));
+        dd.updateTextDetail(kindleId, "Purchase Date", "14/01/2016");
+        dd.updateTextDetail(kindleId, "Warranty Expiry", "14/01/2019");
+        dd.updateTextDetail(kindleId, "Model Number", "B0186FET66");
+        dd.updateTextDetail(kindleId, "Serial Number", "9Q8EWR7923");
 
         String theEssentialHusserlId = dm.createAsset("The Essential Husserl", bookshelfPhilosophyId, CategoryType.Books);
         dd.setPhoto(theEssentialHusserlId, photos.get("TheEssentialHusserl.png"));
@@ -56,6 +72,8 @@ public class SortMyStuffApp extends Application {
 
         String beingAndTimeId = dm.createAsset("Being and Time", bookshelfPhilosophyId, CategoryType.Books);
         dd.setPhoto(beingAndTimeId, photos.get("BeingAndTime.png"));
+
+
     }
 
 
