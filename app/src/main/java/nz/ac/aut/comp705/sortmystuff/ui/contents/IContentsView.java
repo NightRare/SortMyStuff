@@ -36,13 +36,6 @@ public interface IContentsView extends IView<IContentsPresenter> {
     void showAddDialog();
 
     /**
-     * Displays a toast message at the bottom area of the screen.
-     *
-     * @param message the message
-     */
-    void showMessageOnScreen(String message);
-
-    /**
      * Displays the path bar according to the order of the list: from left to right in view <=>
      * from the first to last in list.
      *

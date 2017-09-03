@@ -3,6 +3,7 @@ package nz.ac.aut.comp705.sortmystuff.ui.contents;
 import android.app.Activity;
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.espresso.assertion.ViewAssertions;
 import android.support.test.espresso.contrib.RecyclerViewActions;
 import android.support.test.espresso.matcher.BoundedMatcher;
 import android.support.test.espresso.matcher.RootMatchers;
@@ -41,6 +42,7 @@ import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
+import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 
 import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
@@ -149,6 +151,20 @@ public class ContentsActivityTest {
         onView(withText("Cancel")).perform(click());
         //asset should not be added
         Assert.assertFalse(onData(anything()).inAdapterView(withId(R.id.index_list)).atPosition(0).equals(ASSET1_NAME));
+    }
+
+    @Test
+    public void addAsset_addAssetsWithIllegalNames() {
+        addAsset("");
+        onView(withId(R.id.index_list)).check(matches(isDisplayed()));
+
+        String longAssetName = "";
+        for(int i = 0; i <= AppConstraints.ASSET_NAME_CAP; i++) {
+            longAssetName += "a";
+        }
+        addAsset(longAssetName);
+        onView(withId(R.id.index_list)).check(matches(isDisplayed()));
+        onView(withChild(withText(longAssetName))).check(doesNotExist());
     }
 
     @Test
@@ -625,7 +641,7 @@ public class ContentsActivityTest {
     private Activity activity;
     private IDataManager dm;
 
-    private static final String ROOT_ASSET_NAME = "Root";
+    private static final String ROOT_ASSET_NAME = "Assets";
     private static final String ASSET_NAME = "ASSET_NAME";
     private static final String ASSET1_NAME = "ASSET1_NAME";
     private static final String ASSET2_NAME = "ASSET2_NAME";

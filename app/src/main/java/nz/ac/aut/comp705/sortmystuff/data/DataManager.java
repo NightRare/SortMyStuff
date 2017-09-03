@@ -59,8 +59,9 @@ public class DataManager implements IDataManager {
     public String createAsset(@NonNull String name, @NonNull String containerId, CategoryType categoryType) {
         Preconditions.checkNotNull(name);
         Preconditions.checkNotNull(containerId);
-        Preconditions.checkArgument(!name.replaceAll(" ", "").isEmpty());
-        Preconditions.checkArgument(name.length() < AppConstraints.ASSET_NAME_CAP);
+        Preconditions.checkArgument(!name.replaceAll(" ", "").isEmpty(), "The name cannot be empty");
+        Preconditions.checkArgument(name.length() <= AppConstraints.ASSET_NAME_CAP, "The length of the name should be shorter than "
+                + AppConstraints.ASSET_NAME_CAP + " characters");
 
         if (!assetExists(containerId)) {
             Log.e(getClass().getName(),

@@ -162,16 +162,6 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     /**
      * {@inheritDoc}
      *
-     * @param message the message
-     */
-    @Override
-    public void showMessageOnScreen(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
      * @param assets the list of parent assets, excluding Root asset.
      */
     @Override
@@ -270,8 +260,6 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
                 CategoryType category = (CategoryType) spinner.getSelectedItem();
                 // get user input and add input as asset
                 presenter.createAsset(input.getText().toString(), category);
-                // show success message
-                showMessageOnScreen("Successfully added " + input.getText().toString());
             }
         });
         //creates the Cancel button and what happens when clicked

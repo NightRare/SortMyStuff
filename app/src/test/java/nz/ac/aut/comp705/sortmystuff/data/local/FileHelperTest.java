@@ -54,6 +54,7 @@ import static org.mockito.Mockito.when;
 @Config(constants = BuildConfig.class)
 public class FileHelperTest {
 
+
     @Before
     public void setup() throws IOException {
         MockitoAnnotations.initMocks(this);

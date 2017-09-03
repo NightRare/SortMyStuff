@@ -1563,7 +1563,7 @@ public class DataManagerTest {
 
     //region Private stuff
 
-    private static final String ROOT_ASSET_NAME = "Root";
+    private static final String ROOT_ASSET_NAME = "Assets";
     private static final String ASSET_NAME1 = "Asset_1";
     private static final String ASSET_NAME2 = "Asset_2";
     private static final String ASSET_NAME3 = "Asset_3";

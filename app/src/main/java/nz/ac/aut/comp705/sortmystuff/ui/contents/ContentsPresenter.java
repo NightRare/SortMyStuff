@@ -136,7 +136,12 @@ public class ContentsPresenter implements IContentsPresenter {
      */
     @Override
     public void createAsset(String assetName, CategoryType category) {
-        dm.createAsset(assetName, currentAssetId, category);
+        try {
+            dm.createAsset(assetName, currentAssetId, category);
+            Toast.makeText(activity, "Successfully added " + assetName, Toast.LENGTH_SHORT).show();
+        } catch (NullPointerException | IllegalArgumentException e) {
+            Toast.makeText(activity, e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
         loadCurrentContents(false);
     }
 
@@ -175,7 +180,7 @@ public class ContentsPresenter implements IContentsPresenter {
             case R.id.action_view_details:
                 // if it's Root Asset, do not show details
                 if (currentAssetId.equals(dm.getRootAsset().getId())) {
-                    view.showMessageOnScreen("Root has no detail");
+                    Toast.makeText(activity, "The root asset has no detail", Toast.LENGTH_LONG).show();
                     return false;
                 }
                 Intent intent = new Intent(activity, DetailsActivity.class);
@@ -194,7 +199,7 @@ public class ContentsPresenter implements IContentsPresenter {
 
             case R.id.delete_current_asset_button:
                 if (currentAssetId.equals(dm.getRootAsset().getId())) {
-                    Toast.makeText(activity, "Cannot delete Root", Toast.LENGTH_LONG).show();
+                    Toast.makeText(activity, "Cannot delete the root Asset", Toast.LENGTH_LONG).show();
                     return false;
                 }
                 view.showDeleteDialog(true);

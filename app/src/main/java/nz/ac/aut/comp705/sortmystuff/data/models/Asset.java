@@ -478,9 +478,10 @@ public final class Asset {
     private static void checkIllegalName(String name) {
         Preconditions.checkNotNull(name);
         if (name.isEmpty())
-            throw new IllegalArgumentException("cannot be empty");
+            throw new IllegalArgumentException("The name cannot be empty");
         if (name.length() > AppConstraints.ASSET_NAME_CAP)
-            throw new IllegalArgumentException("string length exceeds cap");
+            throw new IllegalArgumentException("The length of the name should be shorter than "
+                    + AppConstraints.ASSET_NAME_CAP);
     }
 
     //endregion
