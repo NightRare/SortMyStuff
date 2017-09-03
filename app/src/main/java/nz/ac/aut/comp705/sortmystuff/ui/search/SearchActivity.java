@@ -69,8 +69,6 @@ public class SearchActivity extends AppCompatActivity implements ISearchView {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                if(newText.replaceAll(" ", "").isEmpty())
-                    return false;
                 presenter.loadResult(newText);
                 return true;
             }

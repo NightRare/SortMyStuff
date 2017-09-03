@@ -33,7 +33,10 @@ public class SearchPresenter implements ISearchPresenter{
      */
     @Override
     public void loadResult(String query){
-        view.showResultList(search(query));
+        if(query.replaceAll(" ", "").isEmpty())
+            view.showResultList(new ArrayList<Asset>());
+        else
+            view.showResultList(search(query));
     }
 
     /**
@@ -88,10 +91,6 @@ public class SearchPresenter implements ISearchPresenter{
             }
         }
         if(resultList.isEmpty()){ showMessage("No results found.");}
-        if(query =="" || query.length()==0){
-            resultList.clear();
-            showMessage("Please enter a valid keyword.");
-        }
         return resultList;
     }
 

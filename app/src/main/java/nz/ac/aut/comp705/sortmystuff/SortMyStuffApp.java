@@ -27,7 +27,7 @@ public class SortMyStuffApp extends Application {
 
         factory = new Factory(this);
 
-//        prepareDemoData();
+        prepareDemoData();
     }
 
     public IFactory getFactory() {
