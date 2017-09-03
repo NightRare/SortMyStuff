@@ -12,11 +12,11 @@ public interface ISearchPresenter extends IPresenter {
      * Load the result of the query into the activity
      * @param query
      */
-    public void loadResult(String query);
+    void loadResult(String query);
 
     /**
      * Setup the event to go to detail page
      * @param assetId
      */
-    public void goToDetailPage(String assetId);
+    void goToDetailPage(String assetId);
 }

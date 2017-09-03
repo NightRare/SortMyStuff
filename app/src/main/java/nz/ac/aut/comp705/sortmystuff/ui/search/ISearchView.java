@@ -10,11 +10,6 @@ import nz.ac.aut.comp705.sortmystuff.ui.IView;
  */
 
 public interface ISearchView extends IView<ISearchPresenter> {
-    /**
-     * Set the presenter as given
-     * @param presenter the presenter
-     */
-    void setPresenter(ISearchPresenter presenter);
 
     void showResultList(List<Asset> resultList);
 }
