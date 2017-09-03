@@ -69,7 +69,7 @@
                 android:layout_alignParentLeft="true"
                 android:fontFamily="sans-serif-smallcaps"
                 android:gravity="center"
-                android:text="Root >"
+                android:text="Assets >"
                 android:textAppearance="@android:style/TextAppearance"
                 android:textColor="@color/dark_grey" />
 

@@ -123,7 +123,7 @@ public final class Asset {
     public static Asset createRoot() {
         String id = AppConstraints.ROOT_ASSET_ID;
 
-        return new Asset(id, "Root", "", CategoryType.None, null, true, new ArrayList<Asset>(),
+        return new Asset(id, "Assets", "", CategoryType.None, null, true, new ArrayList<Asset>(),
                 System.currentTimeMillis(),
                 System.currentTimeMillis(), false, null);
     }
