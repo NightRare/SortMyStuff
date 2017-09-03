@@ -14,7 +14,7 @@
         <item
             android:id="@+id/selection_mode_button"
             android:icon="@drawable/ic_action_name"
-            android:title="Selection Mode"
+            android:title="@string/selection_mode"
             app:showAsAction="never" />
 
         <item

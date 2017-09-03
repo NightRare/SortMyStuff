@@ -319,8 +319,8 @@ public class ContentsActivityTest {
         addAsset(ASSET3_NAME);
 
         //enter the selection mode
-        onView(withId(R.id.selection_mode_button)).check(matches(isDisplayed()));
-        onView(withId(R.id.selection_mode_button)).perform(click());
+        openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
+        onView(withText(R.string.selection_mode)).perform(click());
 
         //now all the checkbox should display
         for (int i = 0; i < 3; i++) {

@@ -8,13 +8,17 @@ import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.test.InstrumentationRegistry;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ListView;
 
 import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.replaceText;
+import static android.support.test.espresso.action.ViewActions.typeText;
+import static android.support.test.espresso.action.ViewActions.typeTextIntoFocusedView;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.matcher.ViewMatchers.isAssignableFrom;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
@@ -88,8 +92,7 @@ public class SearchActivityTest {
     public void loadSearch_checkComponents(){
         //check if Search UI components (toolbar, and search bar, search button) are there
         onView(withId(R.id.search_toolbar)).check(matches(isDisplayed()));
-        onView(withId(R.id.search_text_bar)).check(matches(isDisplayed()));
-        onView(withId(R.id.search_now_button)).check(matches(isDisplayed()));
+        onView(withId(R.id.search_btn)).check(matches(isDisplayed()));
     }
 
     @Test
@@ -138,10 +141,7 @@ public class SearchActivityTest {
     }
 
     private void search(String keyword){
-        onView(withId(R.id.search_text_bar)).check(matches(isDisplayed()));
-        onView(allOf(withClassName(endsWith("EditText")), withText(is(""))))
-                .perform(replaceText(keyword));
-        onView(withId(R.id.search_now_button)).perform(click());
+        onView(isAssignableFrom(EditText.class)).perform(typeText(keyword));
     }
 
     public static Matcher<View> withListSize (final int size) {

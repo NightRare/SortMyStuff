@@ -11,4 +11,6 @@
     <string name="title_activity_detail">DetailActivity</string>
     <string name="search_hint">Search all assets</string>
 
+    <string name="selection_mode">Selection Mode</string>
+
 </resources>
