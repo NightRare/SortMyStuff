@@ -33,12 +33,12 @@ import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.testutils.TestUtil;
 import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
-import nz.ac.aut.comp705.sortmystuff.util.AppStatusCode;
+import nz.ac.aut.comp705.sortmystuff.util.AppCode;
 import nz.ac.aut.comp705.sortmystuff.util.exceptions.UpdateLocalStorageFailedException;
 
 import static nz.ac.aut.comp705.sortmystuff.testutils.TestUtil.areIdenticalAssets;
 import static nz.ac.aut.comp705.sortmystuff.testutils.TestUtil.areIdenticalDetails;
-import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.ASSET_NOT_EXISTS;
+import static nz.ac.aut.comp705.sortmystuff.util.AppCode.ASSET_NOT_EXISTS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -352,7 +352,7 @@ public class DataManagerTest {
         dataManager.getAllAssetsAsync(mockLoadAssetsCallback);
         verify(mockLoadAssetsCallback, never()).onAssetsLoaded(ArgumentMatchers.<Asset>anyList());
         verify(mockLoadAssetsCallback).dataNotAvailable(
-                ArgumentMatchers.eq(AppStatusCode.NO_ROOT_ASSET));
+                ArgumentMatchers.eq(AppCode.NO_ROOT_ASSET));
     }
 
     @Test
@@ -407,7 +407,7 @@ public class DataManagerTest {
         dataManager.getRecycledAssetsAsync(mockLoadAssetsCallback);
         verify(mockLoadAssetsCallback, never()).onAssetsLoaded(ArgumentMatchers.<Asset>anyList());
         verify(mockLoadAssetsCallback).dataNotAvailable(
-                ArgumentMatchers.eq(AppStatusCode.NO_ROOT_ASSET));
+                ArgumentMatchers.eq(AppCode.NO_ROOT_ASSET));
     }
 
     @Test

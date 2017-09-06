@@ -2,31 +2,14 @@ package nz.ac.aut.comp705.sortmystuff.ui.search;
 
 import android.app.Activity;
 import android.content.Context;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.Espresso;
 import android.support.test.espresso.assertion.ViewAssertions;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
-import android.support.test.InstrumentationRegistry;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
-
-import static android.support.test.espresso.Espresso.onData;
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.action.ViewActions.replaceText;
-import static android.support.test.espresso.action.ViewActions.typeText;
-import static android.support.test.espresso.action.ViewActions.typeTextIntoFocusedView;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.matcher.ViewMatchers.isAssignableFrom;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withText;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.anything;
-import static org.hamcrest.Matchers.endsWith;
-import static org.hamcrest.Matchers.is;
 
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.Description;
@@ -44,8 +27,23 @@ import java.io.IOException;
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
-import nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsActivity;
-import nz.ac.aut.comp705.sortmystuff.util.Log;
+import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
+
+import static android.support.test.espresso.Espresso.onData;
+import static android.support.test.espresso.Espresso.onView;
+import static android.support.test.espresso.action.ViewActions.click;
+import static android.support.test.espresso.action.ViewActions.replaceText;
+import static android.support.test.espresso.action.ViewActions.typeText;
+import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.matcher.ViewMatchers.isAssignableFrom;
+import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
+import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.anything;
+import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.is;
 
 /**
  * Created by Donna on 28 May 2017.
@@ -85,8 +83,8 @@ public class SearchActivityTest {
     }
 
     @Rule
-    public ActivityTestRule<ContentsActivity> contentsActivityTestRule
-            = new ActivityTestRule<>(ContentsActivity.class);
+    public ActivityTestRule<SwipeActivity> contentsActivityTestRule
+            = new ActivityTestRule<>(SwipeActivity.class);
 
     @Test
     public void loadSearch_checkComponents(){

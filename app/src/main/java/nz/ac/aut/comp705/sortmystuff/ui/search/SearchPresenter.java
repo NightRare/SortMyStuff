@@ -1,9 +1,7 @@
 package nz.ac.aut.comp705.sortmystuff.ui.search;
 
 import android.content.Intent;
-import android.util.Log;
 import android.view.Gravity;
-import android.view.View;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -11,7 +9,8 @@ import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
-import nz.ac.aut.comp705.sortmystuff.ui.details.DetailsActivity;
+import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
+import nz.ac.aut.comp705.sortmystuff.util.AppCode;
 
 /**
  * Created by Donna on 23 May 2017.
@@ -45,10 +44,9 @@ public class SearchPresenter implements ISearchPresenter{
      */
     @Override
     public void goToDetailPage(String assetId) {
-        Intent goToDetail = new Intent(activity, DetailsActivity.class);
-        goToDetail.putExtra("AssetID", assetId);
+        Intent goToDetail = new Intent(activity, SwipeActivity.class);
+        goToDetail.putExtra(AppCode.INTENT_ASSET_ID, assetId);
         activity.startActivity(goToDetail);
-
     }
 
 

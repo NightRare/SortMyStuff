@@ -4,7 +4,7 @@ package nz.ac.aut.comp705.sortmystuff.util;
  * Created by Yuan on 2017/4/26.
  */
 
-public class AppStatusCode {
+public class AppCode {
 
     public static final int OK = 100;
 
@@ -21,4 +21,13 @@ public class AppStatusCode {
 
     public static final int LOCAL_DATA_CORRUPT = 201;
 
+
+    /**
+     *  Intents
+     */
+    public static final int INTENT_TAKE_PHOTO = 901;
+
+    public static final int INTENT_CROP_PHOTO = 902;
+
+    public static final String INTENT_ASSET_ID = "INTENT_ASSET_ID";
 }

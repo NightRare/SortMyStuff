@@ -10,10 +10,7 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.intent.rule.IntentsTestRule;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
-import android.support.v7.widget.Toolbar;
 import android.widget.EditText;
-
-import junit.framework.Assert;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -30,7 +27,8 @@ import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
-import nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsActivity;
+import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
+import nz.ac.aut.comp705.sortmystuff.util.AppCode;
 
 import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
@@ -84,13 +82,13 @@ public class DetailsActivityTest {
     }
 
     @Rule
-    public ActivityTestRule<ContentsActivity> mActivityRule
-            = new ActivityTestRule<>(ContentsActivity.class);
+    public ActivityTestRule<SwipeActivity> mActivityRule
+            = new ActivityTestRule<>(SwipeActivity.class);
 
     /* Instantiate an IntentsTestRule object.*/
     @Rule
-    public IntentsTestRule<DetailsActivity> mIntentsRule =
-            new IntentsTestRule<>(DetailsActivity.class, true, false);
+    public IntentsTestRule<SwipeActivity> mIntentsRule =
+            new IntentsTestRule<>(SwipeActivity.class, true, false);
 
 
     @Test
@@ -161,8 +159,8 @@ public class DetailsActivityTest {
     }
 
     private void launchIntentTest(Asset asset) {
-        Intent intent = new Intent(mActivityRule.getActivity(), DetailsActivity.class);
-        intent.putExtra("AssetID", asset.getId());
+        Intent intent = new Intent(mActivityRule.getActivity(), SwipeActivity.class);
+        intent.putExtra(AppCode.INTENT_ASSET_ID, asset.getId());
         mIntentsRule.launchActivity(intent);
 
         Uri imageUri = Uri.parse("android.resource://nz.ac.aut.comp705.sortmystuff/drawable/placeholder2.png");
@@ -186,7 +184,7 @@ public class DetailsActivityTest {
 
     private void startTest(){
         addAsset("Mouse");
-        Intent intent = new Intent(mActivityRule.getActivity(), DetailsActivity.class);
+        Intent intent = new Intent(mActivityRule.getActivity(), SwipeActivity.class);
         intent.putExtra("AssetID", getAssetID("Mouse"));
         mIntentsRule.launchActivity(intent);
         onView(withId(R.id.toolbar)).check(matches(isDisplayed()));

@@ -6,16 +6,15 @@ import android.widget.Toast;
 
 import com.google.common.base.Preconditions;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.prefs.PreferenceChangeEvent;
 
 import nz.ac.aut.comp705.sortmystuff.R;
-import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
-import nz.ac.aut.comp705.sortmystuff.ui.details.DetailsActivity;
 import nz.ac.aut.comp705.sortmystuff.ui.search.SearchActivity;
+import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
+import nz.ac.aut.comp705.sortmystuff.util.AppCode;
 
 /**
  * The implementation class of {@link IContentsPresenter}.
@@ -32,7 +31,7 @@ public class ContentsPresenter implements IContentsPresenter {
      * @param view     the IContentsView instance
      * @param activity the ContentsActivity instance
      */
-    public ContentsPresenter(IDataManager dm, IContentsView view, ContentsActivity activity) {
+    public ContentsPresenter(IDataManager dm, IContentsView view, SwipeActivity activity) {
         this.dm = dm;
         this.view = view;
         this.activity = activity;
@@ -46,9 +45,13 @@ public class ContentsPresenter implements IContentsPresenter {
      */
     @Override
     public void start() {
+        String intendedId = activity.getIntent().getStringExtra(AppCode.INTENT_ASSET_ID);
+        if(intendedId != null)
+            setCurrentAssetId(intendedId);
+
         // if the app just launched, display Root Asset
-        if (currentAssetId == null) {
-            currentAssetId = dm.getRootAsset().getId();
+        else if (currentAssetId == null) {
+            setCurrentAssetId(dm.getRootAsset().getId());
         }
         loadCurrentContents(true);
     }
@@ -86,6 +89,7 @@ public class ContentsPresenter implements IContentsPresenter {
     @Override
     public void setCurrentAssetId(String assetId) {
         currentAssetId = assetId;
+        activity.refreshDetails();
     }
 
     /**
@@ -93,7 +97,7 @@ public class ContentsPresenter implements IContentsPresenter {
      */
     @Override
     public void setCurrentAssetIdToRoot() {
-        currentAssetId = dm.getRootAsset().getId();
+        setCurrentAssetId(dm.getRootAsset().getId());
     }
 
     /**
@@ -109,7 +113,7 @@ public class ContentsPresenter implements IContentsPresenter {
             @Override
             public void onAssetsLoaded(List<Asset> assets) {
                 if (!assets.isEmpty()) {
-                    currentAssetId = assets.get(0).getId();
+                    ContentsPresenter.this.setCurrentAssetId(assets.get(0).getId());
                 }
             }
 
@@ -177,17 +181,6 @@ public class ContentsPresenter implements IContentsPresenter {
     public boolean selectOptionItem(MenuItem item) {
         switch (item.getItemId()) {
 
-            case R.id.action_view_details:
-                // if it's Root Asset, do not show details
-                if (currentAssetId.equals(dm.getRootAsset().getId())) {
-                    Toast.makeText(activity, "The root asset has no detail", Toast.LENGTH_LONG).show();
-                    return false;
-                }
-                Intent intent = new Intent(activity, DetailsActivity.class);
-                intent.putExtra("AssetID", currentAssetId);
-                activity.startActivity(intent);
-                return true;
-
             case R.id.search_view:
                 Intent searchIntent = new Intent(activity, SearchActivity.class);
                 activity.startActivity(searchIntent);
@@ -247,7 +240,7 @@ public class ContentsPresenter implements IContentsPresenter {
 
     //region Private stuff
 
-    private ContentsActivity activity;
+    private SwipeActivity activity;
 
     private IContentsView view;
 

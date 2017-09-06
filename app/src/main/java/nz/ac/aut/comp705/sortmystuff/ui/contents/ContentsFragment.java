@@ -1,20 +1,21 @@
 package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
 import android.app.AlertDialog;
-import android.app.SearchManager;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
+import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -25,103 +26,79 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
-import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
-import nz.ac.aut.comp705.sortmystuff.data.models.Category;
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
+import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
 
-/**
- * The Activity class for "Contents View" (a.k.a. Index Page) where the contained assets of the
- * container asset will be displayed and ready for interactions. It is also the implementation class
- * of {@link IContentsView}.
- *
- * @author Yuan
- */
+public class ContentsFragment extends Fragment implements IContentsView{
+//    private static final String ARG_PRESENTER = "presenter";
 
-public class ContentsActivity extends AppCompatActivity implements IContentsView {
 
-    //region Activity METHODS
+    public ContentsFragment() {
+        // Required empty public constructor
+    }
+
+    public static ContentsFragment newInstance() {
+        ContentsFragment fragment = new ContentsFragment();
+        return fragment;
+    }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        activity = (SwipeActivity) getActivity();
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.contents_act);
+    }
 
-        // init UI components
-        fab = (FloatingActionButton) findViewById(R.id.addAssetButton);
-        fabCancelMoveButton = (FloatingActionButton) findViewById(R.id.cancel_move_button);
-        fabConfirmMoveButton = (FloatingActionButton) findViewById(R.id.confirm_move_button);
-
-        assetListView = (ListView) findViewById(R.id.index_list);
-
-        initEditModeButtons();
-
-        toolbar = (Toolbar) findViewById(R.id.toolbarMain);
-        setSupportActionBar(toolbar);
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        rootView = inflater.inflate(R.layout.contents_frag, container, false);
 
         initPathBar();
 
-        // register all the listeners
-        registerListeners();
+        return rootView;
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        fab = (FloatingActionButton) rootView.findViewById(R.id.addAssetButton);
+        fabCancelMoveButton = (FloatingActionButton) rootView.findViewById(R.id.cancel_move_button);
+        fabConfirmMoveButton = (FloatingActionButton) rootView.findViewById(R.id.confirm_move_button);
+
+        assetListView = (ListView) rootView.findViewById(R.id.index_list);
 
         selectedAssets = new ArrayList<>();
 
-        // Create the presenter
-        IDataManager dm = ((SortMyStuffApp) getApplication()).getFactory().getDataManager();
-        IContentsPresenter p = new ContentsPresenter(dm, this, this);
-        setPresenter(p);
+        initEditModeButtons();
 
-        // Load previously saved state, if available
-        if (savedInstanceState != null) {
-            String currentAssetId = savedInstanceState.getString(CURRENT_ASSET_ID);
-            presenter.setCurrentAssetId(currentAssetId);
-        }
+        // register all the listeners
+        registerListeners();
 
         // start the presenter
         presenter.start();
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        outState.putString(CURRENT_ASSET_ID, presenter.getCurrentAssetId());
-        super.onSaveInstanceState(outState);
+    public void onDetach() {
+        super.onDetach();
     }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        this.menu = menu;
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.contents_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (presenter.selectOptionItem(item))
-            return true;
-        return super.onOptionsItemSelected(item);
-    }
-
-    //Show or hide the toolbar menu.
-    public void toggleMenuDisplay(boolean showMenu) {
-        if (menu == null)
-            return;
-        menu.setGroupVisible(R.id.main_menu_group, showMenu);
-    }
-
-    //endregion
-
-    //region IContentsView METHODS
 
     /**
      * {@inheritDoc}
-     *
-     * @param presenter the presenter
      */
     @Override
     public void setPresenter(IContentsPresenter presenter) {
@@ -130,22 +107,18 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
     /**
      * {@inheritDoc}
-     *
-     * @param name the name of the asset
      */
     @Override
     public void showAssetTitle(String name) {
-        setTitle(name);
+        activity.setTitle(name);
     }
 
     /**
      * {@inheritDoc}
-     *
-     * @param assets the assets
      */
     @Override
     public void showAssetContents(List<Asset> assets, boolean enableEditMode) {
-        adapter = new AssetListAdapter(assets, getApplicationContext(), false);
+        adapter = new AssetListAdapter(assets, activity, false);
         assetListView.setAdapter(adapter);
 
         if (enableEditMode)
@@ -164,29 +137,29 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
     /**
      * {@inheritDoc}
-     *
-     * @param assets the list of parent assets, excluding Root asset.
      */
     @Override
     public void showPath(List<Asset> assets) {
-        PathBarAdapter pba = new PathBarAdapter(this, assets, presenter);
+        PathBarAdapter pba = new PathBarAdapter(activity, assets, presenter);
         pathBar.setAdapter(pba);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void showDeleteDialog(boolean deletingCurrentAsset) {
         String message;
         if (deletingCurrentAsset) {
-            message = "Deleting \'" + getTitle().toString() + "\'\n" +
+            message = "Deleting \'" + activity.getTitle().toString() + "\'\n" +
                     "and its children assets.";
         } else {
             message = "Deleting selected assets\n" +
                     "and their children assets.";
         }
         getConfirmDeleteDialogBuilder(deletingCurrentAsset, message).create().show();
-    }
 
-    //endregion
+    }
 
     //region PRIVATE STUFF
 
@@ -196,15 +169,16 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
     private List<Asset> selectedAssets;
 
-    //region UI Components
+    private SwipeActivity activity;
 
-    private Menu menu;
+    //region UI COMPONENTS
+
+    private View rootView;
 
     private FloatingActionButton fab;
     private FloatingActionButton fabCancelMoveButton;
     private FloatingActionButton fabConfirmMoveButton;
 
-    private Toolbar toolbar;
     private TextView pathBarRoot;
     private RecyclerView pathBar;
 
@@ -215,7 +189,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     //endregion
 
     private void displayInEditMode(List<Asset> assets) {
-        adapter = new AssetListAdapter(assets, getApplicationContext(), true);
+        adapter = new AssetListAdapter(assets, activity.getApplicationContext(), true);
         assetListView.setAdapter(adapter);
         cancel_btn.setVisibility(View.VISIBLE);
         selectAll_btn.setVisibility(View.VISIBLE);
@@ -226,7 +200,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
     }
 
     private void displayWithoutEditMode(List<Asset> assets) {
-        adapter = new AssetListAdapter(assets, getApplicationContext(), false);
+        adapter = new AssetListAdapter(assets, activity.getApplicationContext(), false);
         assetListView.setAdapter(adapter);
         cancel_btn.setVisibility(View.GONE);
         selectAll_btn.setVisibility(View.GONE);
@@ -245,10 +219,10 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
      * @return builder the dialog box format
      */
     private AlertDialog getAddAssetDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         builder.setTitle("Add Asset");
 
-        final View addAssetLayout = getLayoutInflater().inflate(R.layout.contents_add_asset, null);
+        final View addAssetLayout = activity.getLayoutInflater().inflate(R.layout.contents_add_asset, null);
         builder.setView(addAssetLayout);
 
         initCategorySpinner(addAssetLayout);
@@ -277,7 +251,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
     private AlertDialog.Builder getConfirmDeleteDialogBuilder(final boolean deletingCurrentAsset,
                                                               String message) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         builder.setTitle(message);
 
         builder.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
@@ -299,29 +273,31 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         return builder;
     }
 
+
     /**
      * Initialises path bar.
      */
     private void initPathBar() {
-        pathBarRoot = (TextView) findViewById(R.id.pathbar_root);
-        pathBar = (RecyclerView) findViewById(R.id.pathbar_pathview);
-        LinearLayoutManager llm = new LinearLayoutManager(this);
+        pathBarRoot = (TextView) rootView.findViewById(R.id.pathbar_root);
+        pathBar = (RecyclerView) rootView.findViewById(R.id.pathbar_pathview);
+        LinearLayoutManager llm = new LinearLayoutManager(this.getContext());
         llm.setOrientation(LinearLayoutManager.HORIZONTAL);
         llm.setStackFromEnd(true);
         pathBar.setLayoutManager(llm);
     }
 
     private void initEditModeButtons() {
-        cancel_btn = (Button) findViewById(R.id.cancel_button);
-        selectAll_btn = (Button) findViewById(R.id.select_all_button);
-        delete_btn = (Button) findViewById(R.id.delete_button);
-        move_btn = (Button) findViewById(R.id.move_button);
+        cancel_btn = (Button) activity.findViewById(R.id.cancel_button);
+        selectAll_btn = (Button) activity.findViewById(R.id.select_all_button);
+        delete_btn = (Button) activity.findViewById(R.id.delete_button);
+        move_btn = (Button) activity.findViewById(R.id.move_button);
 
         cancel_btn.setVisibility(View.GONE);
         selectAll_btn.setVisibility(View.GONE);
         delete_btn.setVisibility(View.GONE);
         move_btn.setVisibility(View.GONE);
     }
+
 
     private void initCategorySpinner(View contextView) {
         Spinner spinner = (Spinner) contextView.findViewById(R.id.category_spinner);
@@ -332,7 +308,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
                 continue;
             categories.add(cy);
         }
-        ArrayAdapter<CategoryType> adapter = new ArrayAdapter<>(this,
+        ArrayAdapter<CategoryType> adapter = new ArrayAdapter<>(activity,
                 android.R.layout.simple_spinner_item, categories);
 
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -354,7 +330,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
         fabCancelMoveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                toggleMenuDisplay(true);
+                activity.toggleMenuDisplay(true);
                 fab.setVisibility(View.VISIBLE);
                 fabCancelMoveButton.setVisibility(View.GONE);
                 fabConfirmMoveButton.setVisibility(View.GONE);
@@ -365,24 +341,16 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
             @Override
             public void onClick(View v) {
                 if (selectedAssets.isEmpty()) {
-                    Toast.makeText(ContentsActivity.this,
+                    Toast.makeText(activity,
                             "You haven't selected any items.", Toast.LENGTH_SHORT).show();
                 } else {
                     presenter.moveAssets(selectedAssets);
                     presenter.loadCurrentContents(false);
                 }
-                toggleMenuDisplay(true);
+                activity.toggleMenuDisplay(true);
                 fab.setVisibility(View.VISIBLE);
                 fabCancelMoveButton.setVisibility(View.GONE);
                 fabConfirmMoveButton.setVisibility(View.GONE);
-            }
-        });
-
-        toolbar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                presenter.setCurrentAssetIdToContainer();
-                presenter.loadCurrentContents(false);
             }
         });
 
@@ -436,7 +404,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
                     case R.id.select_all_button:
                         selectAll();
-                        Toast.makeText(ContentsActivity.this, adapter.getCount()
+                        Toast.makeText(activity, adapter.getCount()
                                 + " items selected", Toast.LENGTH_SHORT).show();
                         break;
 
@@ -452,7 +420,7 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
                         selectedAssets = adapter.getSelectedAssetList();
 
                         presenter.quitEditMode();
-                        toggleMenuDisplay(false);
+                        activity.toggleMenuDisplay(false);
                         fab.setVisibility(View.GONE);
                         fabCancelMoveButton.setVisibility(View.VISIBLE);
                         fabConfirmMoveButton.setVisibility(View.VISIBLE);
@@ -484,5 +452,3 @@ public class ContentsActivity extends AppCompatActivity implements IContentsView
 
     //endregion
 }
-
-

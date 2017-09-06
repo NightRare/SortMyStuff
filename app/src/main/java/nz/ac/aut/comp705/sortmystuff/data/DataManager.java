@@ -20,15 +20,15 @@ import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
-import nz.ac.aut.comp705.sortmystuff.util.AppStatusCode;
+import nz.ac.aut.comp705.sortmystuff.util.AppCode;
 import nz.ac.aut.comp705.sortmystuff.util.Log;
 import nz.ac.aut.comp705.sortmystuff.util.exceptions.UpdateLocalStorageFailedException;
 
-import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.ASSET_NOT_EXISTS;
-import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.LOCAL_DATA_CORRUPT;
-import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.NO_ROOT_ASSET;
-import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.OK;
-import static nz.ac.aut.comp705.sortmystuff.util.AppStatusCode.UNEXPECTED_ERROR;
+import static nz.ac.aut.comp705.sortmystuff.util.AppCode.ASSET_NOT_EXISTS;
+import static nz.ac.aut.comp705.sortmystuff.util.AppCode.LOCAL_DATA_CORRUPT;
+import static nz.ac.aut.comp705.sortmystuff.util.AppCode.NO_ROOT_ASSET;
+import static nz.ac.aut.comp705.sortmystuff.util.AppCode.OK;
+import static nz.ac.aut.comp705.sortmystuff.util.AppCode.UNEXPECTED_ERROR;
 
 /**
  * Implementation class of IDataManager
@@ -127,7 +127,7 @@ public class DataManager implements IDataManager {
     public Asset getRootAsset() {
         if (dirtyCachedAssets || cachedRootAsset == null) {
             int code = loadCachedAssetsFromLocal();
-            if (code == AppStatusCode.NO_ROOT_ASSET) {
+            if (code == AppCode.NO_ROOT_ASSET) {
                 createRootAsset();
             }
 

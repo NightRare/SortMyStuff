@@ -1,21 +1,14 @@
 package nz.ac.aut.comp705.sortmystuff.ui.details;
 
+
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.content.FileProvider;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,35 +19,56 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.common.base.Preconditions;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
-import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
-import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
+import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
 
-public class DetailsActivity extends AppCompatActivity implements IDetailsView {
+/**
+ * A simple {@link Fragment} subclass.
+ * Use the {@link DetailsFragment#newInstance} factory method to
+ * create an instance of this fragment.
+ */
+public class DetailsFragment extends Fragment implements IDetailsView{
 
+    public DetailsFragment() {
+        // Required empty public constructor
+    }
+
+    public static DetailsFragment newInstance() {
+        DetailsFragment fragment = new DetailsFragment();
+        return fragment;
+    }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        activity = (SwipeActivity) getActivity();
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.details_act);
+    }
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        rootView = inflater.inflate(R.layout.details_frag, container, false);
+        return rootView;
+    }
 
-        details = (ListView) findViewById(R.id.detail_list);
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
 
-        startPresenter();
+        details = (ListView) rootView.findViewById(R.id.detail_list);
 
         details.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -64,58 +78,31 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
             }
         });
 
+        presenter.start();
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @param presenter the presenter
-     */
     @Override
     public void setPresenter(IDetailsPresenter presenter) {
         this.presenter = presenter;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @param detailList
-     */
     @Override
     public void showDetails(List<Detail> detailList) {
-        details.setAdapter(new DetailAdapter(this, R.layout.details_two_lines_list, detailList));
+        details.setAdapter(new DetailAdapter(activity, R.layout.details_two_lines_list, detailList));
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @param message
-     */
     @Override
     public void showMessage(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG);
+        Toast.makeText(activity, message, Toast.LENGTH_LONG);
     }
 
+    //region PRIVATE STUFF
 
-    //*****PRIVATE STUFF*****//
+    private SwipeActivity activity;
     private IDetailsPresenter presenter;
     private ListView details;
-    private FloatingActionButton addDetilButton;
 
-    public static final int TAKE_PHOTO = 1;
-    public static final int CROP_PHOTO = 2;
-    private Uri imageUri;
-
-
-    /**
-     * Creates and starts the presenter
-     */
-    private void startPresenter() {
-        IDataManager dataManager = ((SortMyStuffApp) getApplication()).getFactory().getDataManager();
-        presenter = new DetailsPresenter(dataManager, this, this);
-        setPresenter(presenter);
-        presenter.start();
-    }
+    private View rootView;
 
     /**
      * Inner class to create an Array Adapter
@@ -163,28 +150,7 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
                 imageFieldView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-
-                        File outputImage = new File(getExternalCacheDir(),
-                                "output_image.jpg");
-                        try {
-                            if (outputImage.exists()) {
-                                outputImage.delete();
-                            }
-                            outputImage.createNewFile();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-
-                        if (Build.VERSION.SDK_INT >= 24) {
-                            imageUri = FileProvider.getUriForFile(DetailsActivity.this,
-                                    "sortmystuff.fileprovider", outputImage);
-                        } else {
-                            imageUri = Uri.fromFile(outputImage);
-                        }
-
-                        Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
-                        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-                        startActivityForResult(intent, TAKE_PHOTO);
+                        activity.takePhoto();
                     }
                 });
 
@@ -192,7 +158,7 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
                 imageFieldView.setOnLongClickListener(new View.OnLongClickListener() {
                     @Override
                     public boolean onLongClick(View v) {
-                        AlertDialog.Builder dialog = new AlertDialog.Builder(DetailsActivity.this);
+                        AlertDialog.Builder dialog = new AlertDialog.Builder(activity);
                         dialog.setTitle("Remove Photo");
                         dialog.setMessage("Are you sure of removing this photo?");
                         dialog.setCancelable(true);
@@ -205,7 +171,7 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
                         dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                Toast.makeText(DetailsActivity.this,
+                                Toast.makeText(activity,
                                         "Removing photo cancelled.", Toast.LENGTH_SHORT).show();
                             }
                         });
@@ -220,54 +186,5 @@ public class DetailsActivity extends AppCompatActivity implements IDetailsView {
         }
     }
 
-    /**
-     * Handle photo cropping or update a cropped photo.
-     */
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == RESULT_OK) {
-            switch (requestCode) {
-                case TAKE_PHOTO:
-                    performCrop(imageUri);
-                    break;
-                case CROP_PHOTO:
-                    try {
-                        Bitmap croppedBmp = BitmapFactory.decodeStream
-                                (getContentResolver().openInputStream(imageUri));
-                        presenter.updateImage(croppedBmp);
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    }
-
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-
-    /**
-     * Call the standard crop action intent (the user device may not support it)
-     * @param imageUri
-     */
-    private void performCrop(Uri imageUri) {
-        Preconditions.checkNotNull(imageUri, "The image Uri cannot be null");
-        try {
-            Intent cropIntent = new Intent("com.android.camera.action.CROP");
-            cropIntent.setDataAndType(imageUri, "image/*");
-            cropIntent.putExtra("crop", "true");
-            cropIntent.putExtra("aspectX", 10);
-            cropIntent.putExtra("aspectY", 6);
-            cropIntent.putExtra("outputX", 1000);
-            cropIntent.putExtra("outputY", 600);
-            cropIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-            startActivityForResult(cropIntent, CROP_PHOTO);
-        } catch (ActivityNotFoundException e) {
-            Toast.makeText(this,
-                    "Sorry, your device doesn't support the crop action.",
-                    Toast.LENGTH_SHORT).show();
-        }
-    }
-
-
+    //endregion
 }

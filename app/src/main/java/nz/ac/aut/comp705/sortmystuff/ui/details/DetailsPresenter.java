@@ -2,9 +2,7 @@ package nz.ac.aut.comp705.sortmystuff.ui.details;
 
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Bitmap;
-import android.support.v4.graphics.BitmapCompat;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.widget.EditText;
@@ -14,15 +12,15 @@ import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
-import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
+import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
+import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 import nz.ac.aut.comp705.sortmystuff.util.Log;
 
 import static android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
@@ -35,8 +33,8 @@ public class DetailsPresenter implements IDetailsPresenter {
 
     IDataManager dm;
     IDetailsView view;
-    DetailsActivity activity;
-    String currentAsset;
+    SwipeActivity activity;
+    String currentAssetId;
 
     /**
      * Initialises the detail presenter
@@ -45,7 +43,7 @@ public class DetailsPresenter implements IDetailsPresenter {
      * @param view     the IContentsView instance
      * @param activity the ContentsActivity instance
      */
-    public DetailsPresenter(IDataManager dm, IDetailsView view, DetailsActivity activity) {
+    public DetailsPresenter(IDataManager dm, IDetailsView view, SwipeActivity activity) {
         this.dm = dm;
         this.view = view;
         this.activity = activity;
@@ -56,11 +54,23 @@ public class DetailsPresenter implements IDetailsPresenter {
      */
     @Override
     public void start() {
-        Intent intent = activity.getIntent();
-        setCurrentAsset(intent.getStringExtra("AssetID"));
-        setTitleOnToolbar();
-        setAsset();
-        view.showDetails(loadDetails());
+        if(activity.findViewById(R.id.assetName_detail) == null) return;
+
+        currentAssetId = activity.getCurrentAssetId();
+
+        // show nothing if its root asset
+        if(currentAssetId.equals(AppConstraints.ROOT_ASSET_ID)) {
+            activity.findViewById(R.id.assetName_detail).setVisibility(View.GONE);
+            activity.findViewById(R.id.assetCategory_detail).setVisibility(View.GONE);
+            activity.findViewById(R.id.detail_list).setVisibility(View.GONE);
+        }
+        else {
+            activity.findViewById(R.id.assetName_detail).setVisibility(View.VISIBLE);
+            activity.findViewById(R.id.assetCategory_detail).setVisibility(View.VISIBLE);
+            activity.findViewById(R.id.detail_list).setVisibility(View.VISIBLE);
+            setAsset();
+            view.showDetails(loadDetails());
+        }
     }
 
     /**
@@ -68,9 +78,8 @@ public class DetailsPresenter implements IDetailsPresenter {
      *
      * @param assetID
      */
-    @Override
-    public void setCurrentAsset(String assetID) {
-        currentAsset = assetID;
+    public void setCurrentAssetId(String assetID) {
+        currentAssetId = assetID;
     }
 
     /**
@@ -80,7 +89,7 @@ public class DetailsPresenter implements IDetailsPresenter {
      */
     @Override
     public String getCurrentAssetID() {
-        return currentAsset;
+        return currentAssetId;
     }
 
     /**
@@ -161,14 +170,14 @@ public class DetailsPresenter implements IDetailsPresenter {
      * that enables two single line inputs for
      * detail label and field, and has a
      * functional save and cancel button
-     * @param view
+     * @param v
      * @return dialog
      */
-    private AlertDialog.Builder getEditDetailDialogBox(View view, final Detail detail){
-        AlertDialog.Builder dialog = new AlertDialog.Builder(view.getContext());
+    private AlertDialog.Builder getEditDetailDialogBox(View v, final Detail detail){
+        AlertDialog.Builder dialog = new AlertDialog.Builder(v.getContext());
         dialog.setTitle(detail.getLabel());
         //dialog box setup
-        Context context = view.getContext();
+        Context context = v.getContext();
         LinearLayout layout = new LinearLayout(context);
         layout.setOrientation(LinearLayout.VERTICAL);
         //field text configuration
@@ -180,8 +189,8 @@ public class DetailsPresenter implements IDetailsPresenter {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         editDetail(detail.getId(),detail.getLabel(),fieldText.getText().toString());
-                        activity.showDetails(loadDetails());
-                        activity.showMessage("Edited " + detail.getLabel());
+                        view.showDetails(loadDetails());
+                        view.showMessage("Edited " + detail.getLabel());
                     }
                 })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -206,13 +215,6 @@ public class DetailsPresenter implements IDetailsPresenter {
         return editText;
     }
 
-    /**
-     * Set toolbar title
-     */
-    private void setTitleOnToolbar(){
-        activity.setTitle("Detail: " + getCurrentAssetName());
-    }
-
 
     /**
      * {@inheritDoc}
@@ -221,7 +223,7 @@ public class DetailsPresenter implements IDetailsPresenter {
     @Override
     public void updateImage(final Bitmap newImage) {
         Preconditions.checkNotNull(newImage, "The image cannot be null");
-        dm.getDetailsAsync(currentAsset, new IDataManager.LoadDetailsCallback() {
+        dm.getDetailsAsync(currentAssetId, new IDataManager.LoadDetailsCallback() {
             @Override
             public void onDetailsLoaded(List<Detail> details) {
                 for(Detail d : details) {
@@ -247,7 +249,7 @@ public class DetailsPresenter implements IDetailsPresenter {
     public void resetImage(ImageDetail imageDetail) {
         Preconditions.checkNotNull(imageDetail, "The image detail cannot be null");
         dm.resetImageDetail(imageDetail);
-        dm.getDetailsAsync(currentAsset, new IDataManager.LoadDetailsCallback() {
+        dm.getDetailsAsync(currentAssetId, new IDataManager.LoadDetailsCallback() {
             @Override
             public void onDetailsLoaded(List<Detail> details) {
                 view.showDetails(details);

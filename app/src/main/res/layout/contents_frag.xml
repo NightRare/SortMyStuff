@@ -1,19 +1,18 @@
-<?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsActivity">
+    tools:context="nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsFragment">
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/addAssetButton"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="64dp"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
         app:backgroundTint="@color/colorAccent"
-        app:srcCompat="@drawable/ic_add_white_48dp"/>
+        app:srcCompat="@drawable/ic_add_white_48dp" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/cancel_move_button"
@@ -34,21 +33,6 @@
         app:backgroundTint="@color/colorAccent"
         app:srcCompat="@drawable/ic_confirm_move"
         android:visibility="gone"/>
-
-    <android.support.design.widget.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:theme="@style/AppTheme.AppBarOverlay">
-
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbarMain"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
-            app:popupTheme="@style/AppTheme.PopupOverlay"
-            tools:titleTextColor="#00000" />
-
-    </android.support.design.widget.AppBarLayout>
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -84,11 +68,8 @@
             </android.support.v7.widget.RecyclerView>
         </RelativeLayout>
 
-        <include
-            layout="@layout/contents_list"/>
+        <include layout="@layout/contents_list" />
 
     </RelativeLayout>
 
-
-
-</android.support.design.widget.CoordinatorLayout>
+</FrameLayout>

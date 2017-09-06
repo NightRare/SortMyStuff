@@ -42,6 +42,7 @@ import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
+import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
 import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 
 import static android.support.test.espresso.Espresso.onData;
@@ -109,12 +110,12 @@ public class ContentsActivityTest {
     }
 
     @Rule
-    public ActivityTestRule<ContentsActivity> contentsActivityActivityTestRule
-            = new ActivityTestRule<>(ContentsActivity.class);
+    public ActivityTestRule<SwipeActivity> contentsActivityActivityTestRule
+            = new ActivityTestRule<>(SwipeActivity.class);
 
     @Test
     public void onLaunch_displayRootAssetTitle() {
-        onView(withId(R.id.toolbarMain)).check(matches(isDisplayed()));
+        onView(withId(R.id.toolbar)).check(matches(isDisplayed()));
 
         Assert.assertTrue(getToolbarTitle().equals(ROOT_ASSET_NAME));
     }
@@ -171,7 +172,7 @@ public class ContentsActivityTest {
     public void onClickAssetFromList_displayAssetNameOnToolbar(){
         addAsset(ASSET1_NAME);
         clickAsset(0);
-        onView(withId(R.id.toolbarMain)).check(matches(isDisplayed()));
+        onView(withId(R.id.toolbar)).check(matches(isDisplayed()));
         //check that the name on the toolbar is the name of the selected asset
         Assert.assertTrue(getToolbarTitle().equals(ASSET1_NAME));
     }
@@ -679,7 +680,7 @@ public class ContentsActivityTest {
     }
 
     private String getToolbarTitle() {
-        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.toolbarMain);
+        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.toolbar);
         return toolbar.getTitle().toString();
     }
 
