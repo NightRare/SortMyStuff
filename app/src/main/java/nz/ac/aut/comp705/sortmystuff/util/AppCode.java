@@ -30,4 +30,9 @@ public class AppCode {
     public static final int INTENT_CROP_PHOTO = 902;
 
     public static final String INTENT_ASSET_ID = "INTENT_ASSET_ID";
+
+
+    public static final int CONTENTS_DEFAULT_MODE = 1001;
+    public static final int CONTENTS_SELECTION_MODE = 1002;
+    public static final int CONTENTS_MOVING_MODE = 1003;
 }

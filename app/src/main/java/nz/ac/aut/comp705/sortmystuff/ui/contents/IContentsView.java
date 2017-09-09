@@ -27,8 +27,9 @@ public interface IContentsView extends IView<IContentsPresenter> {
      * Displays the assets as a list.
      *
      * @param assets the assets
+     * @param mode   the code of the display mode
      */
-    void showAssetContents(List<Asset> assets, boolean enableEditMode);
+    void showAssetContents(List<Asset> assets, int mode);
 
     /**
      * Displays the "add asset dialog".
@@ -38,7 +39,7 @@ public interface IContentsView extends IView<IContentsPresenter> {
     /**
      * Displays the path bar according to the order of the list: from left to right in view <=>
      * from the first to last in list.
-     *
+     * <p>
      * Root asset will not be displayed by this method.
      *
      * @param assets the list of parent assets, excluding Root asset.

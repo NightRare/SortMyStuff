@@ -16,6 +16,9 @@ import nz.ac.aut.comp705.sortmystuff.ui.search.SearchActivity;
 import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
 import nz.ac.aut.comp705.sortmystuff.util.AppCode;
 
+import static nz.ac.aut.comp705.sortmystuff.util.AppCode.CONTENTS_DEFAULT_MODE;
+import static nz.ac.aut.comp705.sortmystuff.util.AppCode.CONTENTS_SELECTION_MODE;
+
 /**
  * The implementation class of {@link IContentsPresenter}.
  *
@@ -35,7 +38,7 @@ public class ContentsPresenter implements IContentsPresenter {
         this.dm = dm;
         this.view = view;
         this.activity = activity;
-        editModeEnabled = false;
+        contentsDisplayMode = CONTENTS_DEFAULT_MODE;
     }
 
     //region IContentsPresenter methods
@@ -156,7 +159,7 @@ public class ContentsPresenter implements IContentsPresenter {
 
         //reject the attempt to move to current directory
         if (assets.get(0).getContainerId().equals(currentAssetId)) {
-            Toast.makeText(activity, "The assets are already here:)", Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, "The assets are already here :)", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -187,12 +190,12 @@ public class ContentsPresenter implements IContentsPresenter {
                 return true;
 
             case R.id.selection_mode_button:
-                enableEditMode();
+                setDisplayMode(CONTENTS_SELECTION_MODE);
                 return true;
 
             case R.id.delete_current_asset_button:
                 if (currentAssetId.equals(dm.getRootAsset().getId())) {
-                    Toast.makeText(activity, "Cannot delete the root Asset", Toast.LENGTH_LONG).show();
+                    Toast.makeText(activity, "Cannot delete the root asset", Toast.LENGTH_LONG).show();
                     return false;
                 }
                 view.showDeleteDialog(true);
@@ -221,16 +224,9 @@ public class ContentsPresenter implements IContentsPresenter {
         loadCurrentContents(true);
     }
 
-
     @Override
-    public void enableEditMode() {
-        editModeEnabled = true;
-        loadCurrentContents(false);
-    }
-
-    @Override
-    public void quitEditMode() {
-        editModeEnabled = false;
+    public void setDisplayMode(int mode) {
+        contentsDisplayMode = mode;
         loadCurrentContents(false);
     }
 
@@ -239,14 +235,10 @@ public class ContentsPresenter implements IContentsPresenter {
     //region Private stuff
 
     private SwipeActivity activity;
-
     private IContentsView view;
-
     private IDataManager dm;
-
     private String currentAssetId;
-
-    private boolean editModeEnabled;
+    private int contentsDisplayMode;
 
     /**
      * Loads the contents of the asset.
@@ -257,7 +249,7 @@ public class ContentsPresenter implements IContentsPresenter {
         dm.getContentAssetsAsync(asset, new IDataManager.LoadAssetsCallback() {
             @Override
             public void onAssetsLoaded(List<Asset> assets) {
-                view.showAssetContents(assets, editModeEnabled);
+                view.showAssetContents(assets, contentsDisplayMode);
             }
 
             @Override

@@ -7,7 +7,6 @@ import android.support.v4.app.FragmentPagerAdapter;
 
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
-import nz.ac.aut.comp705.sortmystuff.ui.PlaceHolderFragment;
 import nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsFragment;
 import nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsPresenter;
 import nz.ac.aut.comp705.sortmystuff.ui.contents.IContentsPresenter;

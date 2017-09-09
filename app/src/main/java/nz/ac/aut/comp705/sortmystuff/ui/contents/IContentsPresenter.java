@@ -74,15 +74,11 @@ public interface IContentsPresenter extends IPresenter {
     boolean selectOptionItem(MenuItem item);
 
     /**
-     * Active selection mode (namely edit mode) where each asset can be selected/deselected
-     * and then be modified.
+     * Changes the display mode of the contents. Can be in DEFAULT, SELECTION or MOVING mode.
+     *
+     * @param mode the code of the mode, refer to {@link nz.ac.aut.comp705.sortmystuff.util.AppCode}
      */
-    void enableEditMode();
-
-    /**
-     * Quit selection mode (namely edit mode) where each asset can not be selected or modified.
-     */
-    void quitEditMode();
+    void setDisplayMode (int mode);
 
     /**
      * Recycle the current asset and all its contained assets.

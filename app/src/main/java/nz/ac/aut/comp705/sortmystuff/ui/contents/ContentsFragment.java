@@ -19,7 +19,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
-import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,6 +29,10 @@ import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
+
+import static nz.ac.aut.comp705.sortmystuff.util.AppCode.CONTENTS_DEFAULT_MODE;
+import static nz.ac.aut.comp705.sortmystuff.util.AppCode.CONTENTS_MOVING_MODE;
+import static nz.ac.aut.comp705.sortmystuff.util.AppCode.CONTENTS_SELECTION_MODE;
 
 public class ContentsFragment extends Fragment implements IContentsView{
 //    private static final String ARG_PRESENTER = "presenter";
@@ -113,14 +116,54 @@ public class ContentsFragment extends Fragment implements IContentsView{
      * {@inheritDoc}
      */
     @Override
-    public void showAssetContents(List<Asset> assets, boolean enableEditMode) {
-        adapter = new AssetListAdapter(assets, activity, false);
-        assetListView.setAdapter(adapter);
+    public void showAssetContents(List<Asset> assets, int mode) {
+        boolean displayCheckbox = false;
 
-        if (enableEditMode)
-            displayInEditMode(assets);
-        else
-            displayWithoutEditMode(assets);
+        switch (mode) {
+            case CONTENTS_DEFAULT_MODE:
+                setSelectionModeButtonsVisibility(false);
+                fab.setVisibility(View.VISIBLE);
+                fabCancelMoveButton.setVisibility(View.GONE);
+                fabConfirmMoveButton.setVisibility(View.GONE);
+
+                activity.toggleMenuDisplay(true);
+                activity.setDetailsPageVisibility(true);
+                break;
+
+            case CONTENTS_SELECTION_MODE:
+                displayCheckbox = true;
+                setSelectionModeButtonsVisibility(true);
+                fab.setVisibility(View.GONE);
+                fabCancelMoveButton.setVisibility(View.GONE);
+                fabConfirmMoveButton.setVisibility(View.GONE);
+
+                activity.toggleMenuDisplay(false);
+                activity.setDetailsPageVisibility(false);
+                break;
+
+            case CONTENTS_MOVING_MODE:
+                setSelectionModeButtonsVisibility(false);
+                fab.setVisibility(View.GONE);
+                fabCancelMoveButton.setVisibility(View.VISIBLE);
+                fabConfirmMoveButton.setVisibility(View.VISIBLE);
+
+                activity.toggleMenuDisplay(false);
+                activity.setDetailsPageVisibility(false);
+                break;
+
+            // same as CONTENTS_DEFAULT_MODE
+            default:
+                setSelectionModeButtonsVisibility(false);
+                fab.setVisibility(View.VISIBLE);
+                fabCancelMoveButton.setVisibility(View.GONE);
+                fabConfirmMoveButton.setVisibility(View.GONE);
+
+                activity.toggleMenuDisplay(true);
+                activity.setDetailsPageVisibility(true);
+                break;
+        }
+        adapter = new AssetListAdapter(assets, activity.getApplicationContext(), displayCheckbox);
+        assetListView.setAdapter(adapter);
     }
 
     /**
@@ -158,8 +201,6 @@ public class ContentsFragment extends Fragment implements IContentsView{
     }
 
     //region PRIVATE STUFF
-
-    private static final String CURRENT_ASSET_ID = "CURRENT_ASSET_ID";
 
     private IContentsPresenter presenter;
 
@@ -209,6 +250,21 @@ public class ContentsFragment extends Fragment implements IContentsView{
         activity.toggleMenuDisplay(true);
         activity.setDetailsPageVisibility(true);
     }
+
+    private void setSelectionModeButtonsVisibility(boolean isVisible) {
+        if(isVisible) {
+            cancel_btn.setVisibility(View.VISIBLE);
+            selectAll_btn.setVisibility(View.VISIBLE);
+            delete_btn.setVisibility(View.VISIBLE);
+            move_btn.setVisibility(View.VISIBLE);
+        } else {
+            cancel_btn.setVisibility(View.GONE);
+            selectAll_btn.setVisibility(View.GONE);
+            delete_btn.setVisibility(View.GONE);
+            move_btn.setVisibility(View.GONE);
+        }
+    }
+
 
 
     /**
@@ -330,10 +386,7 @@ public class ContentsFragment extends Fragment implements IContentsView{
         fabCancelMoveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                activity.toggleMenuDisplay(true);
-                fab.setVisibility(View.VISIBLE);
-                fabCancelMoveButton.setVisibility(View.GONE);
-                fabConfirmMoveButton.setVisibility(View.GONE);
+                presenter.setDisplayMode(CONTENTS_DEFAULT_MODE);
             }
         });
 
@@ -347,10 +400,7 @@ public class ContentsFragment extends Fragment implements IContentsView{
                     presenter.moveAssets(selectedAssets);
                     presenter.loadCurrentContents(false);
                 }
-                activity.toggleMenuDisplay(true);
-                fab.setVisibility(View.VISIBLE);
-                fabCancelMoveButton.setVisibility(View.GONE);
-                fabConfirmMoveButton.setVisibility(View.GONE);
+                presenter.setDisplayMode(CONTENTS_DEFAULT_MODE);
             }
         });
 
@@ -378,7 +428,7 @@ public class ContentsFragment extends Fragment implements IContentsView{
         assetListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                presenter.enableEditMode();
+                presenter.setDisplayMode(CONTENTS_SELECTION_MODE);
                 return true;
             }
         });
@@ -399,7 +449,7 @@ public class ContentsFragment extends Fragment implements IContentsView{
 
                 switch (btn_id) {
                     case R.id.cancel_button:
-                        presenter.quitEditMode();
+                        presenter.setDisplayMode(CONTENTS_DEFAULT_MODE);
                         break;
 
                     case R.id.select_all_button:
@@ -410,8 +460,13 @@ public class ContentsFragment extends Fragment implements IContentsView{
 
                     case R.id.delete_button:
                         selectedAssets = adapter.getSelectedAssetList();
-                        showDeleteDialog(false);
-                        presenter.quitEditMode();
+                        if(selectedAssets.isEmpty()) {
+                            Toast.makeText(activity, "Please select the assets to be deleted.",
+                                    Toast.LENGTH_SHORT).show();
+                        } else {
+                            showDeleteDialog(false);
+                            presenter.setDisplayMode(CONTENTS_DEFAULT_MODE);
+                        }
                         break;
 
                     case R.id.move_button:
@@ -419,13 +474,13 @@ public class ContentsFragment extends Fragment implements IContentsView{
                         //or else the selectedAssetList will be empty
                         selectedAssets = adapter.getSelectedAssetList();
 
-                        presenter.quitEditMode();
-                        activity.toggleMenuDisplay(false);
-                        fab.setVisibility(View.GONE);
-                        fabCancelMoveButton.setVisibility(View.VISIBLE);
-                        fabConfirmMoveButton.setVisibility(View.VISIBLE);
+                        if(selectedAssets.isEmpty()) {
+                            Toast.makeText(activity, "Please select the assets to be moved.",
+                                    Toast.LENGTH_SHORT).show();
+                        } else {
+                            presenter.setDisplayMode(CONTENTS_MOVING_MODE);
+                        }
                         break;
-
                 }
             }
         };
