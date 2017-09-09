@@ -3,8 +3,6 @@ package nz.ac.aut.comp705.sortmystuff.ui.contents;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
-import nz.ac.aut.comp705.sortmystuff.data.models.Category;
-import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.ui.IView;
 
 /**
@@ -52,4 +50,10 @@ public interface IContentsView extends IView<IContentsPresenter> {
      * @param deletingCurrentAsset true if it is deleting the currentAsset
      */
     void showDeleteDialog(boolean deletingCurrentAsset);
+
+    /**
+     * Gets the list of assets that have been ticked.
+     * @return the list of assets that have been ticked.
+     */
+    List<Asset> getSelectedAssets();
 }

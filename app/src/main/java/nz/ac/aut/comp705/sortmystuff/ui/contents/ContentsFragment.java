@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
@@ -118,18 +119,9 @@ public class ContentsFragment extends Fragment implements IContentsView{
     @Override
     public void showAssetContents(List<Asset> assets, int mode) {
         boolean displayCheckbox = false;
+        List<Asset> movingAssets = new ArrayList<>();
 
         switch (mode) {
-            case CONTENTS_DEFAULT_MODE:
-                setSelectionModeButtonsVisibility(false);
-                fab.setVisibility(View.VISIBLE);
-                fabCancelMoveButton.setVisibility(View.GONE);
-                fabConfirmMoveButton.setVisibility(View.GONE);
-
-                activity.toggleMenuDisplay(true);
-                activity.setDetailsPageVisibility(true);
-                break;
-
             case CONTENTS_SELECTION_MODE:
                 displayCheckbox = true;
                 setSelectionModeButtonsVisibility(true);
@@ -149,9 +141,11 @@ public class ContentsFragment extends Fragment implements IContentsView{
 
                 activity.toggleMenuDisplay(false);
                 activity.setDetailsPageVisibility(false);
+
+                movingAssets = new ArrayList<>(selectedAssets);
                 break;
 
-            // same as CONTENTS_DEFAULT_MODE
+            // CONTENTS_DEFAULT_MODE falls into this
             default:
                 setSelectionModeButtonsVisibility(false);
                 fab.setVisibility(View.VISIBLE);
@@ -160,9 +154,13 @@ public class ContentsFragment extends Fragment implements IContentsView{
 
                 activity.toggleMenuDisplay(true);
                 activity.setDetailsPageVisibility(true);
+
+                //cleanup selectedAssets and moving list
+                selectedAssets = new ArrayList<>();
                 break;
         }
-        adapter = new AssetListAdapter(assets, activity.getApplicationContext(), displayCheckbox);
+        adapter = new AssetListAdapter(assets, activity.getApplicationContext()
+                , displayCheckbox, movingAssets);
         assetListView.setAdapter(adapter);
     }
 
@@ -200,12 +198,18 @@ public class ContentsFragment extends Fragment implements IContentsView{
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Asset> getSelectedAssets() {
+        return new ArrayList<>(selectedAssets);
+    }
+
     //region PRIVATE STUFF
 
     private IContentsPresenter presenter;
-
     private List<Asset> selectedAssets;
-
     private SwipeActivity activity;
 
     //region UI COMPONENTS
@@ -224,32 +228,6 @@ public class ContentsFragment extends Fragment implements IContentsView{
     private AssetListAdapter adapter;
 
     //endregion
-
-    private void displayInEditMode(List<Asset> assets) {
-        adapter = new AssetListAdapter(assets, activity.getApplicationContext(), true);
-        assetListView.setAdapter(adapter);
-        cancel_btn.setVisibility(View.VISIBLE);
-        selectAll_btn.setVisibility(View.VISIBLE);
-        delete_btn.setVisibility(View.VISIBLE);
-        move_btn.setVisibility(View.VISIBLE);
-
-        fab.setVisibility(View.GONE);
-        activity.toggleMenuDisplay(false);
-        activity.setDetailsPageVisibility(false);
-    }
-
-    private void displayWithoutEditMode(List<Asset> assets) {
-        adapter = new AssetListAdapter(assets, activity.getApplicationContext(), false);
-        assetListView.setAdapter(adapter);
-        cancel_btn.setVisibility(View.GONE);
-        selectAll_btn.setVisibility(View.GONE);
-        delete_btn.setVisibility(View.GONE);
-        move_btn.setVisibility(View.GONE);
-
-        fab.setVisibility(View.VISIBLE);
-        activity.toggleMenuDisplay(true);
-        activity.setDetailsPageVisibility(true);
-    }
 
     private void setSelectionModeButtonsVisibility(boolean isVisible) {
         if(isVisible) {
@@ -386,7 +364,7 @@ public class ContentsFragment extends Fragment implements IContentsView{
         fabCancelMoveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                presenter.setDisplayMode(CONTENTS_DEFAULT_MODE);
+                presenter.loadCurrentContents(false, CONTENTS_DEFAULT_MODE);
             }
         });
 
@@ -400,35 +378,39 @@ public class ContentsFragment extends Fragment implements IContentsView{
                     presenter.moveAssets(selectedAssets);
                     presenter.loadCurrentContents(false);
                 }
-                presenter.setDisplayMode(CONTENTS_DEFAULT_MODE);
+                presenter.loadCurrentContents(false, CONTENTS_DEFAULT_MODE);
             }
         });
 
         assetListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                //if the text is grey light then should not be able to interact
+                AssetListAdapter.ViewHolder holder = (AssetListAdapter.ViewHolder) view.getTag();
+                if(holder.textView.getCurrentTextColor()
+                        == ContextCompat.getColor(activity, R.color.light_grey))
+                    return;
+
                 AssetListAdapter adapter = (AssetListAdapter) parent.getAdapter();
 
                 if (adapter.isCheckboxShowed()) {
-                    AssetListAdapter.ViewHolder holder = (AssetListAdapter.ViewHolder) view.getTag();
                     holder.checkbox.toggle();
                     adapter.getSelectStatusMap().put(position, holder.checkbox.isChecked());
                     //adapter.notifyDataSetChanged();
                 } else {
                     //fetches the selected asset in the list
-                    Asset a = (Asset) parent.getItemAtPosition(position);
+                    Asset clickedAsset = (Asset) parent.getItemAtPosition(position);
                     //sets the selected asset's ID as the current asset (to be viewed)
-                    presenter.setCurrentAssetId(a.getId());
+                    presenter.setCurrentAssetId(clickedAsset.getId());
                     presenter.loadCurrentContents(false);
                 }
-
             }
         });
 
         assetListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                presenter.setDisplayMode(CONTENTS_SELECTION_MODE);
+                presenter.loadCurrentContents(false, CONTENTS_SELECTION_MODE);
                 return true;
             }
         });
@@ -449,7 +431,7 @@ public class ContentsFragment extends Fragment implements IContentsView{
 
                 switch (btn_id) {
                     case R.id.cancel_button:
-                        presenter.setDisplayMode(CONTENTS_DEFAULT_MODE);
+                        presenter.loadCurrentContents(false, CONTENTS_DEFAULT_MODE);
                         break;
 
                     case R.id.select_all_button:
@@ -459,26 +441,26 @@ public class ContentsFragment extends Fragment implements IContentsView{
                         break;
 
                     case R.id.delete_button:
-                        selectedAssets = adapter.getSelectedAssetList();
+                        selectedAssets = new ArrayList<>(adapter.getSelectedAssets().values());
                         if(selectedAssets.isEmpty()) {
                             Toast.makeText(activity, "Please select the assets to be deleted.",
                                     Toast.LENGTH_SHORT).show();
                         } else {
                             showDeleteDialog(false);
-                            presenter.setDisplayMode(CONTENTS_DEFAULT_MODE);
+                            presenter.loadCurrentContents(false, CONTENTS_DEFAULT_MODE);
                         }
                         break;
 
                     case R.id.move_button:
                         //get the selected assets before quitting edit mode,
                         //or else the selectedAssetList will be empty
-                        selectedAssets = adapter.getSelectedAssetList();
+                        selectedAssets = new ArrayList<>(adapter.getSelectedAssets().values());
 
                         if(selectedAssets.isEmpty()) {
                             Toast.makeText(activity, "Please select the assets to be moved.",
                                     Toast.LENGTH_SHORT).show();
                         } else {
-                            presenter.setDisplayMode(CONTENTS_MOVING_MODE);
+                            presenter.loadCurrentContents(false, CONTENTS_MOVING_MODE);
                         }
                         break;
                 }

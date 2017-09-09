@@ -61,8 +61,6 @@ public class ContentsPresenter implements IContentsPresenter {
 
     /**
      * {@inheritDoc}
-     *
-     * @param forceRefreshFromLocal true if want to force reload the contents from local storage
      */
     @Override
     public void loadCurrentContents(boolean forceRefreshFromLocal) {
@@ -82,6 +80,15 @@ public class ContentsPresenter implements IContentsPresenter {
 
             }
         });
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadCurrentContents(boolean forceRefreshFromLocal, int mode) {
+        contentsDisplayMode = mode;
+        loadCurrentContents(forceRefreshFromLocal);
     }
 
     /**
@@ -190,7 +197,7 @@ public class ContentsPresenter implements IContentsPresenter {
                 return true;
 
             case R.id.selection_mode_button:
-                setDisplayMode(CONTENTS_SELECTION_MODE);
+                loadCurrentContents(false, CONTENTS_SELECTION_MODE);
                 return true;
 
             case R.id.delete_current_asset_button:
@@ -222,12 +229,6 @@ public class ContentsPresenter implements IContentsPresenter {
             dm.recycleAssetRecursively(a);
         }
         loadCurrentContents(true);
-    }
-
-    @Override
-    public void setDisplayMode(int mode) {
-        contentsDisplayMode = mode;
-        loadCurrentContents(false);
     }
 
     //endregion

@@ -18,11 +18,20 @@ import nz.ac.aut.comp705.sortmystuff.ui.IPresenter;
 public interface IContentsPresenter extends IPresenter {
 
     /**
-     * Loads the contents (contained assets) of the current asset.
+     * Loads the contents (contained assets) of the current asset as in the previous interface mode.
      *
      * @param forceRefreshFromLocal true if want to force reload the contents from local storage
      */
     void loadCurrentContents(boolean forceRefreshFromLocal);
+
+    /**
+     *
+     * Loads the contents (contained assets) of the current asset as in the specified interface mode.
+     *
+     * @param forceRefreshFromLocal true if want to force reload the contents from local storage
+     * @param mode the code of the mode, refer to {@link nz.ac.aut.comp705.sortmystuff.util.AppCode}
+     */
+    void loadCurrentContents(boolean forceRefreshFromLocal, int mode);
 
     /**
      * Sets the current asset id to the given one. This will change the current asset.
@@ -72,13 +81,6 @@ public interface IContentsPresenter extends IPresenter {
      * @return true if the corresponding action is performed as expected
      */
     boolean selectOptionItem(MenuItem item);
-
-    /**
-     * Changes the display mode of the contents. Can be in DEFAULT, SELECTION or MOVING mode.
-     *
-     * @param mode the code of the mode, refer to {@link nz.ac.aut.comp705.sortmystuff.util.AppCode}
-     */
-    void setDisplayMode (int mode);
 
     /**
      * Recycle the current asset and all its contained assets.
