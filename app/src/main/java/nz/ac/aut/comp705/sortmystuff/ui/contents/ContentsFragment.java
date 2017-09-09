@@ -3,17 +3,14 @@ package nz.ac.aut.comp705.sortmystuff.ui.contents;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.text.InputType;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -29,8 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
-import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
-import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
@@ -197,6 +192,7 @@ public class ContentsFragment extends Fragment implements IContentsView{
         move_btn.setVisibility(View.VISIBLE);
 
         fab.setVisibility(View.GONE);
+        activity.toggleMenuDisplay(false);
     }
 
     private void displayWithoutEditMode(List<Asset> assets) {
@@ -208,6 +204,7 @@ public class ContentsFragment extends Fragment implements IContentsView{
         move_btn.setVisibility(View.GONE);
 
         fab.setVisibility(View.VISIBLE);
+        activity.toggleMenuDisplay(true);
     }
 
 
