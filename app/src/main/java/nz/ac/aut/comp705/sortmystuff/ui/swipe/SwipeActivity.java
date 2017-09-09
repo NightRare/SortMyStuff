@@ -31,20 +31,6 @@ import nz.ac.aut.comp705.sortmystuff.util.AppCode;
 
 public class SwipeActivity extends AppCompatActivity {
 
-    /**
-     * The {@link android.support.v4.view.PagerAdapter} that will provide
-     * fragments for each of the sections. We use a
-     * {@link FragmentPagerAdapter} derivative, which will keep every
-     * loaded fragment in memory. If this becomes too memory intensive, it
-     * may be best to switch to a
-     * {@link android.support.v4.app.FragmentStatePagerAdapter}.
-     */
-    private SwipeAdapter swipeAdapter;
-
-    /**
-     * The {@link ViewPager} that will host the section contents.
-     */
-    private ViewPager viewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -137,6 +123,13 @@ public class SwipeActivity extends AppCompatActivity {
         startActivityForResult(intent, AppCode.INTENT_TAKE_PHOTO);
     }
 
+    public void setDetailsPageVisibility(boolean isVisible) {
+        if(isVisible)
+            swipeAdapter.setTabsAmount(2);
+        else
+            swipeAdapter.setTabsAmount(1);
+    }
+
     /**
      * Handle photo cropping or update a cropped photo.
      */
@@ -170,6 +163,21 @@ public class SwipeActivity extends AppCompatActivity {
     private Menu menu;
 
     private Uri imageUri;
+
+    /**
+     * The {@link android.support.v4.view.PagerAdapter} that will provide
+     * fragments for each of the sections. We use a
+     * {@link FragmentPagerAdapter} derivative, which will keep every
+     * loaded fragment in memory. If this becomes too memory intensive, it
+     * may be best to switch to a
+     * {@link android.support.v4.app.FragmentStatePagerAdapter}.
+     */
+    private SwipeAdapter swipeAdapter;
+
+    /**
+     * The {@link ViewPager} that will host the section contents.
+     */
+    private ViewPager viewPager;
 
     /**
      * Call the standard crop action intent (the user device may not support it)

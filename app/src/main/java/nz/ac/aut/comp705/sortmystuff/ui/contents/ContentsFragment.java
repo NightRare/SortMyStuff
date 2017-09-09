@@ -19,6 +19,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -193,6 +194,7 @@ public class ContentsFragment extends Fragment implements IContentsView{
 
         fab.setVisibility(View.GONE);
         activity.toggleMenuDisplay(false);
+        activity.setDetailsPageVisibility(false);
     }
 
     private void displayWithoutEditMode(List<Asset> assets) {
@@ -205,6 +207,7 @@ public class ContentsFragment extends Fragment implements IContentsView{
 
         fab.setVisibility(View.VISIBLE);
         activity.toggleMenuDisplay(true);
+        activity.setDetailsPageVisibility(true);
     }
 
 

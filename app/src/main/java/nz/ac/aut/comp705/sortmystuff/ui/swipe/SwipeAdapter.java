@@ -27,6 +27,7 @@ public class SwipeAdapter extends FragmentPagerAdapter {
         super(fm);
         this.activity = activity;
         this.dm = ((SortMyStuffApp) activity.getApplication()).getFactory().getDataManager();
+        this.tabsAmount = MAX_TABS_AMOUNT;
         initialiseViewsAndPresenters(currentAssetId);
     }
 
@@ -39,15 +40,17 @@ public class SwipeAdapter extends FragmentPagerAdapter {
         switch (position) {
             case 0:
                 return (ContentsFragment) contentsView;
-            default:
+            case 1:
                 return (DetailsFragment) detailsView;
+            default:
+                return (ContentsFragment) contentsView;
         }
     }
 
     @Override
     public int getCount() {
         // Show 2 total pages.
-        return 2;
+        return tabsAmount;
     }
 
     @Override
@@ -71,6 +74,13 @@ public class SwipeAdapter extends FragmentPagerAdapter {
         return detailsPresenter;
     }
 
+    public void setTabsAmount(int amount) {
+        if(amount < 1 || amount > MAX_TABS_AMOUNT)
+            throw new IllegalArgumentException("The amount of tabs is out of range.");
+        tabsAmount = amount;
+        notifyDataSetChanged();
+    }
+
     private void initialiseViewsAndPresenters(String currentAssetId) {
         detailsView = DetailsFragment.newInstance();
         detailsPresenter = new DetailsPresenter(dm, detailsView, activity);
@@ -83,6 +93,8 @@ public class SwipeAdapter extends FragmentPagerAdapter {
             contentsPresenter.setCurrentAssetId(currentAssetId);
     }
 
+    private static final int MAX_TABS_AMOUNT = 2;
+
     private IContentsView contentsView;
     private IDetailsView detailsView;
     private IContentsPresenter contentsPresenter;
@@ -90,4 +102,5 @@ public class SwipeAdapter extends FragmentPagerAdapter {
 
     private IDataManager dm;
     private SwipeActivity activity;
+    private int tabsAmount;
 }
