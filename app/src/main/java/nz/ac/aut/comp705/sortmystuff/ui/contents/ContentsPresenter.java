@@ -198,8 +198,6 @@ public class ContentsPresenter implements IContentsPresenter {
                 view.showDeleteDialog(true);
                 return true;
 
-
-
             default:
                 return false;
         }

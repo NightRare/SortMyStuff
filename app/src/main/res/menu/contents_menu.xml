@@ -18,12 +18,6 @@
             app:showAsAction="never" />
 
         <item
-            android:id="@+id/action_view_details"
-            android:orderInCategory="100"
-            android:title="@string/action_button_detail"
-            app:showAsAction="never" />
-
-        <item
             android:id="@+id/delete_current_asset_button"
             android:icon="@drawable/ic_delete_white"
             android:title="Delete Asset"
