@@ -15,8 +15,9 @@ public interface ISearchPresenter extends IPresenter {
     void loadResult(String query);
 
     /**
-     * Setup the event to go to detail page
-     * @param assetId
+     * Set up the event to go to the swipe page of the asset whose id is as given.
+     *
+     * @param assetId the id of the asset
      */
-    void goToDetailPage(String assetId);
+    void goToAssetPage(String assetId);
 }

@@ -385,8 +385,9 @@ public class ContentsFragment extends Fragment implements IContentsView{
         assetListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                //if the text is grey light then should not be able to interact
                 AssetListAdapter.ViewHolder holder = (AssetListAdapter.ViewHolder) view.getTag();
+
+                //if the text is grey light then should not be able to interact
                 if(holder.textView.getCurrentTextColor()
                         == ContextCompat.getColor(activity, R.color.light_grey))
                     return;

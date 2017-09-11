@@ -8,7 +8,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import java.util.List;
@@ -35,13 +34,13 @@ public class SearchActivity extends AppCompatActivity implements ISearchView {
         setPresenter(presenter);
         presenter.start();
 
-        //initialise search result list
-        result = (ListView) findViewById(R.id.result_list);
-        result.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        //initialise search resultListView list
+        resultListView = (ListView) findViewById(R.id.result_list);
+        resultListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Asset asset = (Asset) parent.getItemAtPosition(position);
-                presenter.goToDetailPage(asset.getId());
+                Asset clickedAsset = (Asset) parent.getItemAtPosition(position);
+                presenter.goToAssetPage(clickedAsset.getId());
             }
         });
 
@@ -87,12 +86,12 @@ public class SearchActivity extends AppCompatActivity implements ISearchView {
     // **** PRIVATE STUFF **** //
 
     private ISearchPresenter presenter;
-    private ListView result;
+    private ListView resultListView;
 
     @Override
     public void showResultList(List<Asset> resultList) {
-        result.setAdapter(new ArrayAdapter<Asset>(this,
-                android.R.layout.simple_list_item_1, resultList));
+        SearchListAdapter adapter = new SearchListAdapter(resultList, getApplicationContext());
+        resultListView.setAdapter(adapter);
     }
 
     /**
@@ -103,12 +102,5 @@ public class SearchActivity extends AppCompatActivity implements ISearchView {
     @Override
     public void setPresenter(ISearchPresenter presenter) {
         this.presenter = presenter;
-    }
-
-    /**
-     * Starts the presenter for this activity
-     */
-    private void startPresenter(){
-
     }
 }

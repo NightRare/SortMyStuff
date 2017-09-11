@@ -28,15 +28,6 @@ import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 
 public class AssetListAdapter extends BaseAdapter {
 
-    private List<Asset> assetList;
-    private List<Asset> movingAssets;
-
-    //Whether the checkbox is selected.
-    private HashMap<Integer, Boolean> selectStatusMap;
-    private LayoutInflater inflater;
-    private Boolean showCheckbox;
-    private Context context;
-
     public AssetListAdapter(List<Asset> list, Context context, Boolean showCheckbox) {
         this(list, context, showCheckbox, new ArrayList<Asset>());
     }
@@ -121,12 +112,6 @@ public class AssetListAdapter extends BaseAdapter {
         return showCheckbox;
     }
 
-    public class ViewHolder {
-        ImageView imageView;
-        TextView textView;
-        CheckBox checkbox;
-    }
-
     public HashMap<Integer, Boolean> getSelectStatusMap() {
         return selectStatusMap;
     }
@@ -139,5 +124,24 @@ public class AssetListAdapter extends BaseAdapter {
             }
         }
         return selectedAssets;
+    }
+
+    //region PRIVATE STUFF
+
+    private List<Asset> assetList;
+    private List<Asset> movingAssets;
+
+    //Whether the checkbox is selected.
+    private HashMap<Integer, Boolean> selectStatusMap;
+    private LayoutInflater inflater;
+    private Boolean showCheckbox;
+    private Context context;
+
+    //endregion
+
+    public class ViewHolder {
+        ImageView imageView;
+        TextView textView;
+        CheckBox checkbox;
     }
 }

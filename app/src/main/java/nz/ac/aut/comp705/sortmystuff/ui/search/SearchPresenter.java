@@ -43,7 +43,7 @@ public class SearchPresenter implements ISearchPresenter{
      * @param assetId
      */
     @Override
-    public void goToDetailPage(String assetId) {
+    public void goToAssetPage(String assetId) {
         Intent goToDetail = new Intent(activity, SwipeActivity.class);
         goToDetail.putExtra(AppCode.INTENT_ASSET_ID, assetId);
         activity.startActivity(goToDetail);

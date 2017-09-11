@@ -12,9 +12,6 @@
     <ListView
         android:id="@+id/result_list"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:divider="@android:drawable/divider_horizontal_textfield"
-        android:footerDividersEnabled="true"
-        android:headerDividersEnabled="false" />
+        android:layout_height="wrap_content" />
 
 </LinearLayout>
