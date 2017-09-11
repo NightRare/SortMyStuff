@@ -54,32 +54,24 @@ public class DetailsPresenter implements IDetailsPresenter {
      */
     @Override
     public void start() {
-        if(activity.findViewById(R.id.assetName_detail) == null) return;
+        // if the view is not inflated then do not start the presenter
+        if(activity.findViewById(R.id.details_page_categories_title) == null) return;
 
         currentAssetId = activity.getCurrentAssetId();
 
         // show nothing if its root asset
         if(currentAssetId.equals(AppConstraints.ROOT_ASSET_ID)) {
-            activity.findViewById(R.id.assetName_detail).setVisibility(View.GONE);
+            activity.findViewById(R.id.details_page_categories_title).setVisibility(View.GONE);
             activity.findViewById(R.id.assetCategory_detail).setVisibility(View.GONE);
             activity.findViewById(R.id.detail_list).setVisibility(View.GONE);
         }
         else {
-            activity.findViewById(R.id.assetName_detail).setVisibility(View.VISIBLE);
+            activity.findViewById(R.id.details_page_categories_title).setVisibility(View.VISIBLE);
             activity.findViewById(R.id.assetCategory_detail).setVisibility(View.VISIBLE);
             activity.findViewById(R.id.detail_list).setVisibility(View.VISIBLE);
             setAsset();
             view.showDetails(loadDetails());
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @param assetID
-     */
-    public void setCurrentAssetId(String assetID) {
-        currentAssetId = assetID;
     }
 
     /**
@@ -148,8 +140,6 @@ public class DetailsPresenter implements IDetailsPresenter {
     }
 
     private void setAsset(){
-        TextView assetName = (TextView) activity.findViewById(R.id.assetName_detail);
-        assetName.setText(getCurrentAssetName());
         TextView assetCategory = (TextView) activity.findViewById(R.id.assetCategory_detail);
         assetCategory.setText(getCategory().toUpperCase());
     }
