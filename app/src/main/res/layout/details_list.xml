@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="nz.ac.aut.comp705.sortmystuff.ui.details.DetailsActivity"
-    tools:showIn="@layout/details_act"
+    tools:context="nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity"
+    tools:showIn="@layout/details_frag"
     android:padding="15dp">
 
 
     <ListView
         android:id="@+id/detail_list"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:footerDividersEnabled="false"
         android:headerDividersEnabled="false" />
 
-</android.support.constraint.ConstraintLayout>
+</LinearLayout>

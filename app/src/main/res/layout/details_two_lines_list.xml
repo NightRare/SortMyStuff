@@ -28,12 +28,14 @@
         android:layout_marginBottom="6dp"/>
 
     <ImageView
-        android:id="@+id/asset_image"
+        android:id="@+id/details_asset_image"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_centerHorizontal="true"
+        android:minHeight="300sp"
         android:layout_below="@android:id/text1"
         android:layout_alignStart="@android:id/text1"
         android:layout_alignLeft="@android:id/text1"
-        android:layout_marginBottom="50dp"/>
+        android:layout_marginBottom="25dp"/>
 
 </TwoLineListItem>

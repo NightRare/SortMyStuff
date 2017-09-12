@@ -76,7 +76,7 @@ public class AssetListAdapter extends BaseAdapter {
             holder = new ViewHolder();
             convertView = inflater.inflate(R.layout.contents_assets_layout, null);
 
-            holder.imageView = (ImageView) convertView.findViewById(R.id.asset_image);
+            holder.imageView = (ImageView) convertView.findViewById(R.id.contents_asset_image);
             holder.textView = (TextView) convertView.findViewById(R.id.asset_name);
             holder.checkbox = (CheckBox) convertView.findViewById(R.id.asset_checkbox);
 

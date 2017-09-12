@@ -1,33 +1,32 @@
 package nz.ac.aut.comp705.sortmystuff.ui.swipe;
 
-import android.content.ActivityNotFoundException;
+import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.net.Uri;
-import android.os.Build;
-import android.provider.MediaStore;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
-import android.support.v4.content.FileProvider;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.view.ViewPager;
-import android.os.Bundle;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 
-import com.google.common.base.Preconditions;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import com.desmond.squarecamera.CameraActivity;
+import com.desmond.squarecamera.ImageUtility;
 
 import nz.ac.aut.comp705.sortmystuff.R;
-import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 import nz.ac.aut.comp705.sortmystuff.util.AppCode;
+import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 
 public class SwipeActivity extends AppCompatActivity {
 
@@ -55,6 +54,11 @@ public class SwipeActivity extends AppCompatActivity {
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager);
+
+        // prepared for camera
+        Display display = getWindowManager().getDefaultDisplay();
+        screenSize = new Point();
+        display.getSize(screenSize);
     }
 
     @Override
@@ -82,6 +86,24 @@ public class SwipeActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_CAMERA_PERMISSION:
+                final int numOfRequest = grantResults.length;
+                final boolean isGranted = numOfRequest == 1
+                        && PackageManager.PERMISSION_GRANTED == grantResults[numOfRequest - 1];
+                if (isGranted) {
+                    launch();
+                }
+                break;
+
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
+
+
     public String getCurrentAssetId() {
         if(swipeAdapter.getContentsPresenter() == null)
             return AppConstraints.ROOT_ASSET_ID;
@@ -100,27 +122,17 @@ public class SwipeActivity extends AppCompatActivity {
     }
 
     public void takePhoto() {
-        File outputImage = new File(getExternalCacheDir(),
-                "output_image.jpg");
-        try {
-            if (outputImage.exists()) {
-                outputImage.delete();
+        final String permission = Manifest.permission.CAMERA;
+        if (ContextCompat.checkSelfPermission(SwipeActivity.this, permission)
+                != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(SwipeActivity.this, permission)) {
+                showPermissionRationaleDialog("Test", permission);
+            } else {
+                requestForPermission(permission);
             }
-            outputImage.createNewFile();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        if (Build.VERSION.SDK_INT >= 24) {
-            imageUri = FileProvider.getUriForFile(this,
-                    "sortmystuff.fileprovider", outputImage);
         } else {
-            imageUri = Uri.fromFile(outputImage);
+            launch();
         }
-
-        Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-        startActivityForResult(intent, AppCode.INTENT_TAKE_PHOTO);
     }
 
     public void setDetailsPageVisibility(boolean isVisible) {
@@ -135,34 +147,27 @@ public class SwipeActivity extends AppCompatActivity {
      */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == RESULT_OK) {
-            switch (requestCode) {
-                case AppCode.INTENT_TAKE_PHOTO:
-                    performCrop(imageUri);
-                    break;
-                case AppCode.INTENT_CROP_PHOTO:
-                    try {
-                        Bitmap croppedBmp = BitmapFactory.decodeStream
-                                (getContentResolver().openInputStream(imageUri));
-                        swipeAdapter.getDetailsPresenter().updateImage(croppedBmp);
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    }
+        if (resultCode != RESULT_OK) return;
 
-                    break;
-                default:
-                    break;
-            }
+        switch (requestCode) {
+            case AppCode.INTENT_TAKE_PHOTO:
+                Uri photoUri = data.getData();
+                Bitmap bitmap = ImageUtility.decodeSampledBitmapFromPath(photoUri.getPath(),
+                        screenSize.x, screenSize.y);
+                swipeAdapter.getDetailsPresenter().updateImage(bitmap);
+                break;
+            default:
+                break;
         }
     }
 
     //region PRIVATE STUFF
 
+    private static final int REQUEST_CAMERA_PERMISSION = 1;
     private static final String CURRENT_ASSET_ID = "CURRENT_ASSET_ID";
-
     private Menu menu;
-
     private Uri imageUri;
+    private Point screenSize;
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -179,28 +184,35 @@ public class SwipeActivity extends AppCompatActivity {
      */
     private ViewPager viewPager;
 
-    /**
-     * Call the standard crop action intent (the user device may not support it)
-     * @param imageUri
-     */
-    private void performCrop(Uri imageUri) {
-        Preconditions.checkNotNull(imageUri, "The image Uri cannot be null");
-        try {
-            Intent cropIntent = new Intent("com.android.camera.action.CROP");
-            cropIntent.setDataAndType(imageUri, "image/*");
-            cropIntent.putExtra("crop", "true");
-            cropIntent.putExtra("aspectX", 10);
-            cropIntent.putExtra("aspectY", 6);
-            cropIntent.putExtra("outputX", 1000);
-            cropIntent.putExtra("outputY", 600);
-            cropIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-            startActivityForResult(cropIntent, AppCode.INTENT_CROP_PHOTO);
-        } catch (ActivityNotFoundException e) {
-            Toast.makeText(this,
-                    "Sorry, your device doesn't support the crop action.",
-                    Toast.LENGTH_SHORT).show();
-        }
+
+    private void showPermissionRationaleDialog(final String message, final String permission) {
+        new AlertDialog.Builder(SwipeActivity.this)
+                .setMessage(message)
+                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        SwipeActivity.this.requestForPermission(permission);
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                })
+                .create()
+                .show();
     }
+
+    private void requestForPermission(final String permission) {
+        ActivityCompat.requestPermissions(SwipeActivity.this, new String[]{permission}, REQUEST_CAMERA_PERMISSION);
+    }
+
+    private void launch() {
+        Intent startCustomCameraIntent = new Intent(this, CameraActivity.class);
+        startActivityForResult(startCustomCameraIntent, AppCode.INTENT_TAKE_PHOTO);
+    }
+
 
     //endregion
 }

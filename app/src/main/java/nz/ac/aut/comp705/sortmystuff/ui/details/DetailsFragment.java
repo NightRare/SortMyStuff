@@ -132,7 +132,7 @@ public class DetailsFragment extends Fragment implements IDetailsView{
 
             TextView labelView = (TextView) v.findViewById(android.R.id.text1);
             TextView textFieldView = (TextView) v.findViewById(android.R.id.text2);
-            ImageView imageFieldView = (ImageView) v.findViewById(R.id.asset_image);
+            ImageView imageFieldView = (ImageView) v.findViewById(R.id.details_asset_image);
             labelView.setText(item.getLabel());
 
             if (item.getType().equals(DetailType.Date) || item.getType().equals(DetailType.Text)) {
