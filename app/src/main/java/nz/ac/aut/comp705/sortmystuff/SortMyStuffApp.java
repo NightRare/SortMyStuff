@@ -46,10 +46,11 @@ public class SortMyStuffApp extends Application {
         String studyRoomId = dm.createAsset("Study Room", root.getId(), CategoryType.Places);
         dd.setPhoto(studyRoomId, photos.get("StudyRoom.png"));
 
-        String bachHouseId = dm.createAsset("Bach House", root.getId(), CategoryType.Places);
-        dd.setPhoto(bachHouseId, photos.get("BachHouse.png"));
+        String office = dm.createAsset("Office", root.getId(), CategoryType.Places);
+        dd.setPhoto(office, photos.get("Office.png"));
 
         String bedroomId = dm.createAsset("Bedroom", root.getId(), CategoryType.Places);
+        dd.setPhoto(bedroomId, photos.get("Bedroom.png"));
 
         String bookshelfPhilosophyId = dm.createAsset("Bookshelf Philosophy", studyRoomId, CategoryType.Miscellaneous);
         dd.setPhoto(bookshelfPhilosophyId, photos.get("BookshelfPhilosophy.png"));
