@@ -33,7 +33,7 @@ This project was created as the culmination of our work for the paper Software D
 
 - **Take photo for an asset**
 
-![Take photo for an asset](https://i.imgur.com/PcwZFJn.gif)
+![Take photo for an asset](https://i.imgur.com/Nll9XP9.gif)
 
 ### Dependencies
 
