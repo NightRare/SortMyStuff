@@ -28,12 +28,6 @@
         "type": "Date"
       },
       {
-        "assetId": "DUMMY_ASSET_ID",
-        "id": "EXTENDED_DUMMY_DETAIL_ID_2",
-        "label": "Receipt Copy",
-        "type": "Image"
-      },
-      {
         "field": "",
         "assetId": "DUMMY_ASSET_ID",
         "id": "EXTENDED_DUMMY_DETAIL_ID_3",
@@ -53,6 +47,12 @@
         "id": "EXTENDED_DUMMY_DETAIL_ID_5",
         "label": "Serial Number",
         "type": "Text"
+      },
+      {
+        "assetId": "DUMMY_ASSET_ID",
+        "id": "EXTENDED_DUMMY_DETAIL_ID_2",
+        "label": "Receipt Copy",
+        "type": "Image"
       }
     ]
   },

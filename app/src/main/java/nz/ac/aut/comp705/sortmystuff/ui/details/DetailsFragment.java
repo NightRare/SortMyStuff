@@ -27,6 +27,8 @@ import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
+import nz.ac.aut.comp705.sortmystuff.util.AppCode;
+import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -74,6 +76,8 @@ public class DetailsFragment extends Fragment implements IDetailsView{
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Detail detail = (Detail) parent.getItemAtPosition(position);
+                if(detail.getType().equals(DetailType.Image))
+                    return;
                 presenter.showDialogBox(view, detail);
             }
         });
@@ -88,7 +92,8 @@ public class DetailsFragment extends Fragment implements IDetailsView{
 
     @Override
     public void showDetails(List<Detail> detailList) {
-        details.setAdapter(new DetailAdapter(activity, R.layout.details_two_lines_list, detailList));
+        details.setAdapter(new DetailAdapter(activity, R.layout.details_two_lines_list,
+                R.layout.details_asset_photo, detailList));
     }
 
     @Override
@@ -110,76 +115,82 @@ public class DetailsFragment extends Fragment implements IDetailsView{
      */
     private class DetailAdapter extends ArrayAdapter<Detail> {
 
+        // TODO: to be removed later; used as a placeholder of other image details
+        private static final int DUMMY_LAYOUT = R.layout.details_dummy_item;
+
         private Context context;
-        private int layoutResourceId;
+        private int twoLinesLayoutId;
+        private int photoLayoutId;
         private List<Detail> detailList = null;
 
-        private DetailAdapter(Context context, int layoutResourceId, List<Detail> detailList) {
-            super(context, layoutResourceId, detailList);
+        private DetailAdapter(Context context, int twoLinesLayoutId, int photoLayoutId, List<Detail> detailList) {
+            super(context, twoLinesLayoutId, detailList);
             this.context = context;
-            this.layoutResourceId = layoutResourceId;
+            this.twoLinesLayoutId = twoLinesLayoutId;
+            this.photoLayoutId = photoLayoutId;
             this.detailList = detailList;
         }
 
         public View getView(final int position, View convertView, ViewGroup parent) {
             View v = convertView;
-            if (v == null) {
-                LayoutInflater inflater = ((Activity) context).getLayoutInflater();
-                v = inflater.inflate(layoutResourceId, parent, false);
-            }
-
             final Detail item = detailList.get(position);
+            DetailType type = item.getType();
+            LayoutInflater inflater = ((Activity) context).getLayoutInflater();
 
-            TextView labelView = (TextView) v.findViewById(android.R.id.text1);
-            TextView textFieldView = (TextView) v.findViewById(android.R.id.text2);
-            ImageView imageFieldView = (ImageView) v.findViewById(R.id.details_asset_image);
-            labelView.setText(item.getLabel());
+            if(type.equals(DetailType.Image)) {
+                // TODO: to be completed later, now only display the photo of the asset, any other image detail will not be displayed
+                if(!item.getLabel().equals("Photo")) {
+                    v = inflater.inflate(DUMMY_LAYOUT, parent, false);
+                }
+                else {
+                    v = inflater.inflate(photoLayoutId, parent, false);
+                    ImageView imageFieldView = (ImageView) v.findViewById(R.id.details_photo);
 
-            if (item.getType().equals(DetailType.Date) || item.getType().equals(DetailType.Text)) {
+                    imageFieldView.setImageBitmap((Bitmap) item.getField());
+
+                    //Set a click listener on asset image to launch camera
+                    imageFieldView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            activity.takePhoto();
+                        }
+                    });
+
+                    //Set a long-click listener on asset image to delete photo
+                    imageFieldView.setOnLongClickListener(new View.OnLongClickListener() {
+                        @Override
+                        public boolean onLongClick(View v) {
+                            AlertDialog.Builder dialog = new AlertDialog.Builder(activity);
+                            dialog.setTitle("Remove Photo");
+                            dialog.setMessage("Are you sure of removing this photo?");
+                            dialog.setCancelable(true);
+                            dialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    presenter.resetImage((ImageDetail)item);
+                                }
+                            });
+                            dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    Toast.makeText(activity,
+                                            "Removing photo cancelled.", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            dialog.show();
+
+                            return true;
+                        }
+                    });
+                }
+            }
+            else if (type.equals(DetailType.Date) || type.equals(DetailType.Text)) {
+                v = inflater.inflate(twoLinesLayoutId, parent, false);
+                TextView labelView = (TextView) v.findViewById(android.R.id.text1);
+                TextView textFieldView = (TextView) v.findViewById(android.R.id.text2);
+
+                labelView.setText(item.getLabel());
                 textFieldView.setText((String) item.getField());
-                imageFieldView.setImageBitmap(null);
-
-            } else if (item.getLabel().equals(CategoryType.BasicDetail.PHOTO)
-                    && item.getType().equals(DetailType.Image)) {
-                //The label "Photo" and its screen space is hidden
-                imageFieldView.setImageBitmap((Bitmap) item.getField());
-                textFieldView.setText(null);
-                labelView.setText(null);
-
-                //Set a click listener on asset image to launch camera
-                imageFieldView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        activity.takePhoto();
-                    }
-                });
-
-                //Set a long-click listener on asset image to delete photo
-                imageFieldView.setOnLongClickListener(new View.OnLongClickListener() {
-                    @Override
-                    public boolean onLongClick(View v) {
-                        AlertDialog.Builder dialog = new AlertDialog.Builder(activity);
-                        dialog.setTitle("Remove Photo");
-                        dialog.setMessage("Are you sure of removing this photo?");
-                        dialog.setCancelable(true);
-                        dialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                presenter.resetImage((ImageDetail)item);
-                            }
-                        });
-                        dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                Toast.makeText(activity,
-                                        "Removing photo cancelled.", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                        dialog.show();
-
-                        return true;
-                    }
-                });
             }
 
             return v;
