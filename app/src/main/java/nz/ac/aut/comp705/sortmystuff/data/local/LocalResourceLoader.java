@@ -34,7 +34,7 @@ public class LocalResourceLoader {
      * {@link FileHelper#writeToImageFile(Bitmap, File)}
      */
     public final static String IMAGE_DETAIL_FORMAT = ".png";
-    public final static String DEFAULT_PHOTO_FILENAME = "default" + IMAGE_DETAIL_FORMAT;
+    public final static String DEFAULT_PHOTO_FILENAME = "default_square" + IMAGE_DETAIL_FORMAT;
     public final static String DEFAULT_PHOTO_PATH = "images" + File.separator + DEFAULT_PHOTO_FILENAME;
     public final static String CATEGORIES_FILE_NAME = "categories.json";
 

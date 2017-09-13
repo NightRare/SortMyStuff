@@ -55,4 +55,7 @@ dependencies {
     androidTestCompile 'com.android.support:recyclerview-v7:25.3.1'
     androidTestCompile 'com.android.support.test.espresso:espresso-contrib:2.2.2'
     androidTestCompile 'org.mockito:mockito-core:2.7.22'
+
+    //camera
+    compile 'com.github.boxme:squarecamera:1.1.0'
 }

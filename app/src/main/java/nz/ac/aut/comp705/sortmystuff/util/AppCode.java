@@ -35,4 +35,8 @@ public class AppCode {
     public static final int CONTENTS_DEFAULT_MODE = 1001;
     public static final int CONTENTS_SELECTION_MODE = 1002;
     public static final int CONTENTS_MOVING_MODE = 1003;
+
+    public static final String CAMERA_OUTPUT = "CAMERA_OUTPUT";
+    public static final String CAMERA_SCREEN_WIDTH = "CAMERA_SCREEN_WIDTH";
+    public static final String CAMERA_SCREEN_HEIGHT = "CAMERA_SCREEN_HEIGHT";
 }

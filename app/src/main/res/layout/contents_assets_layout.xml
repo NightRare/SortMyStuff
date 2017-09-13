@@ -7,9 +7,9 @@
 
 
         <ImageView
-            android:id="@+id/asset_image"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
+            android:id="@+id/contents_asset_image"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
             android:layout_marginLeft="10dp"
             android:layout_centerVertical="true"/>
 
@@ -23,7 +23,7 @@
             android:textSize="20sp"
             android:textColor="@color/dark_grey"
             android:layout_centerVertical="true"
-            android:layout_toRightOf="@id/asset_image"
+            android:layout_toRightOf="@id/contents_asset_image"
             android:layout_toLeftOf="@+id/asset_checkbox"/>
 
         <CheckBox

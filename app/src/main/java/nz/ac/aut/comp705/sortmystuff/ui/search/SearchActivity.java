@@ -31,7 +31,6 @@ public class SearchActivity extends AppCompatActivity implements ISearchView {
 
         presenter = new SearchPresenter(((SortMyStuffApp) getApplication())
                 .getFactory().getDataManager(), this, this);
-        setPresenter(presenter);
         presenter.start();
 
         //initialise search resultListView list
