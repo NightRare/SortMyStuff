@@ -155,8 +155,6 @@ public class ContentsFragment extends Fragment implements IContentsView{
                 activity.toggleMenuDisplay(true);
                 activity.setDetailsPageVisibility(true);
 
-                //cleanup selectedAssets and moving list
-                selectedAssets = new ArrayList<>();
                 break;
         }
         adapter = new AssetListAdapter(assets, activity.getApplicationContext()
@@ -195,7 +193,6 @@ public class ContentsFragment extends Fragment implements IContentsView{
                     "and their children assets.";
         }
         getConfirmDeleteDialogBuilder(deletingCurrentAsset, message).create().show();
-
     }
 
     /**
