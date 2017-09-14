@@ -94,7 +94,7 @@ public class AssetListAdapter extends BaseAdapter {
 
         Bitmap photo = asset.getPhoto();
         if (photo == null)
-            holder.imageView.setImageResource(R.drawable.placeholder);
+            holder.imageView.setImageResource(R.drawable.default_square);
         else
             holder.imageView.setImageBitmap(photo);
 
