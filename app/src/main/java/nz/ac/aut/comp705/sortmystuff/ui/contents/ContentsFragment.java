@@ -11,6 +11,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
+import android.text.Layout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -78,9 +79,8 @@ public class ContentsFragment extends Fragment implements IContentsView{
         fab = (FloatingActionButton) rootView.findViewById(R.id.addAssetButton);
         fabCancelMoveButton = (FloatingActionButton) rootView.findViewById(R.id.cancel_move_button);
         fabConfirmMoveButton = (FloatingActionButton) rootView.findViewById(R.id.confirm_move_button);
-
         assetListView = (ListView) rootView.findViewById(R.id.index_list);
-
+        pathBarLayout = rootView.findViewById(R.id.pathbar_layout);
         selectedAssets = new ArrayList<>();
 
         initEditModeButtons();
@@ -128,6 +128,7 @@ public class ContentsFragment extends Fragment implements IContentsView{
                 fab.setVisibility(View.GONE);
                 fabCancelMoveButton.setVisibility(View.GONE);
                 fabConfirmMoveButton.setVisibility(View.GONE);
+                pathBarLayout.setVisibility(View.GONE);
 
                 activity.toggleMenuDisplay(false);
                 activity.setDetailsPageVisibility(false);
@@ -138,6 +139,7 @@ public class ContentsFragment extends Fragment implements IContentsView{
                 fab.setVisibility(View.GONE);
                 fabCancelMoveButton.setVisibility(View.VISIBLE);
                 fabConfirmMoveButton.setVisibility(View.VISIBLE);
+                pathBarLayout.setVisibility(View.VISIBLE);
 
                 activity.toggleMenuDisplay(false);
                 activity.setDetailsPageVisibility(false);
@@ -151,6 +153,7 @@ public class ContentsFragment extends Fragment implements IContentsView{
                 fab.setVisibility(View.VISIBLE);
                 fabCancelMoveButton.setVisibility(View.GONE);
                 fabConfirmMoveButton.setVisibility(View.GONE);
+                pathBarLayout.setVisibility(View.VISIBLE);
 
                 activity.toggleMenuDisplay(true);
                 activity.setDetailsPageVisibility(true);
@@ -217,6 +220,7 @@ public class ContentsFragment extends Fragment implements IContentsView{
     private FloatingActionButton fabCancelMoveButton;
     private FloatingActionButton fabConfirmMoveButton;
 
+    private View pathBarLayout;
     private TextView pathBarRoot;
     private RecyclerView pathBar;
 
