@@ -1,7 +1,6 @@
 <resources>
     <string name="app_name">SortMyStuff</string>
     <string name="action_button_detail">View Detail</string>
-    <string name="addAssetButton">Add Asset</string>
 
     <string name="title_activity_contents">ContentsActivity</string>
 
@@ -16,9 +15,13 @@
     <string name="search">Search</string>
     <string name="title_activity_swipe">SwipeActivity</string>
     <string name="action_settings">Settings</string>
+    <string name="cancel_button">Cancel</string>
+    <string name="add_asset_dialog_title">Add Asset</string>
+    <string name="add_asset_confirm_button">Save</string>
 
     <string name="contents_page">Contents</string>
     <string name="details_page">Details</string>
     <string name="details_page_categories_title">Categories</string>
+    <string name="delete_asset_confirm_button">Confirm</string>
 
 </resources>

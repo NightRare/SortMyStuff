@@ -191,7 +191,7 @@ public class ContentsPresenter implements IContentsPresenter {
     public boolean selectOptionItem(MenuItem item) {
         switch (item.getItemId()) {
 
-            case R.id.search_view:
+            case R.id.search_view_button:
                 Intent searchIntent = new Intent(activity, SearchActivity.class);
                 activity.startActivity(searchIntent);
                 return true;

@@ -10,7 +10,7 @@
     android:mode="twoLine">
 
     <TextView
-        android:id="@android:id/text1"
+        android:id="@+id/detail_label"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="5dp"
@@ -18,12 +18,12 @@
         android:textStyle="bold"
         android:textColor="@color/colorPrimary"/>
 
-    <TextView android:id="@android:id/text2"
+    <TextView android:id="@+id/detail_field"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@android:id/text1"
-        android:layout_alignStart="@android:id/text1"
-        android:layout_alignLeft="@android:id/text1"
+        android:layout_below="@id/detail_label"
+        android:layout_alignStart="@id/detail_label"
+        android:layout_alignLeft="@id/detail_label"
         android:textSize="15sp"
         android:layout_marginBottom="6dp"/>
 

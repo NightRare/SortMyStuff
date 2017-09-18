@@ -27,7 +27,7 @@
             android:id="@+id/assetCategory_detail"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_above="@+id/detail_list"
+            android:layout_above="@+id/details_list"
             android:layout_toEndOf="@id/details_page_categories_title"
             android:layout_marginStart="30dp"
             android:layout_marginBottom="8dp"
@@ -37,7 +37,7 @@
             android:padding="6dp"/>
 
         <ListView
-            android:id="@+id/detail_list"
+            android:id="@+id/details_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_below="@id/details_page_categories_title"

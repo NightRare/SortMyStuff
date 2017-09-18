@@ -22,13 +22,10 @@ import android.widget.Toast;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
-import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
-import nz.ac.aut.comp705.sortmystuff.util.AppCode;
-import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -70,7 +67,7 @@ public class DetailsFragment extends Fragment implements IDetailsView{
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        details = (ListView) rootView.findViewById(R.id.detail_list);
+        details = (ListView) rootView.findViewById(R.id.details_list);
 
         details.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -186,8 +183,8 @@ public class DetailsFragment extends Fragment implements IDetailsView{
             }
             else if (type.equals(DetailType.Date) || type.equals(DetailType.Text)) {
                 v = inflater.inflate(twoLinesLayoutId, parent, false);
-                TextView labelView = (TextView) v.findViewById(android.R.id.text1);
-                TextView textFieldView = (TextView) v.findViewById(android.R.id.text2);
+                TextView labelView = (TextView) v.findViewById(R.id.detail_label);
+                TextView textFieldView = (TextView) v.findViewById(R.id.detail_field);
 
                 labelView.setText(item.getLabel());
                 textFieldView.setText((String) item.getField());

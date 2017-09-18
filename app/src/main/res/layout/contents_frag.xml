@@ -6,7 +6,7 @@
     tools:context="nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsFragment">
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/addAssetButton"
+        android:id="@+id/add_asset_button"
         android:layout_width="wrap_content"
         android:layout_height="64dp"
         android:layout_gravity="bottom|end"

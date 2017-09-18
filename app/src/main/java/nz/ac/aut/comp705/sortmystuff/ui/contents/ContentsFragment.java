@@ -11,7 +11,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
-import android.text.Layout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -76,7 +75,7 @@ public class ContentsFragment extends Fragment implements IContentsView{
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        fab = (FloatingActionButton) rootView.findViewById(R.id.addAssetButton);
+        fab = (FloatingActionButton) rootView.findViewById(R.id.add_asset_button);
         fabCancelMoveButton = (FloatingActionButton) rootView.findViewById(R.id.cancel_move_button);
         fabConfirmMoveButton = (FloatingActionButton) rootView.findViewById(R.id.confirm_move_button);
         assetListView = (ListView) rootView.findViewById(R.id.index_list);
@@ -255,7 +254,7 @@ public class ContentsFragment extends Fragment implements IContentsView{
      */
     private AlertDialog getAddAssetDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-        builder.setTitle("Add Asset");
+        builder.setTitle(R.string.add_asset_dialog_title);
 
         final View addAssetLayout = activity.getLayoutInflater().inflate(R.layout.contents_add_asset, null);
         builder.setView(addAssetLayout);
@@ -265,7 +264,7 @@ public class ContentsFragment extends Fragment implements IContentsView{
         input.setInputType(InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
         input.setSingleLine();
 
-        builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(R.string.add_asset_confirm_button, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 Spinner spinner = (Spinner) addAssetLayout.findViewById(R.id.category_spinner);
@@ -275,7 +274,7 @@ public class ContentsFragment extends Fragment implements IContentsView{
             }
         });
         //creates the Cancel button and what happens when clicked
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+        builder.setNegativeButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                 dialog.cancel();
             }
@@ -289,7 +288,7 @@ public class ContentsFragment extends Fragment implements IContentsView{
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         builder.setTitle(message);
 
-        builder.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(R.string.delete_asset_confirm_button, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (deletingCurrentAsset)
@@ -299,7 +298,7 @@ public class ContentsFragment extends Fragment implements IContentsView{
             }
         });
         //creates the Cancel button and what happens when clicked
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+        builder.setNegativeButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                 dialog.cancel();
             }
@@ -322,10 +321,10 @@ public class ContentsFragment extends Fragment implements IContentsView{
     }
 
     private void initEditModeButtons() {
-        cancel_btn = (Button) activity.findViewById(R.id.cancel_button);
-        selectAll_btn = (Button) activity.findViewById(R.id.select_all_button);
-        delete_btn = (Button) activity.findViewById(R.id.delete_button);
-        move_btn = (Button) activity.findViewById(R.id.move_button);
+        cancel_btn = (Button) activity.findViewById(R.id.selection_cancel_button);
+        selectAll_btn = (Button) activity.findViewById(R.id.selection_select_all_button);
+        delete_btn = (Button) activity.findViewById(R.id.selection_delete_button);
+        move_btn = (Button) activity.findViewById(R.id.selection_move_button);
 
         cancel_btn.setVisibility(View.GONE);
         selectAll_btn.setVisibility(View.GONE);
@@ -432,17 +431,17 @@ public class ContentsFragment extends Fragment implements IContentsView{
                 int btn_id = v.getId();
 
                 switch (btn_id) {
-                    case R.id.cancel_button:
+                    case R.id.selection_cancel_button:
                         presenter.loadCurrentContents(false, CONTENTS_DEFAULT_MODE);
                         break;
 
-                    case R.id.select_all_button:
+                    case R.id.selection_select_all_button:
                         selectAll();
                         Toast.makeText(activity, adapter.getCount()
                                 + " items selected", Toast.LENGTH_SHORT).show();
                         break;
 
-                    case R.id.delete_button:
+                    case R.id.selection_delete_button:
                         selectedAssets = new ArrayList<>(adapter.getSelectedAssets().values());
                         if(selectedAssets.isEmpty()) {
                             Toast.makeText(activity, "Please select the assets to be deleted.",
@@ -453,7 +452,7 @@ public class ContentsFragment extends Fragment implements IContentsView{
                         }
                         break;
 
-                    case R.id.move_button:
+                    case R.id.selection_move_button:
                         //get the selected assets before quitting edit mode,
                         //or else the selectedAssetList will be empty
                         selectedAssets = new ArrayList<>(adapter.getSelectedAssets().values());

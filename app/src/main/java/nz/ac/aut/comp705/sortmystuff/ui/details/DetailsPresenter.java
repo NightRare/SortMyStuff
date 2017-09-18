@@ -63,12 +63,12 @@ public class DetailsPresenter implements IDetailsPresenter {
         if(currentAssetId.equals(AppConstraints.ROOT_ASSET_ID)) {
             activity.findViewById(R.id.details_page_categories_title).setVisibility(View.GONE);
             activity.findViewById(R.id.assetCategory_detail).setVisibility(View.GONE);
-            activity.findViewById(R.id.detail_list).setVisibility(View.GONE);
+            activity.findViewById(R.id.details_list).setVisibility(View.GONE);
         }
         else {
             activity.findViewById(R.id.details_page_categories_title).setVisibility(View.VISIBLE);
             activity.findViewById(R.id.assetCategory_detail).setVisibility(View.VISIBLE);
-            activity.findViewById(R.id.detail_list).setVisibility(View.VISIBLE);
+            activity.findViewById(R.id.details_list).setVisibility(View.VISIBLE);
             setAsset();
             view.showDetails(loadDetails());
         }

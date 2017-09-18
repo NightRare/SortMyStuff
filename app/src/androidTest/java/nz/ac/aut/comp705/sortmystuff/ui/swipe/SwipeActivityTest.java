@@ -1,17 +1,13 @@
-package nz.ac.aut.comp705.sortmystuff.ui.contents;
+package nz.ac.aut.comp705.sortmystuff.ui.swipe;
 
 import android.app.Activity;
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.assertion.ViewAssertions;
 import android.support.test.espresso.contrib.RecyclerViewActions;
-import android.support.test.espresso.matcher.BoundedMatcher;
 import android.support.test.espresso.matcher.RootMatchers;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.view.Display;
 import android.view.View;
 import android.widget.EditText;
 
@@ -22,14 +18,12 @@ import junit.framework.Assert;
 import org.apache.commons.io.FileUtils;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 
 import java.io.File;
 import java.io.IOException;
@@ -41,8 +35,6 @@ import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
-import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
-import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
 import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 
 import static android.support.test.espresso.Espresso.onData;
@@ -51,6 +43,8 @@ import static android.support.test.espresso.Espresso.openActionBarOverflowOrOpti
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.longClick;
 import static android.support.test.espresso.action.ViewActions.replaceText;
+import static android.support.test.espresso.action.ViewActions.swipeLeft;
+import static android.support.test.espresso.action.ViewActions.swipeRight;
 import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.isChecked;
@@ -59,12 +53,10 @@ import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.isNotChecked;
 import static android.support.test.espresso.matcher.ViewMatchers.withChild;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
-import static android.support.test.espresso.matcher.ViewMatchers.withContentDescription;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withSpinnerText;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
@@ -74,35 +66,54 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
 /**
- * Created by Yuan on 2017/5/6.
+ * Created by YuanY on 2017/9/17.
  */
 
 @RunWith(AndroidJUnit4.class)
-public class ContentsActivityTest {
+public class SwipeActivityTest {
 
-    public ContentsActivityTest() {
-    }
+    //region PRIVATE MEMBERS
+
+    private static final String ROOT_ASSET_NAME = "Assets";
+    private static final CategoryType DEFAULT_CATEGORY = CategoryType.Miscellaneous;
+    private static final CategoryType SPECIFIED_CATEGORY = CategoryType.Food;
+
+    private static final String ASSET_NAME = "ASSET_NAME";
+    private static final String ASSET1_NAME = "ASSET1_NAME";
+    private static final String ASSET2_NAME = "ASSET2_NAME";
+    private static final String ASSET3_NAME = "ASSET3_NAME";
+    private static final String ASSET_LIVING_ROOM = "Living Room";
+    private static final String ASSET_DINING_ROOM = "Dining Room";
+    private static final String ASSET_TABLE_BIG = "table big";
+    private static final String ASSET_TABLE_SMALL = "table small";
+    private static final String PATH_BAR_0_PREFIX = "  ";
+    private static final String PATH_BAR_PREFIX = " >  ";
+
+    // Category Details List
+    private static final String[] MISCELLANEOUS_DETAIL_LABELS = {"Photo", "Notes"};
+    private static final String[] FOOD_DETAIL_LABELS = {"Photo", "Notes", "Expiry Date", "Purchased From"};
+
+    private Context context;
+    private SortMyStuffApp app;
+    private Activity activity;
+    private IDataManager dm;
+
+    //endregion
+
+    public SwipeActivityTest() {}
 
     @Before
     public void setup() {
         context = InstrumentationRegistry.getTargetContext();
         app = (SortMyStuffApp) context.getApplicationContext();
-        activity = contentsActivityActivityTestRule.getActivity();
+        activity = swipeActivityActivityTestRule.getActivity();
         dm = app.getFactory().getDataManager();
+
+        cleanAssetsData();
     }
 
     @After
     public void tearDown() {
-        File userDir = new File(
-                app.getFilesDir().getPath() + File.separator + "default-user");
-
-        try {
-            FileUtils.cleanDirectory(userDir);
-            dm.refreshFromLocal();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
         context = null;
         app = null;
         activity = null;
@@ -110,12 +121,12 @@ public class ContentsActivityTest {
     }
 
     @Rule
-    public ActivityTestRule<SwipeActivity> contentsActivityActivityTestRule
+    public ActivityTestRule<SwipeActivity> swipeActivityActivityTestRule
             = new ActivityTestRule<>(SwipeActivity.class);
 
     @Test
     public void onLaunch_displayRootAssetTitle() {
-        onView(withId(R.id.toolbar)).check(matches(isDisplayed()));
+        onView(withId(R.id.main_toolbar)).check(matches(isDisplayed()));
 
         Assert.assertTrue(getToolbarTitle().equals(ROOT_ASSET_NAME));
     }
@@ -127,10 +138,10 @@ public class ContentsActivityTest {
     }
 
     @Test
-    public void clickAddAssetButton() {
-        onView(withId(R.id.addAssetButton)).check(matches(isDisplayed()));
-        onView(withId(R.id.addAssetButton)).perform(click());
-        onView(withText("Add Asset")).check(matches(isDisplayed()));
+    public void addAsset_clickAddAssetButton() {
+        onView(withId(R.id.add_asset_button)).check(matches(isDisplayed()));
+        onView(withId(R.id.add_asset_button)).perform(click());
+        onView(withText(R.string.add_asset_dialog_title)).check(matches(isDisplayed()));
     }
 
     @Test
@@ -145,11 +156,11 @@ public class ContentsActivityTest {
 
     @Test
     public void addAsset_cancelDialogBox(){
-        onView(withId(R.id.addAssetButton)).perform(click());
+        onView(withId(R.id.add_asset_button)).perform(click());
         //type asset name into text area in dialog box
         onView(allOf(withClassName(endsWith("EditText")), withText(is("")))).perform(replaceText(ASSET1_NAME));
         //click on cancel button in dialog box
-        onView(withText("Cancel")).perform(click());
+        onView(withText(R.string.cancel_button)).perform(click());
         //asset should not be added
         Assert.assertFalse(onData(anything()).inAdapterView(withId(R.id.index_list)).atPosition(0).equals(ASSET1_NAME));
     }
@@ -169,10 +180,59 @@ public class ContentsActivityTest {
     }
 
     @Test
+    public void addAsset_withDefaultCategory() {
+        onView(withId(R.id.add_asset_button)).perform(click());
+        onView(allOf(is(instanceOf(EditText.class)), withText(is(""))))
+                .perform(replaceText(ASSET1_NAME));
+
+        // check if the category has been selected as the default
+        onView(withId(R.id.category_spinner))
+                .check(matches(withSpinnerText(containsString(DEFAULT_CATEGORY.toString()))));
+        onView(withText(R.string.add_asset_confirm_button)).perform(click());
+
+        clickAsset(0);
+        swipeToDetailsPage();
+        Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
+
+        // check if the category is displayed correctly
+        onView(withId(R.id.assetCategory_detail))
+                .check(matches(withText(DEFAULT_CATEGORY.toString().toUpperCase())));
+
+        checkDetailsListOfMiscellaneous();
+    }
+
+    @Test
+    public void addAsset_withSpecifiedCategory() {
+        onView(withId(R.id.add_asset_button)).perform(click());
+        onView(allOf(is(instanceOf(EditText.class)), withText(is(""))))
+                .perform(replaceText(ASSET1_NAME));
+        onView(withId(R.id.category_spinner)).perform(click());
+
+        // select "Food" category
+        onData(allOf(is(instanceOf(CategoryType.class)), is(SPECIFIED_CATEGORY)))
+                .inRoot(RootMatchers.isPlatformPopup()).perform(click());
+
+        // check if the "Food" has been selected
+        onView(withId(R.id.category_spinner))
+                .check(matches(withSpinnerText(containsString(SPECIFIED_CATEGORY.toString()))));
+        onView(withText(R.string.add_asset_confirm_button)).perform(click());
+
+        clickAsset(0);
+        swipeToDetailsPage();
+        Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
+
+        // check if the category is displayed correctly
+        onView(withId(R.id.assetCategory_detail))
+                .check(matches(withText(SPECIFIED_CATEGORY.toString().toUpperCase())));
+
+        checkDetailsListOfFood();
+    }
+
+    @Test
     public void onClickAssetFromList_displayAssetNameOnToolbar(){
         addAsset(ASSET1_NAME);
         clickAsset(0);
-        onView(withId(R.id.toolbar)).check(matches(isDisplayed()));
+        onView(withId(R.id.main_toolbar)).check(matches(isDisplayed()));
         //check that the name on the toolbar is the name of the selected asset
         Assert.assertTrue(getToolbarTitle().equals(ASSET1_NAME));
     }
@@ -189,8 +249,7 @@ public class ContentsActivityTest {
                 .check(matches(withText(ASSET2_NAME)));
     }
 
-
-  @Test
+    @Test
     public void displayPathbar_lengthWithinScreen() {
         // add asset1 and goes into asset1
         addAsset(ASSET1_NAME);
@@ -351,6 +410,40 @@ public class ContentsActivityTest {
         }
     }
 
+    @Test
+    public void selectionMode_hideUIInSelectionMode() {
+        // some UI components should be hided when in selection mode,
+        // in case unexpected interactions are performed by the user
+
+        addAsset(ASSET1_NAME);
+        clickAsset(0);
+        addAsset(ASSET2_NAME);
+
+        // The following UI components should be displayed in the normal mode:
+        // PATH BAR
+        onView(withId(R.id.pathbar_layout)).check(matches(isDisplayed()));
+
+        // ADD ASSET BUTTON
+        onView(withId(R.id.add_asset_button)).check(matches(isDisplayed()));
+
+        // SEARCH BUTTON (menu items)
+        onView(withId(R.id.search_view_button)).check(matches(isDisplayed()));
+
+        // DETAILS TAB
+        onView(allOf(isDescendantOfA(withId(R.id.tabs)), withText(R.string.details_page)))
+                .check(matches(isDisplayed()));
+
+        // enter selection mode
+        openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
+        onView(withText(R.string.selection_mode)).perform(click());
+
+        // NOW THEY SHOULD BE HIDDEN
+        onView(withId(R.id.pathbar_layout)).check(matches(not(isDisplayed())));
+        onView(withId(R.id.add_asset_button)).check(matches(not(isDisplayed())));
+        onView(withId(R.id.search_view_button)).check(doesNotExist());
+        onView(allOf(isDescendantOfA(withId(R.id.tabs)), withText(R.string.details_page)))
+                .check(doesNotExist());
+    }
 
     @Test
     public void selectionMode_tickTheCheckbox() {
@@ -404,16 +497,55 @@ public class ContentsActivityTest {
                 .atPosition(0).perform(longClick());
 
         //quit the selection mode by clicking the CANCEL button
-        onView(withId(R.id.cancel_button)).check(matches(isDisplayed()));
-        onView(withId(R.id.cancel_button)).perform(click());
+        onView(withId(R.id.selection_cancel_button)).check(matches(isDisplayed()));
+        onView(withId(R.id.selection_cancel_button)).perform(click());
 
         //now the CANCEL button and all the checkbox should disappear
-        onView(withId(R.id.cancel_button)).check(matches(not(isDisplayed())));
+        onView(withId(R.id.selection_cancel_button)).check(matches(not(isDisplayed())));
         for (int i = 0; i < 3; i++) {
             onData(anything()).inAdapterView(withId(R.id.index_list))
                     .atPosition(i).onChildView(withId(R.id.asset_checkbox))
                     .check(matches(not(isDisplayed())));
         }
+    }
+
+    @Test
+    public void moveAsset_hideUIWhenMoving() {
+        // some UI components should be hided when moving assets,
+        // in case unexpected interactions are performed by the user
+
+        addAsset(ASSET1_NAME);
+        clickAsset(0);
+        addAsset(ASSET2_NAME);
+
+        // The following UI components should be displayed in the normal mode:
+        // ADD ASSET BUTTON
+        onView(withId(R.id.add_asset_button)).check(matches(isDisplayed()));
+
+        // SEARCH BUTTON (menu items)
+        onView(withId(R.id.search_view_button)).check(matches(isDisplayed()));
+
+        // DETAILS TAB
+        onView(allOf(isDescendantOfA(withId(R.id.tabs)), withText(R.string.details_page)))
+                .check(matches(isDisplayed()));
+
+        // enter selection mode
+        openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
+        onView(withText(R.string.selection_mode)).perform(click());
+
+        // select item and click move button
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(0).perform(click());
+        onView(withId(R.id.selection_move_button)).perform(click());
+
+        // NOW THEY SHOULD BE HIDDEN
+        onView(withId(R.id.add_asset_button)).check(matches(not(isDisplayed())));
+        onView(withId(R.id.search_view_button)).check(doesNotExist());
+        onView(allOf(isDescendantOfA(withId(R.id.tabs)), withText(R.string.details_page)))
+                .check(doesNotExist());
+
+        // PATH BAR should be DISPLAYED
+        onView(withId(R.id.pathbar_layout)).check(matches(isDisplayed()));
     }
 
     @Test
@@ -428,7 +560,10 @@ public class ContentsActivityTest {
                 .atPosition(0).perform(longClick());
 
         //select nothing and click MOVE button
-        onView(withId(R.id.move_button)).perform(click());
+        onView(withId(R.id.selection_move_button)).perform(click());
+
+        //cancel move
+        onView(withId(R.id.selection_cancel_button)).perform(click());
 
         //two tables should stay where they were
         onView(withChild(withText(ASSET_TABLE_BIG))).check(matches(isDisplayed()));
@@ -458,7 +593,17 @@ public class ContentsActivityTest {
                 .atPosition(0).perform(click());
         onData(anything()).inAdapterView((withId(R.id.index_list)))
                 .atPosition(1).perform(click());
-        onView(withId(R.id.move_button)).perform(click());
+        onView(withId(R.id.selection_move_button)).perform(click());
+
+        //the selected two items should not be interactive
+        // (to prevent from moving assets to themselves or their children)
+        Assert.assertEquals(ASSET_DINING_ROOM, getToolbarTitle());
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(0).perform(click());
+        Assert.assertEquals(ASSET_DINING_ROOM, getToolbarTitle());
+        onData(anything()).inAdapterView((withId(R.id.index_list)))
+                .atPosition(1).perform(click());
+        Assert.assertEquals(ASSET_DINING_ROOM, getToolbarTitle());
 
         //go to the living room where tables will be moved
         onView(withId(R.id.pathbar_root)).perform(click());
@@ -488,8 +633,8 @@ public class ContentsActivityTest {
         Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
 
         openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
-        onView(withText("Delete Asset")).perform(click());
-        onView(withText("Confirm")).perform(click());
+        onView(withText(R.string.delete_current_asset)).perform(click());
+        onView(withText(R.string.delete_asset_confirm_button)).perform(click());
 
         // current asset set back to the container (in this case the Root) asset and asset1 no
         // longer exists
@@ -506,8 +651,8 @@ public class ContentsActivityTest {
         Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
 
         openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
-        onView(withText("Delete Asset")).perform(click());
-        onView(withText("Cancel")).perform(click());
+        onView(withText(R.string.delete_current_asset)).perform(click());
+        onView(withText(R.string.cancel_button)).perform(click());
 
         // current asset should still be asset1
         Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
@@ -518,10 +663,10 @@ public class ContentsActivityTest {
         addAsset(ASSET1_NAME);
 
         openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
-        onView(withText("Delete Asset")).perform(click());
+        onView(withText(R.string.delete_current_asset)).perform(click());
 
         // delete asset dialog should not pop up
-        onView(withText("Confirm")).check(doesNotExist());
+        onView(withText(R.string.delete_asset_confirm_button)).check(doesNotExist());
 
         // Root asset cannot be deleted
         Assert.assertEquals(ROOT_ASSET_NAME, getToolbarTitle());
@@ -544,8 +689,8 @@ public class ContentsActivityTest {
         onData(anything()).inAdapterView((withId(R.id.index_list)))
                 .atPosition(1).perform(click());
 
-        onView(withId(R.id.delete_button)).perform(click());
-        onView(withText("Confirm")).perform(click());
+        onView(withId(R.id.selection_delete_button)).perform(click());
+        onView(withText(R.string.delete_asset_confirm_button)).perform(click());
 
         // asset1 and asset2 should be deleted while asset3 is still there
         onView(withChild(withText(ASSET1_NAME))).check(doesNotExist());
@@ -568,101 +713,38 @@ public class ContentsActivityTest {
         onData(anything()).inAdapterView((withId(R.id.index_list)))
                 .atPosition(1).perform(click());
 
-        onView(withId(R.id.delete_button)).perform(click());
-        onView(withText("Cancel")).perform(click());
+        onView(withId(R.id.selection_delete_button)).perform(click());
+        onView(withText(R.string.cancel_button)).perform(click());
 
         // if cancel deleting, nothing should be deleted
         onView(withChild(withText(ASSET1_NAME))).check(matches(isDisplayed()));
         onView(withChild(withText(ASSET2_NAME))).check(matches(isDisplayed()));
     }
 
-    @Test
-    public void category_specifyCategoryWhenAddingAsset() {
-        onView(withId(R.id.addAssetButton)).perform(click());
-        onView(allOf(is(instanceOf(EditText.class)), withText(is(""))))
-                .perform(replaceText(ASSET1_NAME));
-        onView(withId(R.id.category_spinner)).perform(click());
+    //region PRIVATE METHODS
 
-        // select "Food" category
-        onData(allOf(is(instanceOf(CategoryType.class)), is(CategoryType.Food)))
-                .inRoot(RootMatchers.isPlatformPopup()).perform(click());
+    private void cleanAssetsData() {
+        File userDir = new File(
+                app.getFilesDir().getPath() + File.separator + "default-user");
 
-        // check if the "Food" has been selected
-        onView(withId(R.id.category_spinner))
-                .check(matches(withSpinnerText(containsString(CategoryType.Food.toString()))));
-        onView(withText("Save")).perform(click());
-
-        clickAsset(0);
-        Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
-        clickViewDetail();
-        Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
-
-        // check if the category is displayed correctly
-        onView(withId(R.id.assetCategory_detail))
-                .check(matches(withText(CategoryType.Food.toString().toUpperCase())));
-
-        // check if all the details of "Food" are there
-        onData(allOf(is(instanceOf(Detail.class)), hasToString("Notes")))
-                .check(matches(isDisplayed()));
-        onData(allOf(is(instanceOf(Detail.class)), hasToString("Expiry Date")))
-                .check(matches(isDisplayed()));
-        onData(allOf(is(instanceOf(Detail.class)), hasToString("Purchased From")))
-                .check(matches(isDisplayed()));
+        try {
+            FileUtils.cleanDirectory(userDir);
+            dm.refreshFromLocal();
+            dm.getRootAsset();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
-
-    @Test
-    public void category_defaultCategoryAsMiscellaneous() {
-        onView(withId(R.id.addAssetButton)).perform(click());
-        onView(allOf(is(instanceOf(EditText.class)), withText(is(""))))
-                .perform(replaceText(ASSET1_NAME));
-
-        // check if the "Miscellaneous" has been selected by default
-        onView(withId(R.id.category_spinner))
-                .check(matches(withSpinnerText(containsString(CategoryType.Miscellaneous.toString()))));
-        onView(withText("Save")).perform(click());
-
-        clickAsset(0);
-        Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
-        clickViewDetail();
-        Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
-
-        // check if the category is displayed correctly
-        onView(withId(R.id.assetCategory_detail))
-                .check(matches(withText(CategoryType.Miscellaneous.toString().toUpperCase())));
-
-        // check if all the details of "Food" are there
-        onData(allOf(is(instanceOf(Detail.class)), hasToString("Notes")))
-                .check(matches(isDisplayed()));
-    }
-
-    //region PRIVATE STUFF
-
-    private Context context;
-    private SortMyStuffApp app;
-    private Activity activity;
-    private IDataManager dm;
-
-    private static final String ROOT_ASSET_NAME = "Assets";
-    private static final String ASSET_NAME = "ASSET_NAME";
-    private static final String ASSET1_NAME = "ASSET1_NAME";
-    private static final String ASSET2_NAME = "ASSET2_NAME";
-    private static final String ASSET3_NAME = "ASSET3_NAME";
-    private static final String ASSET_LIVING_ROOM = "Living Room";
-    private static final String ASSET_DINING_ROOM = "Dining Room";
-    private static final String ASSET_TABLE_BIG = "table big";
-    private static final String ASSET_TABLE_SMALL = "table small";
-    private static final String PATH_BAR_0_PREFIX = "  ";
-    private static final String PATH_BAR_PREFIX = " >  ";
 
     private void addAsset(String assetName) {
-        onView(withId(R.id.addAssetButton)).perform(click());
+        onView(withId(R.id.add_asset_button)).perform(click());
         onView(allOf(is(instanceOf(EditText.class)), withText(is(""))))
                 .perform(replaceText(assetName));
-        onView(withText("Save")).perform(click());
+        onView(withText(R.string.add_asset_confirm_button)).perform(click());
     }
 
     private void addAsset(String assetName, CategoryType category) {
-        onView(withId(R.id.addAssetButton)).perform(click());
+        onView(withId(R.id.add_asset_button)).perform(click());
         onView(allOf(is(instanceOf(EditText.class)), withText(is(""))))
                 .perform(replaceText(ASSET1_NAME));
         onView(withId(R.id.category_spinner)).perform(click());
@@ -671,7 +753,7 @@ public class ContentsActivityTest {
         onData(allOf(is(instanceOf(CategoryType.class)), hasToString(category.toString())))
                 .inRoot(RootMatchers.isPlatformPopup()).perform(click());
 
-        onView(withText("Save")).perform(click());
+        onView(withText(R.string.add_asset_confirm_button)).perform(click());
     }
 
     private void clickAsset(int num) {
@@ -680,13 +762,16 @@ public class ContentsActivityTest {
     }
 
     private String getToolbarTitle() {
-        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.main_toolbar);
         return toolbar.getTitle().toString();
     }
 
-    private void clickViewDetail() {
-        openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
-        onView(withText("View Detail")).perform(click());
+    private void swipeToDetailsPage() {
+        onView(withId(R.id.viewpager)).perform(swipeLeft());
+    }
+
+    private void swipeToContentsPage() {
+        onView(withId(R.id.viewpager)).perform(swipeRight());
     }
 
     private static Matcher<View> withItemTextOnPathBar(final String itemText) {
@@ -717,6 +802,34 @@ public class ContentsActivityTest {
         addAsset(ASSET_TABLE_BIG);
         addAsset(ASSET_TABLE_SMALL);
     }
+
+    // change this method if default is not "Miscellaneous"
+    private void checkDetailsListOfMiscellaneous() {
+        if(!DEFAULT_CATEGORY.equals(CategoryType.Miscellaneous))
+            throw new IllegalStateException("Please change the checklist of the default category");
+
+        onData(anything()).inAdapterView(withId(R.id.details_list))
+                .atPosition(1).onChildView(withId(R.id.detail_label))
+                .check(matches(withText(MISCELLANEOUS_DETAIL_LABELS[1])));
+    }
+
+    // change this method if the specified category is not "Food"
+    private void checkDetailsListOfFood() {
+        if(!SPECIFIED_CATEGORY.equals(CategoryType.Food))
+            throw new IllegalStateException("Please change the checklist of the specified category");
+
+        // check if all the details of "Food" are there
+        onData(anything()).inAdapterView(withId(R.id.details_list))
+                .atPosition(1).onChildView(withId(R.id.detail_label))
+                .check(matches(withText(FOOD_DETAIL_LABELS[1])));
+        onData(anything()).inAdapterView(withId(R.id.details_list))
+                .atPosition(2).onChildView(withId(R.id.detail_label))
+                .check(matches(withText(FOOD_DETAIL_LABELS[2])));
+        onData(anything()).inAdapterView(withId(R.id.details_list))
+                .atPosition(3).onChildView(withId(R.id.detail_label))
+                .check(matches(withText(FOOD_DETAIL_LABELS[3])));
+    }
+
     //endregion
 
 }

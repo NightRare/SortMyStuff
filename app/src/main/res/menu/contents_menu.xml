@@ -1,12 +1,13 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsActivity">
+    tools:context="nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsActivity"
+    android:id="@+id/main_menu">
 
 
     <group android:id="@+id/main_menu_group">
 
-        <item android:id="@+id/search_view"
+        <item android:id="@+id/search_view_button"
             android:icon="@drawable/ic_search_white_48dp"
             android:title="@string/search"
             app:showAsAction="ifRoom" />

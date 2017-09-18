@@ -9,33 +9,33 @@
         android:id="@+id/index_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/action_buttons"
+        android:layout_above="@+id/selection_action_buttons"
         android:layout_below="@id/pathbar_layout" />
 
     <LinearLayout
-        android:id="@id/action_buttons"
+        android:id="@id/selection_action_buttons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/cancel_button"
+            android:id="@+id/selection_cancel_button"
             style="@style/action_button_style"
             android:text="Cancel" />
 
         <Button
-            android:id="@+id/select_all_button"
+            android:id="@+id/selection_select_all_button"
             style="@style/action_button_style"
             android:text="ALL" />
 
         <Button
-            android:id="@+id/delete_button"
+            android:id="@+id/selection_delete_button"
             style="@style/action_button_style"
             android:text="DELETE" />
 
         <Button
-            android:id="@+id/move_button"
+            android:id="@+id/selection_move_button"
             style="@style/action_button_style"
             android:text="Move" />
 

@@ -61,7 +61,7 @@ public class SearchActivityTest {
         addAsset("Apple");
         addAsset("Orange");
         addAsset("Apricot");
-        Espresso.onView(withId(R.id.search_view)).perform(click());
+        onView(withId(R.id.search_view_button)).perform(click());
     }
 
     @After
@@ -132,7 +132,7 @@ public class SearchActivityTest {
     private IDataManager dm;
 
     private void addAsset(String assetName) {
-        onView(withId(R.id.addAssetButton)).perform(click());
+        onView(withId(R.id.add_asset_button)).perform(click());
         onView(allOf(withClassName(endsWith("EditText")), withText(is(""))))
                 .perform(replaceText(assetName));
         onView(withText("Save")).perform(click());

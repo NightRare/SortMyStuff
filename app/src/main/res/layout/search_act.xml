@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:theme="@style/AppTheme.AppBarOverlay"
-        android:id="@+id/appBarLayout">
+        android:id="@+id/search_appbar_layout">
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/search_toolbar"
@@ -24,7 +24,7 @@
 
 
     <include layout="@layout/search_list"
-        android:layout_below="@id/appBarLayout"
+        android:layout_below="@id/search_appbar_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/include" />

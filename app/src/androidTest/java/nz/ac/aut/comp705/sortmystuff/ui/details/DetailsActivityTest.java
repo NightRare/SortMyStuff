@@ -116,7 +116,7 @@ public class DetailsActivityTest {
     public void checkAddDetail_success(){
         startTest();
         addEditDetail("","Test text");
-        onData(anything()).inAdapterView(withId(R.id.detail_list))
+        onData(anything()).inAdapterView(withId(R.id.details_list))
                 .atPosition(1).onChildView(withId(android.R.id.text2))
                 .check(matches(withText("Test text")));
     }
@@ -126,7 +126,7 @@ public class DetailsActivityTest {
         startTest();
         addEditDetail("","Test text");
         addEditDetail("Test text","Text test");
-        onData(anything()).inAdapterView(withId(R.id.detail_list))
+        onData(anything()).inAdapterView(withId(R.id.details_list))
                 .atPosition(1).onChildView(withId(android.R.id.text2))
                 .check(matches(withText("Text test")));
     }
@@ -142,7 +142,7 @@ public class DetailsActivityTest {
     private static final String ACTION_NAME = "android.media.action.IMAGE_CAPTURE";
 
     private void addAsset(String assetName) {
-        onView(withId(R.id.addAssetButton)).perform(click());
+        onView(withId(R.id.add_asset_button)).perform(click());
         onView(allOf(is(instanceOf(EditText.class)), withText(is(""))))
                 .perform(replaceText(assetName));
         onView(withText("Save")).perform(click());
@@ -154,7 +154,7 @@ public class DetailsActivityTest {
     }
 
     private void clickPhoto() {
-        onData(anything()).inAdapterView(withId(R.id.detail_list))
+        onData(anything()).inAdapterView(withId(R.id.details_list))
                 .atPosition(0).perform(click());
     }
 
@@ -187,7 +187,7 @@ public class DetailsActivityTest {
         Intent intent = new Intent(mActivityRule.getActivity(), SwipeActivity.class);
         intent.putExtra("AssetID", getAssetID("Mouse"));
         mIntentsRule.launchActivity(intent);
-        onView(withId(R.id.toolbar)).check(matches(isDisplayed()));
+        onView(withId(R.id.main_toolbar)).check(matches(isDisplayed()));
     }
 
     private String getAssetID(final String assetName){
@@ -211,7 +211,7 @@ public class DetailsActivityTest {
     }
 
     private void addEditDetail(String fromName, String newDetail){
-        onData(anything()).inAdapterView(withId(R.id.detail_list))
+        onData(anything()).inAdapterView(withId(R.id.details_list))
                 .atPosition(1).perform(click());
         onView(allOf(withClassName(endsWith("EditText")), withText(is(fromName))))
                 .perform(replaceText(newDetail));
