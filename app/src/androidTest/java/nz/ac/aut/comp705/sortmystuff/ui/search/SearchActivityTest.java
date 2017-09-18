@@ -52,30 +52,37 @@ import static org.hamcrest.Matchers.is;
 @RunWith(AndroidJUnit4.class)
 public class SearchActivityTest {
 
+    //region PRIVATE MEMBERS
+
+    private Context context;
+    private SortMyStuffApp app;
+    private Activity activity;
+    private IDataManager dm;
+
+    private static final String ONE_RESULT_SEARCH_ITEM = "Orange";
+    private static final String TWO_RESULT_SEARCH_PREFIX = "Ap";
+    private static final String TWO_RESULT_SEARCH_ITEM_1 = TWO_RESULT_SEARCH_PREFIX + "ple";
+    private static final String TWO_RESULT_SEARCH_ITEM_2 = TWO_RESULT_SEARCH_PREFIX + "ricot";
+    private static final String NO_RESULT_SEARCH_KEYWORD = "Ba";
+
+    //endregion
+
     @Before
     public void setup() {
         context = InstrumentationRegistry.getTargetContext();
         app = (SortMyStuffApp) context.getApplicationContext();
         activity = swipeActivityTestRule.getActivity();
         dm = app.getFactory().getDataManager();
-        addAsset("Apple");
-        addAsset("Orange");
-        addAsset("Apricot");
+        cleanAssetsData();
+
+        addAsset(ONE_RESULT_SEARCH_ITEM);
+        addAsset(TWO_RESULT_SEARCH_ITEM_1);
+        addAsset(TWO_RESULT_SEARCH_ITEM_2);
         onView(withId(R.id.search_view_button)).perform(click());
     }
 
     @After
     public void tearDown() {
-        File userDir = new File(
-                app.getFilesDir().getPath() + File.separator + "default-user");
-
-        try {
-            FileUtils.cleanDirectory(userDir);
-            dm.refreshFromLocal();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
         context = null;
         app = null;
         activity = null;
@@ -94,23 +101,24 @@ public class SearchActivityTest {
     }
 
     @Test
-    public void search_Orange(){
-        search("Orange");
+    public void search_oneResult(){
+        search(ONE_RESULT_SEARCH_ITEM);
         //Orange should display in search results
         onData(anything()).inAdapterView(withId(R.id.result_list))
-                .atPosition(0).check(matches(withText("Orange")));
+                .atPosition(0).onChildView(withId(R.id.search_result_title))
+                .check(matches(withText(ONE_RESULT_SEARCH_ITEM)));
     }
 
     @Test
-    public void search_twoItems(){
-        search("Ap");
+    public void search_twoResults(){
+        search(TWO_RESULT_SEARCH_PREFIX);
         //there should be two items in result list: Apple and Apricot
         onView (withId (R.id.result_list)).check (ViewAssertions.matches (withListSize(2)));
     }
 
     @Test
     public void search_noResult(){
-        search("Ba");
+        search(NO_RESULT_SEARCH_KEYWORD);
         //No results shown, result list should be empty
         onView (withId (R.id.result_list)).check(ViewAssertions.matches(withListSize(0)));
     }
@@ -122,20 +130,26 @@ public class SearchActivityTest {
         onView (withId (R.id.result_list)).check(ViewAssertions.matches(withListSize(0)));
     }
 
+    //region PRIVATE METHODS
 
-    private Context context;
+    private void cleanAssetsData() {
+        File userDir = new File(
+                app.getFilesDir().getPath() + File.separator + "default-user");
 
-    private SortMyStuffApp app;
-
-    private Activity activity;
-
-    private IDataManager dm;
+        try {
+            FileUtils.cleanDirectory(userDir);
+            dm.refreshFromLocal();
+            dm.getRootAsset();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     private void addAsset(String assetName) {
         onView(withId(R.id.add_asset_button)).perform(click());
         onView(allOf(withClassName(endsWith("EditText")), withText(is(""))))
                 .perform(replaceText(assetName));
-        onView(withText("Save")).perform(click());
+        onView(withText(R.string.add_asset_confirm_button)).perform(click());
     }
 
     private void search(String keyword){
@@ -153,4 +167,6 @@ public class SearchActivityTest {
             }
         };
     }
+
+    //endregion
 }
