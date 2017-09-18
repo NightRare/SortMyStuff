@@ -18,6 +18,10 @@
     <string name="cancel_button">Cancel</string>
     <string name="add_asset_dialog_title">Add Asset</string>
     <string name="add_asset_confirm_button">Save</string>
+    <string name="photo_remove_dialog_title">Remove Photo</string>
+    <string name="photo_remove_confirm_button">Yes</string>
+    <string name="permission_allow_button">Ok</string>
+    <string name="edit_detail_confirm_button">Save</string>
 
     <string name="contents_page">Contents</string>
     <string name="details_page">Details</string>

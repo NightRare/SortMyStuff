@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
@@ -22,7 +23,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.desmond.squarecamera.CameraActivity;
-import com.desmond.squarecamera.ImageUtility;
+
+import java.io.IOException;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.util.AppCode;
@@ -103,6 +105,24 @@ public class SwipeActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode != RESULT_OK) return;
+
+        switch (requestCode) {
+            case AppCode.INTENT_TAKE_PHOTO:
+                Uri photoUri = data.getData();
+                try {
+                    Bitmap bm = MediaStore.Images.Media.getBitmap(this.getContentResolver(), photoUri);
+                    swipeAdapter.getDetailsPresenter().updateAssetPhoto(bm);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
+            default:
+                break;
+        }
+    }
 
     public String getCurrentAssetId() {
         if(swipeAdapter.getContentsPresenter() == null)
@@ -142,25 +162,6 @@ public class SwipeActivity extends AppCompatActivity {
             swipeAdapter.setTabsAmount(1);
     }
 
-    /**
-     * Handle photo cropping or update a cropped photo.
-     */
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode != RESULT_OK) return;
-
-        switch (requestCode) {
-            case AppCode.INTENT_TAKE_PHOTO:
-                Uri photoUri = data.getData();
-                Bitmap bitmap = ImageUtility.decodeSampledBitmapFromPath(photoUri.getPath(),
-                        screenSize.x, screenSize.y);
-                swipeAdapter.getDetailsPresenter().updateImage(bitmap);
-                break;
-            default:
-                break;
-        }
-    }
-
     //region PRIVATE STUFF
 
     private static final int REQUEST_CAMERA_PERMISSION = 1;
@@ -184,23 +185,23 @@ public class SwipeActivity extends AppCompatActivity {
      */
     private ViewPager viewPager;
 
-
     private void showPermissionRationaleDialog(final String message, final String permission) {
         new AlertDialog.Builder(SwipeActivity.this)
                 .setMessage(message)
-                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                .setPositiveButton(R.string.permission_allow_button, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         SwipeActivity.this.requestForPermission(permission);
                     }
                 })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                .setNegativeButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
 
                     }
                 })
                 .create()
+
                 .show();
     }
 

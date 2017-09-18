@@ -22,6 +22,7 @@ import android.widget.Toast;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
+import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
@@ -136,7 +137,7 @@ public class DetailsFragment extends Fragment implements IDetailsView{
 
             if(type.equals(DetailType.Image)) {
                 // TODO: to be completed later, now only display the photo of the asset, any other image detail will not be displayed
-                if(!item.getLabel().equals("Photo")) {
+                if(!item.getLabel().equals(CategoryType.BasicDetail.PHOTO)) {
                     v = inflater.inflate(DUMMY_LAYOUT, parent, false);
                 }
                 else {
@@ -158,16 +159,16 @@ public class DetailsFragment extends Fragment implements IDetailsView{
                         @Override
                         public boolean onLongClick(View v) {
                             AlertDialog.Builder dialog = new AlertDialog.Builder(activity);
-                            dialog.setTitle("Remove Photo");
+                            dialog.setTitle(R.string.photo_remove_dialog_title);
                             dialog.setMessage("Are you sure of removing this photo?");
                             dialog.setCancelable(true);
-                            dialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            dialog.setPositiveButton(R.string.photo_remove_confirm_button, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     presenter.resetImage((ImageDetail)item);
                                 }
                             });
-                            dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            dialog.setNegativeButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     Toast.makeText(activity,

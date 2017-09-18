@@ -175,7 +175,7 @@ public class DetailsPresenter implements IDetailsPresenter {
         fieldText.setText(detail.getField().toString());
         //button setup
         dialog.setView(layout)
-                .setPositiveButton("Save", new DialogInterface.OnClickListener() {
+                .setPositiveButton(R.string.edit_detail_confirm_button, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         editDetail(detail.getId(),detail.getLabel(),fieldText.getText().toString());
@@ -183,7 +183,7 @@ public class DetailsPresenter implements IDetailsPresenter {
                         view.showMessage("Edited " + detail.getLabel());
                     }
                 })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                .setNegativeButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) { dialog.cancel();
                     }
@@ -211,7 +211,7 @@ public class DetailsPresenter implements IDetailsPresenter {
      * @param newImage
      */
     @Override
-    public void updateImage(final Bitmap newImage) {
+    public void updateAssetPhoto(final Bitmap newImage) {
         Preconditions.checkNotNull(newImage, "The image cannot be null");
         dm.getDetailsAsync(currentAssetId, new IDataManager.LoadDetailsCallback() {
             @Override
@@ -220,6 +220,7 @@ public class DetailsPresenter implements IDetailsPresenter {
                     if(d.getLabel().equals(CategoryType.BasicDetail.PHOTO)) {
                         dm.updateImageDetail((ImageDetail) d, d.getLabel(), newImage);
                         view.showDetails(details);
+                        break;
                     }
                 }
             }

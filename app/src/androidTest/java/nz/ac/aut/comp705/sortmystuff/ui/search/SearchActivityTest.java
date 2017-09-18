@@ -56,7 +56,7 @@ public class SearchActivityTest {
     public void setup() {
         context = InstrumentationRegistry.getTargetContext();
         app = (SortMyStuffApp) context.getApplicationContext();
-        activity = contentsActivityTestRule.getActivity();
+        activity = swipeActivityTestRule.getActivity();
         dm = app.getFactory().getDataManager();
         addAsset("Apple");
         addAsset("Orange");
@@ -83,7 +83,7 @@ public class SearchActivityTest {
     }
 
     @Rule
-    public ActivityTestRule<SwipeActivity> contentsActivityTestRule
+    public ActivityTestRule<SwipeActivity> swipeActivityTestRule
             = new ActivityTestRule<>(SwipeActivity.class);
 
     @Test

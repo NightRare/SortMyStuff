@@ -1,9 +1,20 @@
 package nz.ac.aut.comp705.sortmystuff.ui.swipe;
 
 import android.app.Activity;
+import android.app.Instrumentation;
+import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.res.AssetManager;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.SystemClock;
+import android.provider.MediaStore;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.contrib.RecyclerViewActions;
+import android.support.test.espresso.intent.matcher.IntentMatchers;
+import android.support.test.espresso.intent.rule.IntentsTestRule;
 import android.support.test.espresso.matcher.RootMatchers;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
@@ -11,6 +22,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.EditText;
 
+import com.desmond.squarecamera.CameraActivity;
 import com.google.common.base.Preconditions;
 
 import junit.framework.Assert;
@@ -30,11 +42,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
+import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
+import nz.ac.aut.comp705.sortmystuff.ui.utils.AndroidTestUtility;
+import nz.ac.aut.comp705.sortmystuff.util.AppCode;
 import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 
 import static android.support.test.espresso.Espresso.onData;
@@ -47,10 +65,16 @@ import static android.support.test.espresso.action.ViewActions.swipeLeft;
 import static android.support.test.espresso.action.ViewActions.swipeRight;
 import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.intent.Intents.intended;
+import static android.support.test.espresso.intent.Intents.intending;
+import static android.support.test.espresso.intent.matcher.IntentMatchers.hasAction;
+import static android.support.test.espresso.intent.matcher.IntentMatchers.hasComponent;
+import static android.support.test.espresso.intent.matcher.IntentMatchers.toPackage;
 import static android.support.test.espresso.matcher.ViewMatchers.isChecked;
 import static android.support.test.espresso.matcher.ViewMatchers.isDescendantOfA;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.isNotChecked;
+import static android.support.test.espresso.matcher.ViewMatchers.isRoot;
 import static android.support.test.espresso.matcher.ViewMatchers.withChild;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
@@ -77,6 +101,7 @@ public class SwipeActivityTest {
     private static final String ROOT_ASSET_NAME = "Assets";
     private static final CategoryType DEFAULT_CATEGORY = CategoryType.Miscellaneous;
     private static final CategoryType SPECIFIED_CATEGORY = CategoryType.Food;
+    private static final String ACTION_NAME = "android.media.action.IMAGE_CAPTURE";
 
     private static final String ASSET_NAME = "ASSET_NAME";
     private static final String ASSET1_NAME = "ASSET1_NAME";
@@ -90,8 +115,11 @@ public class SwipeActivityTest {
     private static final String PATH_BAR_PREFIX = " >  ";
 
     // Category Details List
-    private static final String[] MISCELLANEOUS_DETAIL_LABELS = {"Photo", "Notes"};
-    private static final String[] FOOD_DETAIL_LABELS = {"Photo", "Notes", "Expiry Date", "Purchased From"};
+    private static final String[] MISCELLANEOUS_DETAIL_LABELS =
+            {CategoryType.BasicDetail.PHOTO, CategoryType.BasicDetail.NOTES};
+    private static final String[] FOOD_DETAIL_LABELS =
+            {CategoryType.BasicDetail.PHOTO, CategoryType.BasicDetail.NOTES,
+                    "Expiry Date", "Purchased From"};
 
     private Context context;
     private SortMyStuffApp app;
@@ -106,7 +134,7 @@ public class SwipeActivityTest {
     public void setup() {
         context = InstrumentationRegistry.getTargetContext();
         app = (SortMyStuffApp) context.getApplicationContext();
-        activity = swipeActivityActivityTestRule.getActivity();
+        activity = swipeActivityRule.getActivity();
         dm = app.getFactory().getDataManager();
 
         cleanAssetsData();
@@ -121,8 +149,13 @@ public class SwipeActivityTest {
     }
 
     @Rule
-    public ActivityTestRule<SwipeActivity> swipeActivityActivityTestRule
+    public ActivityTestRule<SwipeActivity> swipeActivityRule
             = new ActivityTestRule<>(SwipeActivity.class);
+
+    /* Instantiate an IntentsTestRule object.*/
+    @Rule
+    public IntentsTestRule<SwipeActivity> intentsRule =
+            new IntentsTestRule<>(SwipeActivity.class, true, false);
 
     @Test
     public void onLaunch_displayRootAssetTitle() {
@@ -721,6 +754,202 @@ public class SwipeActivityTest {
         onView(withChild(withText(ASSET2_NAME))).check(matches(isDisplayed()));
     }
 
+    @Test
+    public void editTextDetail_inputNewText(){
+        addAsset(ASSET1_NAME);
+        clickAsset(0);
+        swipeToDetailsPage();
+
+        editTextDetail("","Test text");
+        onData(anything()).inAdapterView(withId(R.id.details_list))
+                .atPosition(1).onChildView(withId(R.id.detail_field))
+                .check(matches(withText("Test text")));
+    }
+
+    @Test
+    public void editTextDetail_changeExistingText(){
+        addAsset(ASSET1_NAME);
+        clickAsset(0);
+        swipeToDetailsPage();
+
+        editTextDetail("","Test text");
+        editTextDetail("Test text","Text test");
+        onData(anything()).inAdapterView(withId(R.id.details_list))
+                .atPosition(1).onChildView(withId(R.id.detail_field))
+                .check(matches(withText("Text test")));
+    }
+
+    @Test
+    public void editTextDetail_inputVoidText() {
+        addAsset(ASSET1_NAME);
+        clickAsset(0);
+        swipeToDetailsPage();
+
+        editTextDetail("","Test text");
+        editTextDetail("Test text","");
+        onData(anything()).inAdapterView(withId(R.id.details_list))
+                .atPosition(1).onChildView(withId(R.id.detail_field))
+                .check(matches(withText("")));
+    }
+
+    @Test
+    public void editTextDetail_inputVeryLongText() {
+        addAsset(ASSET1_NAME);
+        clickAsset(0);
+        swipeToDetailsPage();
+
+        String longField = "";
+        for(int i = 0; i <= AppConstraints.TEXTDETAIL_FIELD_CAP; i++) {
+            longField += "l";
+        }
+
+        editTextDetail("",longField);
+        // the edit action should be canceled due to the overlong text
+        onData(anything()).inAdapterView(withId(R.id.details_list))
+                .atPosition(1).onChildView(withId(R.id.detail_field))
+                .check(matches(withText("")));
+    }
+
+    @Test
+    public void photo_takePhotoTest() throws IOException {
+        // in order to stub the outgoing intents, need to use IntentsTestRule
+        Intent intent = new Intent(swipeActivityRule.getActivity(), SwipeActivity.class);
+        intentsRule.launchActivity(intent);
+
+        addAsset(ASSET_LIVING_ROOM);
+        clickAsset(0);
+        swipeToDetailsPage();
+
+        // stubbing the return data of the camera activity
+        Resources resources = InstrumentationRegistry.getTargetContext().getResources();
+        Uri imageUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
+                resources.getResourcePackageName(R.drawable.androidtest_image_1) + '/' +
+                resources.getResourceTypeName(R.drawable.androidtest_image_1) + '/' +
+                resources.getResourceEntryName(R.drawable.androidtest_image_1));
+        Intent resultData = new Intent();
+        resultData.setData(imageUri);
+        Instrumentation.ActivityResult result = new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData);
+        final Bitmap newImage = MediaStore.Images.Media.getBitmap(
+                InstrumentationRegistry.getTargetContext().getContentResolver(), imageUri);
+
+        // Stub out the Camera.
+        intending(hasComponent(CameraActivity.class.getName())).respondWith(result);
+
+        clickPhoto(false);
+
+        // check if the CameraActivity is inteded
+        intended(hasComponent(CameraActivity.class.getName()));
+        dm.getAllAssetsAsync(new IDataManager.LoadAssetsCallback() {
+            @Override
+            public void onAssetsLoaded(List<Asset> assets) {
+                boolean checked = false;
+                for(Asset a : assets) {
+                    if(a.getName().equals(ASSET_LIVING_ROOM)) {
+                        // check whether the new image is updated to the asset
+                        Assert.assertTrue(newImage.sameAs(a.getPhoto()));
+                        checked = true;
+                        break;
+                    }
+                }
+                if(!checked) Assert.fail();
+            }
+
+            @Override
+            public void dataNotAvailable(int errorCode) {
+
+            }
+        });
+    }
+
+    @Test
+    public void photo_removePhoto() throws IOException {
+        // in order to stub the outgoing intents, need to use IntentsTestRule
+        Intent intent = new Intent(swipeActivityRule.getActivity(), SwipeActivity.class);
+        intentsRule.launchActivity(intent);
+
+        // get the customised photo image
+        Resources resources = InstrumentationRegistry.getTargetContext().getResources();
+        Uri imageUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
+                resources.getResourcePackageName(R.drawable.androidtest_image_1) + '/' +
+                resources.getResourceTypeName(R.drawable.androidtest_image_1) + '/' +
+                resources.getResourceEntryName(R.drawable.androidtest_image_1));
+        final Bitmap customisedImage = MediaStore.Images.Media.getBitmap(
+                InstrumentationRegistry.getTargetContext().getContentResolver(), imageUri);
+
+        // get the default image
+        Uri defaultImageUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
+                resources.getResourcePackageName(R.drawable.default_square) + '/' +
+                resources.getResourceTypeName(R.drawable.default_square) + '/' +
+                resources.getResourceEntryName(R.drawable.default_square));
+        final Bitmap defaultImage = MediaStore.Images.Media.getBitmap(
+                InstrumentationRegistry.getTargetContext().getContentResolver(), defaultImageUri);
+
+        addAsset(ASSET_LIVING_ROOM);
+
+        // update the photo of the newly added asset
+        dm.getAllAssetsAsync(new IDataManager.LoadAssetsCallback() {
+            @Override
+            public void onAssetsLoaded(List<Asset> assets) {
+                for(Asset a : assets) {
+                    if(a.getName().equals(ASSET_LIVING_ROOM)) {
+
+                        dm.getDetailsAsync(a, new IDataManager.LoadDetailsCallback() {
+                            @Override
+                            public void onDetailsLoaded(List<Detail> details) {
+                                for(Detail d : details) {
+                                    if(d.getLabel().equals(CategoryType.BasicDetail.PHOTO)) {
+                                        dm.updateImageDetail((ImageDetail) d, d.getLabel(), customisedImage);
+                                        break;
+                                    }
+                                }
+                            }
+
+                            @Override
+                            public void dataNotAvailable(int errorCode) {
+
+                            }
+                        });
+
+                        // check whether the new image is updated to the asset
+                        break;
+                    }
+                }
+            }
+
+            @Override
+            public void dataNotAvailable(int errorCode) {
+
+            }
+        });
+
+        clickAsset(0);
+        swipeToDetailsPage();
+        clickPhoto(true);
+        onView(withText(R.string.photo_remove_confirm_button)).perform(click());
+
+        dm.getAllAssetsAsync(new IDataManager.LoadAssetsCallback() {
+            @Override
+            public void onAssetsLoaded(List<Asset> assets) {
+                boolean checked = false;
+                for(Asset a : assets) {
+                    if(a.getName().equals(ASSET_LIVING_ROOM)) {
+                        // check whether the new image is updated to the asset
+                        Assert.assertTrue(defaultImage.sameAs(a.getPhoto()));
+                        checked = true;
+                        break;
+                    }
+                }
+                if(!checked) Assert.fail();
+            }
+
+            @Override
+            public void dataNotAvailable(int errorCode) {
+
+            }
+        });
+    }
+
+
     //region PRIVATE METHODS
 
     private void cleanAssetsData() {
@@ -768,10 +997,14 @@ public class SwipeActivityTest {
 
     private void swipeToDetailsPage() {
         onView(withId(R.id.viewpager)).perform(swipeLeft());
+        // wait for the animation
+        SystemClock.sleep(1000);
     }
 
     private void swipeToContentsPage() {
         onView(withId(R.id.viewpager)).perform(swipeRight());
+        // wait for the animation
+        SystemClock.sleep(1000);
     }
 
     private static Matcher<View> withItemTextOnPathBar(final String itemText) {
@@ -829,6 +1062,21 @@ public class SwipeActivityTest {
                 .atPosition(3).onChildView(withId(R.id.detail_label))
                 .check(matches(withText(FOOD_DETAIL_LABELS[3])));
     }
+
+    private void clickPhoto(boolean longClick) {
+        onData(anything()).inAdapterView(withId(R.id.details_list))
+                .atPosition(0).perform(longClick ? longClick() : click());
+    }
+
+    private void editTextDetail(String fromName, String newDetail){
+        onData(anything()).inAdapterView(withId(R.id.details_list))
+                .atPosition(1).perform(click());
+        onView(allOf(withClassName(endsWith("EditText")), withText(is(fromName))))
+                .perform(replaceText(newDetail));
+        onView(withText(R.string.edit_detail_confirm_button)).perform(click());
+    }
+
+
 
     //endregion
 
