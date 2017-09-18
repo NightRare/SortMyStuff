@@ -529,8 +529,10 @@ public class DataManager implements IDataManager {
         Preconditions.checkNotNull(label);
         Preconditions.checkNotNull(field);
         Preconditions.checkArgument(!label.replaceAll(" ", "").isEmpty());
-        Preconditions.checkArgument(label.length() < AppConstraints.DETAIL_LABEL_CAP);
-        Preconditions.checkArgument(field.length() < AppConstraints.TEXTDETAIL_FIELD_CAP);
+        Preconditions.checkArgument(label.length() <= AppConstraints.DETAIL_LABEL_CAP,
+                "Please keep the length of the text within " + AppConstraints.DETAIL_LABEL_CAP + " characters");
+        Preconditions.checkArgument(field.length() <= AppConstraints.TEXTDETAIL_FIELD_CAP,
+                "Please keep the length of the text within " + AppConstraints.TEXTDETAIL_FIELD_CAP + " characters");
 
         modifyDetail(assetId, detailId, label, field);
     }

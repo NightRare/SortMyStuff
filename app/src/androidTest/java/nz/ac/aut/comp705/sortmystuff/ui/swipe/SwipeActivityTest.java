@@ -1076,8 +1076,6 @@ public class SwipeActivityTest {
         onView(withText(R.string.edit_detail_confirm_button)).perform(click());
     }
 
-
-
     //endregion
 
 }

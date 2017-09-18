@@ -7,6 +7,7 @@ import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
+import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.ui.IPresenter;
 
 /**
@@ -22,23 +23,12 @@ public interface IDetailsPresenter extends IPresenter {
     String getCurrentAssetID();
 
     /**
-     * Retrieve the current asset's name
-     * @return AssetName
-     */
-    String getCurrentAssetName();
-
-    /**
      * Load the details associated with the current asset
      * @return DetailList
      */
     List<Detail> loadDetails();
 
-    /**
-     * Show the dialog box associated
-     * with editing details
-     * @param view
-     */
-    void showDialogBox(View view, Detail detail);
+    void updateTextDetail(TextDetail detail, String newText);
 
     /**
      * Update the image of an asset given an Bitmap type image

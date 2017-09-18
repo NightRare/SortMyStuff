@@ -8,6 +8,8 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
@@ -19,6 +21,7 @@ import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
+import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
 import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 import nz.ac.aut.comp705.sortmystuff.util.Log;
@@ -87,28 +90,6 @@ public class DetailsPresenter implements IDetailsPresenter {
     /**
      * {@inheritDoc}
      *
-     * @return assetName
-     */
-    @Override
-    public String getCurrentAssetName() {
-        final String[] name = new String[1];
-        dm.getAssetAsync(getCurrentAssetID(), new IDataManager.GetAssetCallback() {
-            @Override
-            public void onAssetLoaded(Asset asset) {
-                name[0] = asset.getName();
-            }
-
-            @Override
-            public void dataNotAvailable(int errorCode) {
-                Log.e("Data not found ","Error: "+errorCode);
-            }
-        });
-        return name[0];
-    }
-
-    /**
-     * {@inheritDoc}
-     *
      * @return detailList
      */
     @Override
@@ -129,82 +110,21 @@ public class DetailsPresenter implements IDetailsPresenter {
         return  detailList;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @param view
-     */
     @Override
-    public void showDialogBox(View view, Detail detail){
-        getEditDetailDialogBox(view, detail).create().show();
+    public void updateTextDetail(final TextDetail detail, String newText) {
+        try {
+            dm.updateTextDetail(getCurrentAssetID(),detail.getId(),detail.getLabel(),newText);
+        } catch (IllegalArgumentException e) {
+            Toast.makeText(activity, e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+        view.showDetails(loadDetails());
+        view.showMessage("Edited " + detail.getLabel());
     }
 
     private void setAsset(){
         TextView assetCategory = (TextView) activity.findViewById(R.id.assetCategory_detail);
         assetCategory.setText(getCategory().toUpperCase());
     }
-
-    /**
-     * Edit selected detail of current asset
-     * @param  detailId
-     * @param label
-     * @param field
-     */
-    private void editDetail(String detailId, String label, String field) {
-        //dm.createTextDetail(getCurrentAssetID(), label, field);
-        dm.updateTextDetail(getCurrentAssetID(),detailId,label,field);
-    }
-
-    /**
-     * Setup the dialog box for adding details
-     * that enables two single line inputs for
-     * detail label and field, and has a
-     * functional save and cancel button
-     * @param v
-     * @return dialog
-     */
-    private AlertDialog.Builder getEditDetailDialogBox(View v, final Detail detail){
-        AlertDialog.Builder dialog = new AlertDialog.Builder(v.getContext());
-        dialog.setTitle(detail.getLabel());
-        //dialog box setup
-        Context context = v.getContext();
-        LinearLayout layout = new LinearLayout(context);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        //field text configuration
-        final EditText fieldText = createEditText(context,layout);
-        fieldText.setText(detail.getField().toString());
-        //button setup
-        dialog.setView(layout)
-                .setPositiveButton(R.string.edit_detail_confirm_button, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        editDetail(detail.getId(),detail.getLabel(),fieldText.getText().toString());
-                        view.showDetails(loadDetails());
-                        view.showMessage("Edited " + detail.getLabel());
-                    }
-                })
-                .setNegativeButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) { dialog.cancel();
-                    }
-                });
-        return dialog;
-    }
-
-    /**
-     * Creates an editable text area for the dialog box
-     * @param context
-     * @param layout
-     * @return editText
-     */
-    private EditText createEditText(Context context, LinearLayout layout){
-        final EditText editText = new EditText(context);
-        editText.setSingleLine();
-        editText.setInputType(TYPE_TEXT_FLAG_CAP_SENTENCES);
-        layout.addView(editText);
-        return editText;
-    }
-
 
     /**
      * {@inheritDoc}

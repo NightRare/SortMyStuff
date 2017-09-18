@@ -14,7 +14,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,7 +28,10 @@ import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
+import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
+
+import static android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -74,9 +79,9 @@ public class DetailsFragment extends Fragment implements IDetailsView{
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Detail detail = (Detail) parent.getItemAtPosition(position);
-                if(detail.getType().equals(DetailType.Image))
-                    return;
-                presenter.showDialogBox(view, detail);
+                if (detail.getType().equals(DetailType.Text))
+                    getEditTextDetailDialog(view, (TextDetail) detail).show();
+                else return;
             }
         });
 
@@ -106,6 +111,55 @@ public class DetailsFragment extends Fragment implements IDetailsView{
     private ListView details;
 
     private View rootView;
+
+
+    /**
+     * Setup the dialog box for adding details
+     * that enables two single line inputs for
+     * detail label and field, and has a
+     * functional save and cancel button
+     * @param v
+     * @return dialog
+     */
+    private AlertDialog.Builder getEditTextDetailDialog(View v, final TextDetail detail){
+        AlertDialog.Builder dialog = new AlertDialog.Builder(v.getContext());
+        dialog.setTitle(detail.getLabel());
+        //dialog box setup
+        Context context = v.getContext();
+        LinearLayout layout = new LinearLayout(context);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        //field text configuration
+        final EditText fieldText = createEditText(context,layout);
+        fieldText.setText(detail.getField());
+        //button setup
+        dialog.setView(layout)
+                .setPositiveButton(R.string.edit_detail_confirm_button, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        presenter.updateTextDetail(detail, fieldText.getText().toString());
+                    }
+                })
+                .setNegativeButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) { dialog.cancel();
+                    }
+                });
+        return dialog;
+    }
+
+    /**
+     * Creates an editable text area for the dialog box
+     * @param context
+     * @param layout
+     * @return editText
+     */
+    private EditText createEditText(Context context, LinearLayout layout){
+        final EditText editText = new EditText(context);
+        editText.setSingleLine();
+        editText.setInputType(TYPE_TEXT_FLAG_CAP_SENTENCES);
+        layout.addView(editText);
+        return editText;
+    }
 
     /**
      * Inner class to create an Array Adapter
