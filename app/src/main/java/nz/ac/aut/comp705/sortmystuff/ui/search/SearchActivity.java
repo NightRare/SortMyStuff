@@ -21,6 +21,7 @@ import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.di.IFactory;
 import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
 import nz.ac.aut.comp705.sortmystuff.util.AppCode;
+import rx.Observable;
 
 public class SearchActivity extends AppCompatActivity implements ISearchView {
 

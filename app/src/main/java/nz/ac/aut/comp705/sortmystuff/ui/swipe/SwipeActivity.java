@@ -42,11 +42,8 @@ public class SwipeActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         // Load previously saved state, if available
-        String currentAssetId = null;
-
-        if (savedInstanceState != null) {
-            currentAssetId = savedInstanceState.getString(CURRENT_ASSET_ID);
-        }
+        String currentAssetId = savedInstanceState == null ?
+                AppConstraints.ROOT_ASSET_ID : savedInstanceState.getString(CURRENT_ASSET_ID);
 
         swipeAdapter = new SwipeAdapter(getSupportFragmentManager(), this, currentAssetId);
 
@@ -137,7 +134,8 @@ public class SwipeActivity extends AppCompatActivity {
         menu.setGroupVisible(R.id.main_menu_group, showMenu);
     }
 
-    public void refreshDetails(){
+    public void refreshDetails(String currentAssetId){
+        swipeAdapter.getDetailsPresenter().setCurrentAsset(currentAssetId);
         swipeAdapter.getDetailsPresenter().subscribe();
     }
 

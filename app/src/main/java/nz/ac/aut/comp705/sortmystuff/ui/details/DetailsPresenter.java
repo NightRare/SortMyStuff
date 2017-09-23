@@ -1,55 +1,34 @@
 package nz.ac.aut.comp705.sortmystuff.ui.details;
 
-import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.Bitmap;
-import android.support.v7.app.AlertDialog;
-import android.view.View;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.common.base.Preconditions;
+import java.util.AbstractMap;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import nz.ac.aut.comp705.sortmystuff.R;
-import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
-import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
-import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
-import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
-import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
-import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
-import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
-import nz.ac.aut.comp705.sortmystuff.util.Log;
+import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
+import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
+import nz.ac.aut.comp705.sortmystuff.util.schedulers.ISchedulerProvider;
 
-import static android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
+import rx.Observable;
+import rx.Subscription;
+import rx.subscriptions.CompositeSubscription;
 
-/**
- * Created by DonnaCello on 30 Apr 2017.
- */
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class DetailsPresenter implements IDetailsPresenter {
 
-    IDataManager dm;
-    IDetailsView view;
-    SwipeActivity activity;
-    String currentAssetId;
+    public DetailsPresenter(IDataManager dataManager, IDetailsView view,
+                            ISchedulerProvider schedulerProvider, String currentAssetId) {
+        mDataManager = checkNotNull(dataManager, "The dataManager cannot be null.");
+        mView = checkNotNull(view, "The view cannot be null.");
+        mSchedulerProvider = checkNotNull(schedulerProvider, "The schedulerProvider cannot be null.");
+        checkNotNull(currentAssetId, "The currentAssetId cannot be null.");
+        checkArgument(!currentAssetId.replaceAll(" ", "").isEmpty(), currentAssetId);
+        mCurrentAssetId = currentAssetId;
 
-    /**
-     * Initialises the detail presenter
-     *
-     * @param dm       the IDataManager instance
-     * @param view     the IContentsView instance
-     * @param activity the ContentsActivity instance
-     */
-    public DetailsPresenter(IDataManager dm, IDetailsView view, SwipeActivity activity) {
-        this.dm = dm;
-        this.view = view;
-        this.activity = activity;
+        mSubscriptions = new CompositeSubscription();
+        mView.setPresenter(this);
     }
 
     /**
@@ -57,39 +36,12 @@ public class DetailsPresenter implements IDetailsPresenter {
      */
     @Override
     public void subscribe() {
-        // if the view is not inflated then do not subscribe the presenter
-        if(activity.findViewById(R.id.details_page_categories_title) == null) return;
-
-        currentAssetId = activity.getCurrentAssetId();
-
-        // show nothing if its root asset
-        if(currentAssetId.equals(AppConstraints.ROOT_ASSET_ID)) {
-            activity.findViewById(R.id.details_page_categories_title).setVisibility(View.GONE);
-            activity.findViewById(R.id.assetCategory_detail).setVisibility(View.GONE);
-            activity.findViewById(R.id.details_list).setVisibility(View.GONE);
-        }
-        else {
-            activity.findViewById(R.id.details_page_categories_title).setVisibility(View.VISIBLE);
-            activity.findViewById(R.id.assetCategory_detail).setVisibility(View.VISIBLE);
-            activity.findViewById(R.id.details_list).setVisibility(View.VISIBLE);
-            setAsset();
-            view.showDetails(loadDetails());
-        }
+        loadDetails();
     }
 
     @Override
     public void unsubscribe() {
-        //TODO: to be implemented
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @return
-     */
-    @Override
-    public String getCurrentAssetID() {
-        return currentAssetId;
+        mSubscriptions.clear();
     }
 
     /**
@@ -98,100 +50,104 @@ public class DetailsPresenter implements IDetailsPresenter {
      * @return detailList
      */
     @Override
-    public List<Detail> loadDetails() {
-        final ArrayList detailList = new ArrayList();
-        dm.getDetailsAsync(getCurrentAssetID(), new IDataManager.LoadDetailsCallback() {
-            @Override
-            public void onDetailsLoaded(List<Detail> details) {
-                for(Detail d: details){
-                        detailList.add(d);
-                }
-            }
+    public void loadDetails() {
+        if (mCurrentAssetId.equals(mDataManager.getRootAsset().getId())) {
+            mView.showRootAssetDetailPage();
+            return;
+        }
 
-            @Override
-            public void dataNotAvailable(int errorCode) {
-            }
-        });
-        return  detailList;
+        mView.setLoadingIndicator(true);
+        mSubscriptions.clear();
+        Subscription subscription = mDataManager
+                .getDetails(mCurrentAssetId)
+                .zipWith(mDataManager.getAsset(mCurrentAssetId),
+                        (details, assets) -> new AbstractMap.SimpleEntry<>(assets, details))
+                .subscribeOn(mSchedulerProvider.io())
+                .observeOn(mSchedulerProvider.ui())
+                .subscribe(
+                        //onNext
+                        args -> mView.showDetails(args.getKey(), args.getValue()),
+                        //onError
+                        throwable -> mView.showLoadingDetailsError(throwable),
+                        //onCompleted
+                        () -> mView.setLoadingIndicator(false)
+                );
+        mSubscriptions.add(subscription);
     }
 
     @Override
-    public void updateTextDetail(final TextDetail detail, String newText) {
+    public void updateTextDetail(final IDetail<String> detail, String newText) {
+        boolean edited = false;
         try {
-            dm.updateTextDetail(getCurrentAssetID(),detail.getId(),detail.getLabel(),newText);
+            mDataManager.updateTextDetail(mCurrentAssetId, detail.getId(), detail.getLabel(), newText);
+            edited = true;
         } catch (IllegalArgumentException e) {
-            Toast.makeText(activity, e.getMessage(), Toast.LENGTH_SHORT).show();
+            mView.showMessage(e.getMessage());
         }
-        view.showDetails(loadDetails());
-        view.showMessage("Edited " + detail.getLabel());
-    }
-
-    private void setAsset(){
-        TextView assetCategory = (TextView) activity.findViewById(R.id.assetCategory_detail);
-        assetCategory.setText(getCategory().toUpperCase());
+        loadDetails();
+        if(edited)
+            mView.showMessage("Edited " + detail.getLabel());
     }
 
     /**
      * {@inheritDoc}
+     *
      * @param newImage
      */
     @Override
     public void updateAssetPhoto(final Bitmap newImage) {
-        Preconditions.checkNotNull(newImage, "The image cannot be null");
-        dm.getDetailsAsync(currentAssetId, new IDataManager.LoadDetailsCallback() {
-            @Override
-            public void onDetailsLoaded(List<Detail> details) {
-                for(Detail d : details) {
-                    if(d.getLabel().equals(CategoryType.BasicDetail.PHOTO)) {
-                        dm.updateImageDetail((ImageDetail) d, d.getLabel(), newImage);
-                        view.showDetails(details);
-                        break;
-                    }
-                }
-            }
+        checkNotNull(newImage, "The new image cannot be null");
 
-            @Override
-            public void dataNotAvailable(int errorCode) {
-
-            }
-        });
+        mSubscriptions.clear();
+        Subscription subscription = mDataManager
+                .getDetails(mCurrentAssetId)
+                .flatMap(Observable::from)
+                .doOnNext(detail -> {
+                    if(detail.getLabel().equals(CategoryType.BasicDetail.PHOTO))
+                        mDataManager.updateImageDetail((IDetail<Bitmap>) detail, detail.getLabel(), newImage);
+                })
+                .toList()
+                .zipWith(mDataManager.getAsset(mCurrentAssetId),
+                        (details, assets) -> new AbstractMap.SimpleEntry<>(assets, details))
+                .subscribeOn(mSchedulerProvider.io())
+                .observeOn(mSchedulerProvider.ui())
+                .subscribe(
+                        //onNext
+                        args -> mView.showDetails(args.getKey(), args.getValue()),
+                        //onError
+                        throwable -> mView.showLoadingDetailsError(throwable),
+                        //onCompleted
+                        () -> mView.setLoadingIndicator(false)
+                );
+        mSubscriptions.add(subscription);
     }
 
     /**
      * {@inheritDoc}
+     *
      * @param imageDetail
      */
     @Override
-    public void resetImage(ImageDetail imageDetail) {
-        Preconditions.checkNotNull(imageDetail, "The image detail cannot be null");
-        dm.resetImageDetail(imageDetail);
-        dm.getDetailsAsync(currentAssetId, new IDataManager.LoadDetailsCallback() {
-            @Override
-            public void onDetailsLoaded(List<Detail> details) {
-                view.showDetails(details);
-            }
-
-            @Override
-            public void dataNotAvailable(int errorCode) {
-
-            }
-        });
+    public void resetImage(IDetail<Bitmap> imageDetail) {
+        checkNotNull(imageDetail, "The image detail cannot be null");
+        mDataManager.resetImageDetail(imageDetail);
+        loadDetails();
     }
 
-    private String getCategory(){
-        final String[] name = new String[1];
-        dm.getAssetAsync(getCurrentAssetID(), new IDataManager.GetAssetCallback() {
-            @Override
-            public void onAssetLoaded(Asset asset) {
-                name[0] = asset.getCategoryType().toString();
-            }
-
-            @Override
-            public void dataNotAvailable(int errorCode) {
-                Log.e("Data not found ","Error: "+errorCode);
-            }
-        });
-        return name[0];
+    @Override
+    public void setCurrentAsset(String currentAssetId) {
+        checkNotNull(currentAssetId, "The currentAssetId cannot be null.");
+        checkArgument(!currentAssetId.replaceAll(" ", "").isEmpty(), currentAssetId);
+        mCurrentAssetId = currentAssetId;
     }
 
+    // region PRIVATE STUFF
+
+    private IDataManager mDataManager;
+    private IDetailsView mView;
+    private String mCurrentAssetId;
+    private ISchedulerProvider mSchedulerProvider;
+    private CompositeSubscription mSubscriptions;
+
+    //endregion
 }

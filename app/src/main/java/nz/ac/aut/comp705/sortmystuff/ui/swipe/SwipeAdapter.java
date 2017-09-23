@@ -7,6 +7,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
+import nz.ac.aut.comp705.sortmystuff.di.IFactory;
 import nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsFragment;
 import nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsPresenter;
 import nz.ac.aut.comp705.sortmystuff.ui.contents.IContentsPresenter;
@@ -15,18 +16,25 @@ import nz.ac.aut.comp705.sortmystuff.ui.details.DetailsFragment;
 import nz.ac.aut.comp705.sortmystuff.ui.details.DetailsPresenter;
 import nz.ac.aut.comp705.sortmystuff.ui.details.IDetailsPresenter;
 import nz.ac.aut.comp705.sortmystuff.ui.details.IDetailsView;
+import nz.ac.aut.comp705.sortmystuff.util.schedulers.ISchedulerProvider;
 
-/**
- * Created by YuanY on 2017/9/4.
- */
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SwipeAdapter extends FragmentPagerAdapter {
 
+    //region CONFIGS
+
+    private static final int DEFAULT_TABS_AMOUNT = 2;
+
+    //endregion
+
     public SwipeAdapter(FragmentManager fm, SwipeActivity activity, String currentAssetId) {
         super(fm);
-        this.activity = activity;
-        this.dm = ((SortMyStuffApp) activity.getApplication()).getFactory().getDataManager();
-        this.tabsAmount = MAX_TABS_AMOUNT;
+        mActivity = checkNotNull(activity, "The activity cannot be null.");
+        IFactory factory = ((SortMyStuffApp) activity.getApplication()).getFactory();
+        mDataManager = factory.getDataManager();
+        mSchedulerProvider = factory.getSchedulerProvider();
+        mTabsAmount = DEFAULT_TABS_AMOUNT;
         initialiseViewsAndPresenters(currentAssetId);
     }
 
@@ -49,7 +57,7 @@ public class SwipeAdapter extends FragmentPagerAdapter {
     @Override
     public int getCount() {
         // Show 2 total pages.
-        return tabsAmount;
+        return mTabsAmount;
     }
 
     @Override
@@ -74,32 +82,32 @@ public class SwipeAdapter extends FragmentPagerAdapter {
     }
 
     public void setTabsAmount(int amount) {
-        if(amount < 1 || amount > MAX_TABS_AMOUNT)
+        if(amount < 1 || amount > DEFAULT_TABS_AMOUNT)
             throw new IllegalArgumentException("The amount of tabs is out of range.");
-        tabsAmount = amount;
+        mTabsAmount = amount;
         notifyDataSetChanged();
     }
 
+    //region PRIVATE STUFF
+
     private void initialiseViewsAndPresenters(String currentAssetId) {
         detailsView = DetailsFragment.newInstance();
-        detailsPresenter = new DetailsPresenter(dm, detailsView, activity);
-        detailsView.setPresenter(detailsPresenter);
+        detailsPresenter = new DetailsPresenter(mDataManager, detailsView,
+                mSchedulerProvider, currentAssetId);
 
         contentsView = ContentsFragment.newInstance();
-        contentsPresenter = new ContentsPresenter(dm, contentsView, activity);
-        contentsView.setPresenter(contentsPresenter);
-        if(currentAssetId != null)
-            contentsPresenter.setCurrentAssetId(currentAssetId);
+        contentsPresenter = new ContentsPresenter(mDataManager, contentsView, mActivity, currentAssetId);
     }
-
-    private static final int MAX_TABS_AMOUNT = 2;
 
     private IContentsView contentsView;
     private IDetailsView detailsView;
     private IContentsPresenter contentsPresenter;
     private IDetailsPresenter detailsPresenter;
 
-    private IDataManager dm;
-    private SwipeActivity activity;
-    private int tabsAmount;
+    private IDataManager mDataManager;
+    private ISchedulerProvider mSchedulerProvider;
+    private SwipeActivity mActivity;
+    private int mTabsAmount;
+
+    //endregion
 }

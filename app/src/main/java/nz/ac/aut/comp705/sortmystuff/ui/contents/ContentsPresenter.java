@@ -34,11 +34,14 @@ public class ContentsPresenter implements IContentsPresenter {
      * @param view     the IContentsView instance
      * @param activity the ContentsActivity instance
      */
-    public ContentsPresenter(IDataManager dm, IContentsView view, SwipeActivity activity) {
+    public ContentsPresenter(IDataManager dm, IContentsView view, SwipeActivity activity, String currentAssetId) {
         this.dm = dm;
         this.view = view;
         this.activity = activity;
+        this.currentAssetId = currentAssetId;
         contentsDisplayMode = CONTENTS_DEFAULT_MODE;
+
+        view.setPresenter(this);
     }
 
     //region IContentsPresenter methods
@@ -104,7 +107,7 @@ public class ContentsPresenter implements IContentsPresenter {
     @Override
     public void setCurrentAssetId(String assetId) {
         currentAssetId = assetId;
-        activity.refreshDetails();
+        activity.refreshDetails(assetId);
     }
 
     /**

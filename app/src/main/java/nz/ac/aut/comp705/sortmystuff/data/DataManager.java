@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 
 import com.google.common.base.Preconditions;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,15 +19,18 @@ import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
+import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 import nz.ac.aut.comp705.sortmystuff.util.AppCode;
 import nz.ac.aut.comp705.sortmystuff.util.Log;
+import nz.ac.aut.comp705.sortmystuff.util.exceptions.ReadLocalStorageFailedException;
 import nz.ac.aut.comp705.sortmystuff.util.exceptions.UpdateLocalStorageFailedException;
 import rx.Observable;
 import rx.functions.Func1;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static nz.ac.aut.comp705.sortmystuff.util.AppCode.ASSET_NOT_EXISTS;
 import static nz.ac.aut.comp705.sortmystuff.util.AppCode.LOCAL_DATA_CORRUPT;
 import static nz.ac.aut.comp705.sortmystuff.util.AppCode.NO_ROOT_ASSET;
@@ -55,7 +59,7 @@ public class DataManager implements IDataManager {
         if (dirtyCachedAssets || cachedAssets == null) {
             int code = loadCachedAssetsFromLocal();
             if (code != OK)
-                throw new IllegalStateException("Cannot load assets from storage. Error code: " + code);
+                throw new ReadLocalStorageFailedException("Cannot load assets from storage. Error code: " + code);
         }
 
         return Observable.from(cachedAssets.values())
@@ -68,12 +72,51 @@ public class DataManager implements IDataManager {
         if (dirtyCachedAssets || cachedRecycledAssets == null) {
             int code = loadCachedAssetsFromLocal();
             if (code != OK)
-                throw new IllegalStateException("Cannot load recycled assets from storage. Error code: " + code);
+                throw new ReadLocalStorageFailedException("Cannot load recycled assets from storage. Error code: " + code);
         }
 
         return Observable.from(cachedRecycledAssets.values())
                 .map(asset -> (IAsset) asset)
                 .toList();
+    }
+
+    @Override
+    public Observable<List<IDetail>> getDetails(String assetId) {
+        checkNotNull(assetId);
+
+        // if get the Details of the Root asset, always return empty list
+        if (assetId.equals(getRootAsset().getId())) {
+            return Observable.just(new ArrayList<>());
+        }
+
+        int code = loadCachedDetailsFromLocal(assetId);
+        if (code != OK) {
+            throw new ReadLocalStorageFailedException("Cannot load details for asset " + assetId
+                    + " from storage. Error code: " + code);
+        }
+        if (!cachedDetails.containsKey(assetId)) {
+            throw new IllegalStateException("Asset " + assetId + " does not exist. Error code: " + ASSET_NOT_EXISTS);
+        }
+        return Observable.from(cachedDetails.get(assetId))
+                .map(detail -> (IDetail) detail)
+                .toList();
+    }
+
+    @Override
+    public Observable<IAsset> getAsset(String id) {
+        checkNotNull(id);
+
+        if (dirtyCachedAssets || cachedAssets == null) {
+            int code = loadCachedAssetsFromLocal();
+            if (code != OK)
+                throw new ReadLocalStorageFailedException("Cannot load the asset from storage. Error code: " + code);
+        }
+
+        if (!cachedAssets.containsKey(id)) {
+            throw new IllegalStateException("Asset " + id + " does not exist. Error code: " + ASSET_NOT_EXISTS);
+        }
+
+        return Observable.just(cachedAssets.get(id));
     }
 
     //endregion
@@ -90,8 +133,8 @@ public class DataManager implements IDataManager {
 
     @Override
     public String createAsset(@NonNull String name, @NonNull String containerId, CategoryType categoryType) {
-        Preconditions.checkNotNull(name);
-        Preconditions.checkNotNull(containerId);
+        checkNotNull(name);
+        checkNotNull(containerId);
         Preconditions.checkArgument(!name.replaceAll(" ", "").isEmpty(), "The name cannot be empty");
         Preconditions.checkArgument(name.length() <= AppConstraints.ASSET_NAME_CAP, "The length of the name should be shorter than "
                 + AppConstraints.ASSET_NAME_CAP + " characters");
@@ -127,7 +170,7 @@ public class DataManager implements IDataManager {
     @Deprecated
     @Override
     public String createTextDetail(@NonNull Asset asset, @NonNull String label, @NonNull String field) {
-        Preconditions.checkNotNull(asset);
+        checkNotNull(asset);
 
         return createTextDetail(asset.getId(), label, field);
     }
@@ -138,9 +181,9 @@ public class DataManager implements IDataManager {
     @Deprecated
     @Override
     public String createTextDetail(@NonNull final String assetId, @NonNull String label, @NonNull String field) {
-        Preconditions.checkNotNull(assetId);
-        Preconditions.checkNotNull(label);
-        Preconditions.checkNotNull(field);
+        checkNotNull(assetId);
+        checkNotNull(label);
+        checkNotNull(field);
         Preconditions.checkArgument(!label.replaceAll(" ", "").isEmpty());
         Preconditions.checkArgument(label.length() < AppConstraints.DETAIL_LABEL_CAP);
         Preconditions.checkArgument(field.length() < AppConstraints.TEXTDETAIL_FIELD_CAP);
@@ -177,7 +220,7 @@ public class DataManager implements IDataManager {
      */
     @Override
     public void getAllAssetsAsync(@NonNull LoadAssetsCallback callback) {
-        Preconditions.checkNotNull(callback);
+        checkNotNull(callback);
 
         if (dirtyCachedAssets || cachedAssets == null) {
             int code = loadCachedAssetsFromLocal();
@@ -196,7 +239,7 @@ public class DataManager implements IDataManager {
      */
     @Override
     public void getRecycledAssetsAsync(@NonNull LoadAssetsCallback callback) {
-        Preconditions.checkNotNull(callback);
+        checkNotNull(callback);
 
         if (dirtyCachedAssets || cachedRecycledAssets == null) {
             int code = loadCachedAssetsFromLocal();
@@ -215,7 +258,7 @@ public class DataManager implements IDataManager {
      */
     @Override
     public void getContentAssetsAsync(@NonNull Asset container, @NonNull LoadAssetsCallback callback) {
-        Preconditions.checkNotNull(container);
+        checkNotNull(container);
 
         getContentAssetsAsync(container.getId(), callback);
     }
@@ -225,8 +268,8 @@ public class DataManager implements IDataManager {
      */
     @Override
     public void getContentAssetsAsync(@NonNull String containerId, @NonNull LoadAssetsCallback callback) {
-        Preconditions.checkNotNull(containerId);
-        Preconditions.checkNotNull(callback);
+        checkNotNull(containerId);
+        checkNotNull(callback);
 
         if (dirtyCachedAssets || cachedAssets == null) {
             int code = loadCachedAssetsFromLocal();
@@ -254,7 +297,7 @@ public class DataManager implements IDataManager {
      */
     @Override
     public void getParentAssetsAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback) {
-        Preconditions.checkNotNull(asset);
+        checkNotNull(asset);
 
         getParentAssetsAsync(asset.getId(), callback);
     }
@@ -264,8 +307,8 @@ public class DataManager implements IDataManager {
      */
     @Override
     public void getParentAssetsAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback) {
-        Preconditions.checkNotNull(assetId);
-        Preconditions.checkNotNull(callback);
+        checkNotNull(assetId);
+        checkNotNull(callback);
 
         if (dirtyCachedAssets || cachedAssets == null) {
             int code = loadCachedAssetsFromLocal();
@@ -293,7 +336,7 @@ public class DataManager implements IDataManager {
      */
     @Override
     public void getParentAssetsDescAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback) {
-        Preconditions.checkNotNull(asset);
+        checkNotNull(asset);
 
         getParentAssetsDescAsync(asset.getId(), callback);
     }
@@ -303,7 +346,7 @@ public class DataManager implements IDataManager {
      */
     @Override
     public void getParentAssetsDescAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback) {
-        Preconditions.checkNotNull(assetId);
+        checkNotNull(assetId);
 
         if (dirtyCachedAssets || cachedAssets == null) {
             int code = loadCachedAssetsFromLocal();
@@ -333,8 +376,8 @@ public class DataManager implements IDataManager {
      */
     @Override
     public void getAssetAsync(@NonNull String assetId, @NonNull GetAssetCallback callback) {
-        Preconditions.checkNotNull(assetId);
-        Preconditions.checkNotNull(callback);
+        checkNotNull(assetId);
+        checkNotNull(callback);
 
         if (dirtyCachedAssets || cachedAssets == null) {
             int code = loadCachedAssetsFromLocal();
@@ -356,7 +399,7 @@ public class DataManager implements IDataManager {
      */
     @Override
     public void getDetailsAsync(@NonNull Asset asset, @NonNull LoadDetailsCallback callback) {
-        Preconditions.checkNotNull(asset);
+        checkNotNull(asset);
 
         getDetailsAsync(asset.getId(), callback);
     }
@@ -366,8 +409,8 @@ public class DataManager implements IDataManager {
      */
     @Override
     public void getDetailsAsync(@NonNull String assetId, @NonNull LoadDetailsCallback callback) {
-        Preconditions.checkNotNull(assetId);
-        Preconditions.checkNotNull(callback);
+        checkNotNull(assetId);
+        checkNotNull(callback);
 
         // if get the Details of the Root asset, always return empty list
         if (assetId.equals(getRootAsset().getId())) {
@@ -392,7 +435,7 @@ public class DataManager implements IDataManager {
      */
     @Override
     public void updateAssetName(@NonNull Asset asset, @NonNull String newName) {
-        Preconditions.checkNotNull(asset);
+        checkNotNull(asset);
 
         updateAssetName(asset.getId(), newName);
     }
@@ -402,8 +445,8 @@ public class DataManager implements IDataManager {
      */
     @Override
     public void updateAssetName(@NonNull String assetId, @NonNull final String newName) {
-        Preconditions.checkNotNull(assetId);
-        Preconditions.checkNotNull(newName);
+        checkNotNull(assetId);
+        checkNotNull(newName);
         Preconditions.checkArgument(!newName.replaceAll(" ", "").isEmpty());
         Preconditions.checkArgument(newName.length() < AppConstraints.ASSET_NAME_CAP);
 
@@ -425,7 +468,7 @@ public class DataManager implements IDataManager {
      */
     @Override
     public void moveAsset(@NonNull Asset asset, @NonNull String newContainerId) {
-        Preconditions.checkNotNull(asset);
+        checkNotNull(asset);
 
         moveAsset(asset.getId(), newContainerId);
     }
@@ -435,8 +478,8 @@ public class DataManager implements IDataManager {
      */
     @Override
     public void moveAsset(@NonNull String assetId, @NonNull String newContainerId) {
-        Preconditions.checkNotNull(assetId);
-        Preconditions.checkNotNull(newContainerId);
+        checkNotNull(assetId);
+        checkNotNull(newContainerId);
 
         if (!assetExists(assetId) || !assetExists(newContainerId)) {
             Log.e(getClass().getName(), "asset not exists, failed to update, asset id: "
@@ -462,7 +505,7 @@ public class DataManager implements IDataManager {
      */
     @Override
     public void recycleAssetRecursively(@NonNull String assetId) {
-        Preconditions.checkNotNull(assetId);
+        checkNotNull(assetId);
 
         if (!assetExists(assetId) || assetId.equals(AppConstraints.ROOT_ASSET_ID)) {
             Log.e(getClass().getName(), "asset not exists or it is Root Asset, failed to recycle, asset id: " + assetId);
@@ -484,7 +527,7 @@ public class DataManager implements IDataManager {
      */
     @Override
     public void recycleAssetRecursively(@NonNull Asset asset) {
-        Preconditions.checkNotNull(asset);
+        checkNotNull(asset);
 
         recycleAssetRecursively(asset.getId());
     }
@@ -494,7 +537,7 @@ public class DataManager implements IDataManager {
      */
     @Override
     public void removeDetail(@NonNull Detail detail) {
-        Preconditions.checkNotNull(detail);
+        checkNotNull(detail);
 
         removeDetail(detail.getAssetId(), detail.getId());
     }
@@ -504,8 +547,8 @@ public class DataManager implements IDataManager {
      */
     @Override
     public void removeDetail(@NonNull String assetId, @NonNull String detailId) {
-        Preconditions.checkNotNull(assetId);
-        Preconditions.checkNotNull(detailId);
+        checkNotNull(assetId);
+        checkNotNull(detailId);
 
         int code = loadCachedDetailsFromLocal(assetId);
         if (code != OK) {
@@ -546,7 +589,7 @@ public class DataManager implements IDataManager {
     @Override
     public void updateTextDetail(@NonNull TextDetail detail,
                                  @NonNull String label, @NonNull String field) {
-        Preconditions.checkNotNull(detail);
+        checkNotNull(detail);
 
         updateTextDetail(detail.getAssetId(), detail.getId(), label, field);
     }
@@ -557,10 +600,10 @@ public class DataManager implements IDataManager {
     @Override
     public void updateTextDetail(@NonNull String assetId, @NonNull String detailId,
                                  @NonNull String label, @NonNull String field) {
-        Preconditions.checkNotNull(assetId);
-        Preconditions.checkNotNull(detailId);
-        Preconditions.checkNotNull(label);
-        Preconditions.checkNotNull(field);
+        checkNotNull(assetId);
+        checkNotNull(detailId);
+        checkNotNull(label);
+        checkNotNull(field);
         Preconditions.checkArgument(!label.replaceAll(" ", "").isEmpty());
         Preconditions.checkArgument(label.length() <= AppConstraints.DETAIL_LABEL_CAP,
                 "Please keep the length of the text within " + AppConstraints.DETAIL_LABEL_CAP + " characters");
@@ -575,10 +618,15 @@ public class DataManager implements IDataManager {
      */
     @Override
     public void resetImageDetail(@NonNull ImageDetail detail) {
-        Preconditions.checkNotNull(detail);
+        checkNotNull(detail);
 
         modifyDetail(detail.getAssetId(), detail.getId(), detail.getLabel()
                 , resLoader.getDefaultPhoto());
+    }
+
+    @Override
+    public void resetImageDetail(@NonNull IDetail<Bitmap> detail) {
+        resetImageDetail((ImageDetail) detail);
     }
 
     /**
@@ -586,13 +634,18 @@ public class DataManager implements IDataManager {
      */
     @Override
     public void updateImageDetail(@NonNull ImageDetail detail, @NonNull String label, @NonNull Bitmap field) {
-        Preconditions.checkNotNull(detail);
-        Preconditions.checkNotNull(label);
-        Preconditions.checkNotNull(field);
+        checkNotNull(detail);
+        checkNotNull(label);
+        checkNotNull(field);
         Preconditions.checkArgument(!label.replaceAll(" ", "").isEmpty());
         Preconditions.checkArgument(label.length() < AppConstraints.DETAIL_LABEL_CAP);
 
         modifyDetail(detail.getAssetId(), detail.getId(), label, field);
+    }
+
+    @Override
+    public void updateImageDetail(@NonNull IDetail<Bitmap> detail, @NonNull String label, @NonNull Bitmap field) {
+        updateImageDetail((ImageDetail) detail, label, field);
     }
 
     /**
@@ -713,7 +766,7 @@ public class DataManager implements IDataManager {
 
 
     private void recycleAsset(@NonNull Asset asset) {
-        Preconditions.checkNotNull(asset);
+        checkNotNull(asset);
 
         asset.recycle();
         cachedRecycledAssets.put(asset.getId(), cachedAssets.remove(asset.getId()));

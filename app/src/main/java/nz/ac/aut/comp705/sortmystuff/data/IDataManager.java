@@ -9,6 +9,7 @@ import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
+import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.util.exceptions.*;
@@ -28,6 +29,10 @@ public interface IDataManager {
     Observable<List<IAsset>> getAssets();
 
     Observable<List<IAsset>> getRecycledAssets();
+
+    Observable<List<IDetail>> getDetails(String assetId);
+
+    Observable<IAsset> getAsset(String id);
 
     //endregion
 
@@ -322,6 +327,8 @@ public interface IDataManager {
      */
     void resetImageDetail(@NonNull ImageDetail detail);
 
+    void resetImageDetail(@NonNull IDetail<Bitmap> detail);
+
     /**
      * Update the ImageDetail according to the given arguments.
      *
@@ -333,7 +340,10 @@ public interface IDataManager {
      *                                           label exceeds app constraints
      * @throws UpdateLocalStorageFailedException if update local storage failed
      */
+    @Deprecated
     void updateImageDetail(@NonNull ImageDetail detail, @NonNull String label, @NonNull Bitmap field);
+
+    void updateImageDetail(@NonNull IDetail<Bitmap> detail, @NonNull String label, @NonNull Bitmap field);
 
     /*
     TODO methods to be added in the future

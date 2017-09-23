@@ -11,6 +11,10 @@ import nz.ac.aut.comp705.sortmystuff.ui.IView;
 
 public interface ISearchView extends IView<ISearchPresenter> {
 
+    /**
+     * Shows a list of search results.
+     * @param resultList the list of assets to be showed
+     */
     void showResultList(List<IAsset> resultList);
 
     void turnToAssetPage(String assetId);

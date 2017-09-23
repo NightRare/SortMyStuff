@@ -1,7 +1,5 @@
 package nz.ac.aut.comp705.sortmystuff.ui.details;
 
-
-import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
@@ -12,140 +10,120 @@ import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
-import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
-import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
-import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
-import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
+import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
+import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
 import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
 
 import static android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
+import static com.google.common.base.Preconditions.checkNotNull;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link DetailsFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class DetailsFragment extends Fragment implements IDetailsView{
 
     public DetailsFragment() {
         // Required empty public constructor
     }
 
-    public static DetailsFragment newInstance() {
-        DetailsFragment fragment = new DetailsFragment();
-        return fragment;
+    public static DetailsFragment newInstance() { return new DetailsFragment(); }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mDetailsAdapter = new DetailsAdapter(mActivity, new ArrayList<>(), mDetailsItemListener);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mPresenter.subscribe();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mPresenter.unsubscribe();
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
 
-        activity = (SwipeActivity) getActivity();
+        mActivity = (SwipeActivity) getActivity();
     }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        rootView = inflater.inflate(R.layout.details_frag, container, false);
-        return rootView;
+        mRootView = inflater.inflate(R.layout.details_frag, container, false);
+
+        mDetails = (ListView) mRootView.findViewById(R.id.details_list);
+        mDetails.setAdapter(mDetailsAdapter);
+        mDetails.setOnItemClickListener((parent, view, position, id) ->
+                mDetailsItemListener.onItemClick(view, (IDetail) parent.getItemAtPosition(position)));
+
+        return mRootView;
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        details = (ListView) rootView.findViewById(R.id.details_list);
-
-        details.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Detail detail = (Detail) parent.getItemAtPosition(position);
-                if (detail.getType().equals(DetailType.Text))
-                    getEditTextDetailDialog(view, (TextDetail) detail).show();
-                else return;
-            }
-        });
-
-        presenter.subscribe();
+        // if the view is not inflated then do not subscribe the presenter
+//        if (mActivity.findViewById(R.id.details_page_categories_title) != null)
+//            mPresenter.subscribe();
     }
 
     @Override
     public void setPresenter(IDetailsPresenter presenter) {
-        this.presenter = presenter;
+        mPresenter = checkNotNull(presenter);
     }
 
     @Override
-    public void showDetails(List<Detail> detailList) {
-        details.setAdapter(new DetailAdapter(activity, R.layout.details_two_lines_list,
-                R.layout.details_asset_photo, detailList));
+    public void showDetails(IAsset asset, List<IDetail> detailList) {
+        mActivity.findViewById(R.id.details_page_categories_title).setVisibility(View.VISIBLE);
+        mActivity.findViewById(R.id.assetCategory_detail).setVisibility(View.VISIBLE);
+        mActivity.findViewById(R.id.details_list).setVisibility(View.VISIBLE);
+
+        showCategoryInfo(asset.getCategoryType().toString().toUpperCase());
+//        mDetailsAdapter = new DetailsAdapter(mActivity, detailList, mDetailsItemListener);
+        mDetailsAdapter.replaceData(detailList);
+    }
+
+    @Override
+    public void showRootAssetDetailPage() {
+        mActivity.findViewById(R.id.details_page_categories_title).setVisibility(View.GONE);
+        mActivity.findViewById(R.id.assetCategory_detail).setVisibility(View.GONE);
+        mActivity.findViewById(R.id.details_list).setVisibility(View.GONE);
     }
 
     @Override
     public void showMessage(String message) {
-        Toast.makeText(activity, message, Toast.LENGTH_LONG);
+        Toast.makeText(mActivity, message, Toast.LENGTH_SHORT);
+    }
+
+    @Override
+    public void showLoadingDetailsError(Throwable exception) {
+        //TODO: to be implemented
+    }
+
+    @Override
+    public void setLoadingIndicator(boolean active) {
+        //TODO: to be implemented
     }
 
     //region PRIVATE STUFF
-
-    private SwipeActivity activity;
-    private IDetailsPresenter presenter;
-    private ListView details;
-
-    private View rootView;
-
-
-    /**
-     * Setup the dialog box for adding details
-     * that enables two single line inputs for
-     * detail label and field, and has a
-     * functional save and cancel button
-     * @param v
-     * @return dialog
-     */
-    private AlertDialog.Builder getEditTextDetailDialog(View v, final TextDetail detail){
-        AlertDialog.Builder dialog = new AlertDialog.Builder(v.getContext());
-        dialog.setTitle(detail.getLabel());
-        //dialog box setup
-        Context context = v.getContext();
-        LinearLayout layout = new LinearLayout(context);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        //field text configuration
-        final EditText fieldText = createEditText(context,layout);
-        fieldText.setText(detail.getField());
-        //button setup
-        dialog.setView(layout)
-                .setPositiveButton(R.string.edit_detail_confirm_button, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        presenter.updateTextDetail(detail, fieldText.getText().toString());
-                    }
-                })
-                .setNegativeButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) { dialog.cancel();
-                    }
-                });
-        return dialog;
-    }
 
     /**
      * Creates an editable text area for the dialog box
@@ -161,93 +139,82 @@ public class DetailsFragment extends Fragment implements IDetailsView{
         return editText;
     }
 
-    /**
-     * Inner class to create an Array Adapter
-     * according to the format required for the detail list
-     */
-    private class DetailAdapter extends ArrayAdapter<Detail> {
-
-        // TODO: to be removed later; used as a placeholder of other image details
-        private static final int DUMMY_LAYOUT = R.layout.details_dummy_item;
-
-        private Context context;
-        private int twoLinesLayoutId;
-        private int photoLayoutId;
-        private List<Detail> detailList = null;
-
-        private DetailAdapter(Context context, int twoLinesLayoutId, int photoLayoutId, List<Detail> detailList) {
-            super(context, twoLinesLayoutId, detailList);
-            this.context = context;
-            this.twoLinesLayoutId = twoLinesLayoutId;
-            this.photoLayoutId = photoLayoutId;
-            this.detailList = detailList;
-        }
-
-        public View getView(final int position, View convertView, ViewGroup parent) {
-            View v = convertView;
-            final Detail item = detailList.get(position);
-            DetailType type = item.getType();
-            LayoutInflater inflater = ((Activity) context).getLayoutInflater();
-
-            if(type.equals(DetailType.Image)) {
-                // TODO: to be completed later, now only display the photo of the asset, any other image detail will not be displayed
-                if(!item.getLabel().equals(CategoryType.BasicDetail.PHOTO)) {
-                    v = inflater.inflate(DUMMY_LAYOUT, parent, false);
-                }
-                else {
-                    v = inflater.inflate(photoLayoutId, parent, false);
-                    ImageView imageFieldView = (ImageView) v.findViewById(R.id.details_photo);
-
-                    imageFieldView.setImageBitmap((Bitmap) item.getField());
-
-                    //Set a click listener on asset image to launch camera
-                    imageFieldView.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            activity.takePhoto();
-                        }
-                    });
-
-                    //Set a long-click listener on asset image to delete photo
-                    imageFieldView.setOnLongClickListener(new View.OnLongClickListener() {
-                        @Override
-                        public boolean onLongClick(View v) {
-                            AlertDialog.Builder dialog = new AlertDialog.Builder(activity);
-                            dialog.setTitle(R.string.photo_remove_dialog_title);
-                            dialog.setMessage("Are you sure of removing this photo?");
-                            dialog.setCancelable(true);
-                            dialog.setPositiveButton(R.string.photo_remove_confirm_button, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    presenter.resetImage((ImageDetail)item);
-                                }
-                            });
-                            dialog.setNegativeButton(R.string.cancel_button, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    Toast.makeText(activity,
-                                            "Removing photo cancelled.", Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                            dialog.show();
-
-                            return true;
-                        }
-                    });
-                }
-            }
-            else if (type.equals(DetailType.Date) || type.equals(DetailType.Text)) {
-                v = inflater.inflate(twoLinesLayoutId, parent, false);
-                TextView labelView = (TextView) v.findViewById(R.id.detail_label);
-                TextView textFieldView = (TextView) v.findViewById(R.id.detail_field);
-
-                labelView.setText(item.getLabel());
-                textFieldView.setText((String) item.getField());
-            }
-
-            return v;
-        }
+    private void showCategoryInfo(String categoryString) {
+        TextView assetCategory = (TextView) mActivity.findViewById(R.id.assetCategory_detail);
+        assetCategory.setText(categoryString);
     }
 
+    private DetailsItemListener mDetailsItemListener = new DetailsItemListener() {
+
+        @Override
+        public void onItemClick(View view, IDetail item) {
+            if(!item.getType().equals(DetailType.Text))
+                return;
+
+            AlertDialog.Builder dialog = new AlertDialog.Builder(view.getContext());
+            dialog.setTitle(item.getLabel());
+            //dialog box setup
+            Context context = view.getContext();
+            LinearLayout layout = new LinearLayout(context);
+            layout.setOrientation(LinearLayout.VERTICAL);
+            //field text configuration
+            final EditText fieldText = createEditText(context,layout);
+            fieldText.setText((String) item.getField());
+            //button setup
+            dialog.setView(layout);
+            dialog.setPositiveButton(R.string.edit_detail_confirm_button, (dialog2, which) ->
+                    onConfirmEditTextDetail(item, fieldText.getText().toString()));
+            dialog.setNegativeButton(R.string.cancel_button, (dialog2, which) ->
+                    onCancelEditTextDetail(dialog2, item, fieldText.getText().toString()));
+            dialog.show();
+        }
+
+        @Override
+        public void onImageClick(IDetail<Bitmap> item) {
+            mActivity.takePhoto();
+        }
+
+        @Override
+        public void onImageLongClick(IDetail<Bitmap> item) {
+            AlertDialog.Builder dialog = new AlertDialog.Builder(mActivity);
+            dialog.setTitle(R.string.photo_remove_dialog_title);
+            dialog.setMessage("Are you sure of removing this photo?");
+            dialog.setCancelable(true);
+            dialog.setPositiveButton(R.string.photo_remove_confirm_button,
+                    (dialog1, which) -> onConfirmResetImageClick(item));
+            dialog.setNegativeButton(R.string.cancel_button,
+                    (dialog12, which) -> onCancelResetImageClick(item));
+            dialog.show();
+        }
+
+        @Override
+        public void onConfirmResetImageClick(IDetail<Bitmap> item) {
+            mPresenter.resetImage(item);
+        }
+
+        @Override
+        public void onCancelResetImageClick(IDetail<Bitmap> item) {
+            showMessage("Removing photo cancelled.");
+        }
+
+        @Override
+        public void onConfirmEditTextDetail(IDetail<String> item, String text) {
+            mPresenter.updateTextDetail(item, text);
+        }
+
+        @Override
+        public void onCancelEditTextDetail(DialogInterface dialog, IDetail<String> item, String text) {
+            dialog.cancel();
+        }
+    };
+
+    private SwipeActivity mActivity;
+    private IDetailsPresenter mPresenter;
+    private DetailsAdapter mDetailsAdapter;
+    private ListView mDetails;
+    private View mRootView;
+
     //endregion
+
+
 }

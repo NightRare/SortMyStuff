@@ -10,7 +10,7 @@ public interface ISearchPresenter extends IPresenter {
 
     /**
      * Load the result of the query into the activity
-     * @param query
+     * @param query the query
      */
     void loadResult(String query);
 }

@@ -20,7 +20,7 @@ import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
  *
  * @param <T> the type of the field
  */
-public abstract class Detail<T> {
+public abstract class Detail<T> implements IDetail<T>{
 
     //region DATA FIELDS
 
@@ -70,6 +70,7 @@ public abstract class Detail<T> {
      * @return the id
      */
     @NonNull
+    @Override
     public String getId() {
         return id;
     }
@@ -80,6 +81,7 @@ public abstract class Detail<T> {
      * @return the id of the owner asset
      */
     @NonNull
+    @Override
     public String getAssetId() {
         return assetId;
     }
@@ -90,6 +92,7 @@ public abstract class Detail<T> {
      * @return the label
      */
     @NonNull
+    @Override
     public String getLabel() {
         return label;
     }
@@ -99,6 +102,7 @@ public abstract class Detail<T> {
      *
      * @return the DetailType
      */
+    @Override
     public DetailType getType() {
         return type;
     }
@@ -108,7 +112,20 @@ public abstract class Detail<T> {
      *
      * @return the field
      */
+    @Override
     public abstract T getField();
+
+    @Override
+    public Long getCreateTimestamp() {
+        //TODO: to be implemented
+        return 0L;
+    }
+
+    @Override
+    public Long getModifyTimestamp() {
+        //TODO: to be implemented
+        return 0L;
+    }
 
     //endregion
 
