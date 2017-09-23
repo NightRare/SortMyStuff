@@ -47,7 +47,7 @@ public class ContentsPresenter implements IContentsPresenter {
      * {@inheritDoc}
      */
     @Override
-    public void start() {
+    public void subscribe() {
         String intendedId = activity.getIntent().getStringExtra(AppCode.INTENT_ASSET_ID);
         if(intendedId != null)
             setCurrentAssetId(intendedId);
@@ -57,6 +57,11 @@ public class ContentsPresenter implements IContentsPresenter {
             setCurrentAssetId(dm.getRootAsset().getId());
         }
         loadCurrentContents(true);
+    }
+
+    @Override
+    public void unsubscribe() {
+        //TODO: to be implemented
     }
 
     /**

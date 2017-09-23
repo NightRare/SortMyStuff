@@ -22,7 +22,7 @@ import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
  * @author Yuan
  */
 
-public final class Asset {
+public final class Asset implements IAsset{
 
     //region DATA FIELDS
 
@@ -137,6 +137,7 @@ public final class Asset {
      *
      * @return the id.
      */
+    @Override
     public String getId() {
         return id;
     }
@@ -146,6 +147,7 @@ public final class Asset {
      *
      * @return the name.
      */
+    @Override
     public String getName() {
         return name;
     }
@@ -155,6 +157,7 @@ public final class Asset {
      *
      * @return the container's id
      */
+    @Override
     public String getContainerId() {
         return containerId;
     }
@@ -164,6 +167,7 @@ public final class Asset {
      *
      * @return true if is recycled
      */
+    @Override
     public boolean isRecycled() {
         return isRecycled;
     }
@@ -173,6 +177,7 @@ public final class Asset {
      *
      * @return true if the asset is a root asset
      */
+    @Override
     public boolean isRoot() {
         return isRoot;
     }
@@ -182,7 +187,7 @@ public final class Asset {
      *
      * @return the creating timestamp
      */
-    @NonNull
+    @Override
     public Long getCreateTimestamp() {
         return createTimestamp;
     }
@@ -192,9 +197,14 @@ public final class Asset {
      *
      * @return the latest modifying timestamp
      */
-    @NonNull
+    @Override
     public Long getModifyTimestamp() {
         return modifyTimestamp;
+    }
+
+    @Override
+    public Byte[] getThumbData() {
+        return null;
     }
 
     /**
@@ -211,6 +221,7 @@ public final class Asset {
      *
      * @return the name of the category this asset was classified as
      */
+    @Override
     public CategoryType getCategoryType() {
         return categoryType;
     }

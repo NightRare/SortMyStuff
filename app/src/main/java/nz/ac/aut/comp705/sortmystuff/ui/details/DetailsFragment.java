@@ -85,7 +85,7 @@ public class DetailsFragment extends Fragment implements IDetailsView{
             }
         });
 
-        presenter.start();
+        presenter.subscribe();
     }
 
     @Override

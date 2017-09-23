@@ -6,12 +6,13 @@ import android.support.annotation.NonNull;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
-import nz.ac.aut.comp705.sortmystuff.data.models.Category;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.util.exceptions.*;
+import rx.Observable;
 
 /**
  * IDataManager is responsible for providing data for Presenters, as well as updating or deleting
@@ -21,6 +22,14 @@ import nz.ac.aut.comp705.sortmystuff.util.exceptions.*;
  */
 
 public interface IDataManager {
+
+    //region RXJAVA METHODS
+
+    Observable<List<IAsset>> getAssets();
+
+    Observable<List<IAsset>> getRecycledAssets();
+
+    //endregion
 
     //region CREATE DATA METHODS
 

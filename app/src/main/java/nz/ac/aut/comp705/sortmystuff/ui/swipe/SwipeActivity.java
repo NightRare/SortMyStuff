@@ -138,7 +138,7 @@ public class SwipeActivity extends AppCompatActivity {
     }
 
     public void refreshDetails(){
-        swipeAdapter.getDetailsPresenter().start();
+        swipeAdapter.getDetailsPresenter().subscribe();
     }
 
     public void takePhoto() {

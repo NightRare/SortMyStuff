@@ -11,7 +11,12 @@ package nz.ac.aut.comp705.sortmystuff.ui;
 public interface IPresenter {
 
     /**
-     * When the corresponding activity is on created, this method will be invoked.
+     * When the corresponding activity is on created or on resume, this method will be invoked.
      */
-    void start();
+    void subscribe();
+
+    /**
+     * When the corresponding activity is on pause, this method will be invoked.
+     */
+    void unsubscribe();
 }

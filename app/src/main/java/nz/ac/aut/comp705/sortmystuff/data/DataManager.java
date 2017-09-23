@@ -17,12 +17,15 @@ import nz.ac.aut.comp705.sortmystuff.data.models.Category;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
+import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
 import nz.ac.aut.comp705.sortmystuff.util.AppCode;
 import nz.ac.aut.comp705.sortmystuff.util.Log;
 import nz.ac.aut.comp705.sortmystuff.util.exceptions.UpdateLocalStorageFailedException;
+import rx.Observable;
+import rx.functions.Func1;
 
 import static nz.ac.aut.comp705.sortmystuff.util.AppCode.ASSET_NOT_EXISTS;
 import static nz.ac.aut.comp705.sortmystuff.util.AppCode.LOCAL_DATA_CORRUPT;
@@ -44,6 +47,36 @@ public class DataManager implements IDataManager {
         dirtyCachedAssets = true;
         dirtyCachedDetails = true;
     }
+
+    //region RXJAVA METHODS
+
+    @Override
+    public Observable<List<IAsset>> getAssets() {
+        if (dirtyCachedAssets || cachedAssets == null) {
+            int code = loadCachedAssetsFromLocal();
+            if (code != OK)
+                throw new IllegalStateException("Cannot load assets from storage. Error code: " + code);
+        }
+
+        return Observable.from(cachedAssets.values())
+                .map(asset -> (IAsset) asset)
+                .toList();
+    }
+
+    @Override
+    public Observable<List<IAsset>> getRecycledAssets() {
+        if (dirtyCachedAssets || cachedRecycledAssets == null) {
+            int code = loadCachedAssetsFromLocal();
+            if (code != OK)
+                throw new IllegalStateException("Cannot load recycled assets from storage. Error code: " + code);
+        }
+
+        return Observable.from(cachedRecycledAssets.values())
+                .map(asset -> (IAsset) asset)
+                .toList();
+    }
+
+    //endregion
 
     //region IDataManger METHODS
 

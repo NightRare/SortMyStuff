@@ -56,8 +56,8 @@ public class DetailsPresenter implements IDetailsPresenter {
      * {@inheritDoc}
      */
     @Override
-    public void start() {
-        // if the view is not inflated then do not start the presenter
+    public void subscribe() {
+        // if the view is not inflated then do not subscribe the presenter
         if(activity.findViewById(R.id.details_page_categories_title) == null) return;
 
         currentAssetId = activity.getCurrentAssetId();
@@ -75,6 +75,11 @@ public class DetailsPresenter implements IDetailsPresenter {
             setAsset();
             view.showDetails(loadDetails());
         }
+    }
+
+    @Override
+    public void unsubscribe() {
+        //TODO: to be implemented
     }
 
     /**

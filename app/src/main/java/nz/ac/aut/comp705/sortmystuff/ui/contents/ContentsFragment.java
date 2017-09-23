@@ -87,8 +87,8 @@ public class ContentsFragment extends Fragment implements IContentsView{
         // register all the listeners
         registerListeners();
 
-        // start the presenter
-        presenter.start();
+        // subscribe the presenter
+        presenter.subscribe();
     }
 
     @Override

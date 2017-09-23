@@ -12,7 +12,7 @@ import com.google.common.base.Preconditions;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
-import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 
 /**
  * Created by YuanY on 2017/9/11.
@@ -20,7 +20,7 @@ import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 
 public class SearchListAdapter extends BaseAdapter{
 
-    public SearchListAdapter(List<Asset> resultList, Context context) {
+    public SearchListAdapter(List<IAsset> resultList, Context context) {
         Preconditions.checkNotNull(resultList);
         Preconditions.checkNotNull(context);
 
@@ -60,7 +60,7 @@ public class SearchListAdapter extends BaseAdapter{
             holder = (ViewHolder) convertView.getTag();
         }
 
-        Asset result = resultList.get(position);
+        IAsset result = resultList.get(position);
 
         holder.titleView.setText(result.getName());
         // TODO: It now only displays one category type according to the data structure
@@ -71,7 +71,7 @@ public class SearchListAdapter extends BaseAdapter{
 
     //region PRIVATE STUFF
 
-    private List<Asset> resultList;
+    private List<IAsset> resultList;
     private LayoutInflater inflater;
     private Context context;
 

@@ -3,6 +3,7 @@ package nz.ac.aut.comp705.sortmystuff.di;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.local.IFileHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
+import nz.ac.aut.comp705.sortmystuff.util.schedulers.ISchedulerProvider;
 
 /**
  * A factory for dependency injection.
@@ -12,9 +13,14 @@ import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
 
 public interface IFactory {
 
+    ISchedulerProvider getImmediateSchedulerProvider();
+
+    ISchedulerProvider getSchedulerProvider();
+
     IDataManager getDataManager();
 
     IFileHelper getFileHelper();
 
     LocalResourceLoader getLocalResourceLoader();
+
 }
