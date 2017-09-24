@@ -37,6 +37,7 @@ This project was created as the culmination of our work for the paper Software D
 
 ### Dependencies
 
+- [RxJava](https://github.com/ReactiveX/RxJava/tree/1.x)
 - The photo taking feature is dependent on [SquareCamera by boxme](https://github.com/boxme/SquareCamera.git)
 
 ## Declaration of the use of resources
