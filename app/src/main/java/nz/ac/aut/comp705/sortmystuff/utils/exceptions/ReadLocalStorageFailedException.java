@@ -1,4 +1,4 @@
-package nz.ac.aut.comp705.sortmystuff.util.exceptions;
+package nz.ac.aut.comp705.sortmystuff.utils.exceptions;
 
 public class ReadLocalStorageFailedException extends IllegalStateException {
 

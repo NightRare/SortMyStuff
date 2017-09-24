@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
+import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
 
 /**
  * Represents an asset instance in the app.

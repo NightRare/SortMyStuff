@@ -14,10 +14,10 @@ import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.ui.search.SearchActivity;
 import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
-import nz.ac.aut.comp705.sortmystuff.util.AppCode;
+import nz.ac.aut.comp705.sortmystuff.utils.AppCode;
 
-import static nz.ac.aut.comp705.sortmystuff.util.AppCode.CONTENTS_DEFAULT_MODE;
-import static nz.ac.aut.comp705.sortmystuff.util.AppCode.CONTENTS_SELECTION_MODE;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.CONTENTS_DEFAULT_MODE;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.CONTENTS_SELECTION_MODE;
 
 /**
  * The implementation class of {@link IContentsPresenter}.

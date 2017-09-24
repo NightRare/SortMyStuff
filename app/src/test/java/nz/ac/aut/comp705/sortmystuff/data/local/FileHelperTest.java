@@ -19,7 +19,6 @@ import org.robolectric.annotation.Config;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -35,7 +34,7 @@ import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.testutils.TestUtil;
-import nz.ac.aut.comp705.sortmystuff.util.JsonDetailAdapter;
+import nz.ac.aut.comp705.sortmystuff.utils.JsonDetailAdapter;
 
 import static nz.ac.aut.comp705.sortmystuff.testutils.TestUtil.areIdenticalAssets;
 import static nz.ac.aut.comp705.sortmystuff.testutils.TestUtil.areIdenticalDetails;

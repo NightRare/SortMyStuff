@@ -22,20 +22,19 @@ import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
-import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
-import nz.ac.aut.comp705.sortmystuff.util.AppCode;
-import nz.ac.aut.comp705.sortmystuff.util.Log;
-import nz.ac.aut.comp705.sortmystuff.util.exceptions.ReadLocalStorageFailedException;
-import nz.ac.aut.comp705.sortmystuff.util.exceptions.UpdateLocalStorageFailedException;
+import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
+import nz.ac.aut.comp705.sortmystuff.utils.AppCode;
+import nz.ac.aut.comp705.sortmystuff.utils.Log;
+import nz.ac.aut.comp705.sortmystuff.utils.exceptions.ReadLocalStorageFailedException;
+import nz.ac.aut.comp705.sortmystuff.utils.exceptions.UpdateLocalStorageFailedException;
 import rx.Observable;
-import rx.functions.Func1;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static nz.ac.aut.comp705.sortmystuff.util.AppCode.ASSET_NOT_EXISTS;
-import static nz.ac.aut.comp705.sortmystuff.util.AppCode.LOCAL_DATA_CORRUPT;
-import static nz.ac.aut.comp705.sortmystuff.util.AppCode.NO_ROOT_ASSET;
-import static nz.ac.aut.comp705.sortmystuff.util.AppCode.OK;
-import static nz.ac.aut.comp705.sortmystuff.util.AppCode.UNEXPECTED_ERROR;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.ASSET_NOT_EXISTS;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.LOCAL_DATA_CORRUPT;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.NO_ROOT_ASSET;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.OK;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.UNEXPECTED_ERROR;
 
 /**
  * Implementation class of IDataManager

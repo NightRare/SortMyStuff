@@ -24,8 +24,8 @@ import nz.ac.aut.comp705.sortmystuff.data.models.Category;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
-import nz.ac.aut.comp705.sortmystuff.util.JsonDetailAdapter;
-import nz.ac.aut.comp705.sortmystuff.util.Log;
+import nz.ac.aut.comp705.sortmystuff.utils.JsonDetailAdapter;
+import nz.ac.aut.comp705.sortmystuff.utils.Log;
 
 /**
  * An implementation class of {@link IFileHelper}.

@@ -6,7 +6,7 @@ import com.google.common.base.Preconditions;
 
 import java.util.UUID;
 
-import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
+import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
 
 /**
  * A detail of an asset is a particular record/information of as asset. Each detail has a label and

@@ -29,7 +29,7 @@ public interface IContentsPresenter extends IPresenter {
      * Loads the contents (contained assets) of the current asset as in the specified interface mode.
      *
      * @param forceRefreshFromLocal true if want to force reload the contents from local storage
-     * @param mode the code of the mode, refer to {@link nz.ac.aut.comp705.sortmystuff.util.AppCode}
+     * @param mode the code of the mode, refer to {@link nz.ac.aut.comp705.sortmystuff.utils.AppCode}
      */
     void loadCurrentContents(boolean forceRefreshFromLocal, int mode);
 

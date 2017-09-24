@@ -1,7 +1,6 @@
-package nz.ac.aut.comp705.sortmystuff.util.schedulers;
+package nz.ac.aut.comp705.sortmystuff.utils.schedulers;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import rx.Scheduler;
 import rx.schedulers.Schedulers;

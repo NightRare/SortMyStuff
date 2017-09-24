@@ -1,4 +1,4 @@
-package nz.ac.aut.comp705.sortmystuff.util;
+package nz.ac.aut.comp705.sortmystuff.utils;
 
 import android.graphics.Bitmap;
 

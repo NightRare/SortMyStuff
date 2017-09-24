@@ -7,7 +7,7 @@ import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
 
-import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
+import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
 
 /**
  * An asset with a particular category has a certain (default) types of details.

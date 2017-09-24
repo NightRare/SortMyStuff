@@ -16,7 +16,7 @@ import nz.ac.aut.comp705.sortmystuff.ui.details.DetailsFragment;
 import nz.ac.aut.comp705.sortmystuff.ui.details.DetailsPresenter;
 import nz.ac.aut.comp705.sortmystuff.ui.details.IDetailsPresenter;
 import nz.ac.aut.comp705.sortmystuff.ui.details.IDetailsView;
-import nz.ac.aut.comp705.sortmystuff.util.schedulers.ISchedulerProvider;
+import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

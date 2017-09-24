@@ -12,7 +12,7 @@ import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
-import nz.ac.aut.comp705.sortmystuff.util.exceptions.*;
+import nz.ac.aut.comp705.sortmystuff.utils.exceptions.*;
 import rx.Observable;
 
 /**

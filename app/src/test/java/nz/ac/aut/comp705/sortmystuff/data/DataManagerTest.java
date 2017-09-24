@@ -32,13 +32,13 @@ import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.testutils.TestUtil;
-import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
-import nz.ac.aut.comp705.sortmystuff.util.AppCode;
-import nz.ac.aut.comp705.sortmystuff.util.exceptions.UpdateLocalStorageFailedException;
+import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
+import nz.ac.aut.comp705.sortmystuff.utils.AppCode;
+import nz.ac.aut.comp705.sortmystuff.utils.exceptions.UpdateLocalStorageFailedException;
 
 import static nz.ac.aut.comp705.sortmystuff.testutils.TestUtil.areIdenticalAssets;
 import static nz.ac.aut.comp705.sortmystuff.testutils.TestUtil.areIdenticalDetails;
-import static nz.ac.aut.comp705.sortmystuff.util.AppCode.ASSET_NOT_EXISTS;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.ASSET_NOT_EXISTS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;

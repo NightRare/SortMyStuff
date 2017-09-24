@@ -30,6 +30,8 @@ public interface IDetailsView extends IView<IDetailsPresenter> {
 
     void showRootAssetDetailPage();
 
+    void turnToCamera(IDetail<Bitmap> photo);
+
     /**
      * Shows message on screen
      * @param message

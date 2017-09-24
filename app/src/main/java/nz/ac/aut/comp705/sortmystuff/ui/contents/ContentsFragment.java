@@ -31,9 +31,9 @@ import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
 
-import static nz.ac.aut.comp705.sortmystuff.util.AppCode.CONTENTS_DEFAULT_MODE;
-import static nz.ac.aut.comp705.sortmystuff.util.AppCode.CONTENTS_MOVING_MODE;
-import static nz.ac.aut.comp705.sortmystuff.util.AppCode.CONTENTS_SELECTION_MODE;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.CONTENTS_DEFAULT_MODE;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.CONTENTS_MOVING_MODE;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.CONTENTS_SELECTION_MODE;
 
 public class ContentsFragment extends Fragment implements IContentsView{
 //    private static final String ARG_PRESENTER = "presenter";

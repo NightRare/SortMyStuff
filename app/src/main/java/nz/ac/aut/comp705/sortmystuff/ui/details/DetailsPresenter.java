@@ -7,7 +7,7 @@ import java.util.AbstractMap;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
-import nz.ac.aut.comp705.sortmystuff.util.schedulers.ISchedulerProvider;
+import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
 
 import rx.Observable;
 import rx.Subscription;
@@ -95,31 +95,11 @@ public class DetailsPresenter implements IDetailsPresenter {
      * @param newImage
      */
     @Override
-    public void updateAssetPhoto(final Bitmap newImage) {
+    public void updateAssetPhoto(IDetail<Bitmap> photo, final Bitmap newImage) {
         checkNotNull(newImage, "The new image cannot be null");
 
-        mSubscriptions.clear();
-        Subscription subscription = mDataManager
-                .getDetails(mCurrentAssetId)
-                .flatMap(Observable::from)
-                .doOnNext(detail -> {
-                    if(detail.getLabel().equals(CategoryType.BasicDetail.PHOTO))
-                        mDataManager.updateImageDetail((IDetail<Bitmap>) detail, detail.getLabel(), newImage);
-                })
-                .toList()
-                .zipWith(mDataManager.getAsset(mCurrentAssetId),
-                        (details, assets) -> new AbstractMap.SimpleEntry<>(assets, details))
-                .subscribeOn(mSchedulerProvider.io())
-                .observeOn(mSchedulerProvider.ui())
-                .subscribe(
-                        //onNext
-                        args -> mView.showDetails(args.getKey(), args.getValue()),
-                        //onError
-                        throwable -> mView.showLoadingDetailsError(throwable),
-                        //onCompleted
-                        () -> mView.setLoadingIndicator(false)
-                );
-        mSubscriptions.add(subscription);
+        mDataManager.updateImageDetail(photo, photo.getLabel(), newImage);
+        loadDetails();
     }
 
     /**

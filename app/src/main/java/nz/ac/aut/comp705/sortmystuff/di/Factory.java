@@ -11,9 +11,9 @@ import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.local.FileHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.IFileHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
-import nz.ac.aut.comp705.sortmystuff.util.schedulers.ISchedulerProvider;
-import nz.ac.aut.comp705.sortmystuff.util.schedulers.ImmediateSchedularProvider;
-import nz.ac.aut.comp705.sortmystuff.util.schedulers.SchedularProvider;
+import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
+import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ImmediateSchedularProvider;
+import nz.ac.aut.comp705.sortmystuff.utils.schedulers.SchedularProvider;
 
 /**
  * An implementation of {@link IFactory}.

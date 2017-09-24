@@ -7,11 +7,10 @@ import java.util.Map;
 
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
-import nz.ac.aut.comp705.sortmystuff.data.models.Category;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.di.Factory;
 import nz.ac.aut.comp705.sortmystuff.di.IFactory;
-import nz.ac.aut.comp705.sortmystuff.util.DemoDebugger;
+import nz.ac.aut.comp705.sortmystuff.utils.DemoDebugger;
 
 /**
  * Created by Yuan on 2017/4/25.

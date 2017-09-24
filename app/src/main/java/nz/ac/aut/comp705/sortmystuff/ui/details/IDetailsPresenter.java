@@ -19,7 +19,7 @@ public interface IDetailsPresenter extends IPresenter {
      * Update the image of an asset given an Bitmap type image
      * @param image
      */
-    void updateAssetPhoto(Bitmap image);
+    void updateAssetPhoto(IDetail<Bitmap> photo, Bitmap image);
 
     /**
      * Reset the image of an asset to default placeholder

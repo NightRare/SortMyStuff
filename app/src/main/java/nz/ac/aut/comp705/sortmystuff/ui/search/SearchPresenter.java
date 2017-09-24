@@ -5,7 +5,7 @@ import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
-import nz.ac.aut.comp705.sortmystuff.util.schedulers.ISchedulerProvider;
+import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
 import rx.Observable;
 import rx.Subscription;
 import rx.subscriptions.CompositeSubscription;

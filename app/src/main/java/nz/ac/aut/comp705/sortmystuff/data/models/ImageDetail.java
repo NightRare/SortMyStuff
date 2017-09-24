@@ -5,7 +5,7 @@ import android.support.annotation.NonNull;
 
 import com.google.common.base.Preconditions;
 
-import nz.ac.aut.comp705.sortmystuff.util.AppConstraints;
+import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
 
 /**
  * ImageDetail has a field as Bitmap instance.

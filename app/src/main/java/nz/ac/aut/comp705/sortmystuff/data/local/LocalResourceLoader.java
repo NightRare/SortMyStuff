@@ -15,7 +15,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import nz.ac.aut.comp705.sortmystuff.util.Log;
+import nz.ac.aut.comp705.sortmystuff.utils.Log;
 
 /**
  * Takes in the AssetManager of Android and loads the assets into memory.
