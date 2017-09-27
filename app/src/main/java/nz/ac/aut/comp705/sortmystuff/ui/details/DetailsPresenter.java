@@ -51,6 +51,8 @@ public class DetailsPresenter implements IDetailsPresenter {
      */
     @Override
     public void loadDetails() {
+        if(!mView.isReady()) return;
+
         if (mCurrentAssetId.equals(mDataManager.getRootAsset().getId())) {
             mView.showRootAssetDetailPage();
             return;

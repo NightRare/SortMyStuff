@@ -1,4 +1,4 @@
-package nz.ac.aut.comp705.sortmystuff.ui.swipe;
+package nz.ac.aut.comp705.sortmystuff.ui.main;
 
 import android.app.Activity;
 import android.app.Instrumentation;
@@ -82,10 +82,6 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
-/**
- * Created by YuanY on 2017/9/17.
- */
-
 @RunWith(AndroidJUnit4.class)
 public class SwipeActivityTest {
 
@@ -94,7 +90,6 @@ public class SwipeActivityTest {
     private static final String ROOT_ASSET_NAME = "Assets";
     private static final CategoryType DEFAULT_CATEGORY = CategoryType.Miscellaneous;
     private static final CategoryType SPECIFIED_CATEGORY = CategoryType.Food;
-    private static final String ACTION_NAME = "android.media.action.IMAGE_CAPTURE";
 
     private static final String ASSET_NAME = "ASSET_NAME";
     private static final String ASSET1_NAME = "ASSET1_NAME";

@@ -1,4 +1,4 @@
-package nz.ac.aut.comp705.sortmystuff.ui.swipe;
+package nz.ac.aut.comp705.sortmystuff.ui.main;
 
 import android.graphics.Point;
 import android.os.Bundle;
@@ -11,6 +11,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import nz.ac.aut.comp705.sortmystuff.R;
+import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
 
 public class SwipeActivity extends AppCompatActivity {
@@ -67,10 +68,10 @@ public class SwipeActivity extends AppCompatActivity {
 
     }
 
-    public String getCurrentAssetId() {
-        if(mSwipeAdapter.getContentsPresenter() == null)
-            return AppConstraints.ROOT_ASSET_ID;
-        return mSwipeAdapter.getContentsPresenter().getCurrentAssetId();
+    public void setCurrentAsset(IAsset asset) {
+        setTitle(asset.getName());
+        if(mSwipeAdapter == null) return;
+        refreshDetails(asset.getId());
     }
 
     //Show or hide the toolbar menu.
@@ -78,11 +79,6 @@ public class SwipeActivity extends AppCompatActivity {
         if (mMenu == null)
             return;
         mMenu.setGroupVisible(R.id.main_menu_group, showMenu);
-    }
-
-    public void refreshDetails(String currentAssetId){
-        mSwipeAdapter.getDetailsPresenter().setCurrentAsset(currentAssetId);
-        mSwipeAdapter.getDetailsPresenter().subscribe();
     }
 
     public void setDetailsPageVisibility(boolean isVisible) {
@@ -94,9 +90,14 @@ public class SwipeActivity extends AppCompatActivity {
 
     //region PRIVATE STUFF
 
+    private void refreshDetails(String assetId){
+        mSwipeAdapter.getDetailsPresenter().setCurrentAsset(assetId);
+        mSwipeAdapter.getDetailsPresenter().subscribe();
+    }
 
     private static final String CURRENT_ASSET_ID = "CURRENT_ASSET_ID";
     private Menu mMenu;
+
 
     private Point mScreenSize;
     private SwipeAdapter mSwipeAdapter;

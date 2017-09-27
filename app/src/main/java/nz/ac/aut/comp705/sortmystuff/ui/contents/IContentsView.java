@@ -3,6 +3,7 @@ package nz.ac.aut.comp705.sortmystuff.ui.contents;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.ui.IView;
 
 /**
@@ -17,9 +18,9 @@ public interface IContentsView extends IView<IContentsPresenter> {
     /**
      * Displays the name of the asset as the title in toolbar.
      *
-     * @param name the name of the asset
+     * @param asset the asset
      */
-    void showAssetTitle(String name);
+    void showAssetTitle(IAsset asset);
 
     /**
      * Displays the assets as a list.

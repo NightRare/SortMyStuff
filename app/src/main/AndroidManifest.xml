@@ -20,7 +20,7 @@
         android:theme="@style/AppTheme"
         tools:replace="android:theme" >
         <activity
-            android:name=".ui.swipe.SwipeActivity"
+            android:name=".ui.main.SwipeActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:screenOrientation="portrait"
             android:configChanges="orientation">

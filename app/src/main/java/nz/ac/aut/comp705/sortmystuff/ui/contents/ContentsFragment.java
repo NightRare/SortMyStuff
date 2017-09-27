@@ -29,7 +29,8 @@ import java.util.List;
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
-import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
+import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
+import nz.ac.aut.comp705.sortmystuff.ui.main.SwipeActivity;
 
 import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.CONTENTS_DEFAULT_MODE;
 import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.CONTENTS_MOVING_MODE;
@@ -104,12 +105,9 @@ public class ContentsFragment extends Fragment implements IContentsView{
         this.presenter = presenter;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void showAssetTitle(String name) {
-        activity.setTitle(name);
+    public void showAssetTitle(IAsset asset) {
+        activity.setCurrentAsset(asset);
     }
 
     /**

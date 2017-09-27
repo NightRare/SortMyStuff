@@ -1,4 +1,4 @@
-package nz.ac.aut.comp705.sortmystuff.ui.swipe;
+package nz.ac.aut.comp705.sortmystuff.ui.main;
 
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;

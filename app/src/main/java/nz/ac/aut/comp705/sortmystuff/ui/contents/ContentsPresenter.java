@@ -13,9 +13,10 @@ import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.ui.search.SearchActivity;
-import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
+import nz.ac.aut.comp705.sortmystuff.ui.main.SwipeActivity;
 import nz.ac.aut.comp705.sortmystuff.utils.AppCode;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.CONTENTS_DEFAULT_MODE;
 import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.CONTENTS_SELECTION_MODE;
 
@@ -78,7 +79,7 @@ public class ContentsPresenter implements IContentsPresenter {
         dm.getAssetAsync(currentAssetId, new IDataManager.GetAssetCallback() {
             @Override
             public void onAssetLoaded(Asset asset) {
-                view.showAssetTitle(asset.getName());
+                view.showAssetTitle(asset);
                 loadContents(asset);
                 loadPathBar(asset);
             }
@@ -106,8 +107,7 @@ public class ContentsPresenter implements IContentsPresenter {
      */
     @Override
     public void setCurrentAssetId(String assetId) {
-        currentAssetId = assetId;
-        activity.refreshDetails(assetId);
+        currentAssetId = checkNotNull(assetId);
     }
 
     /**
@@ -169,7 +169,7 @@ public class ContentsPresenter implements IContentsPresenter {
 
     @Override
     public void moveAssets(List<Asset> assets) {
-        Preconditions.checkNotNull(assets, "The assets to move cannot be null.");
+        checkNotNull(assets, "The assets to move cannot be null.");
         Preconditions.checkArgument(!assets.isEmpty(), "The assets to move cannot be empty");
 
         //reject the attempt to move to current directory
@@ -232,7 +232,7 @@ public class ContentsPresenter implements IContentsPresenter {
 
     @Override
     public void recycleAssetsRecursively(List<Asset> assets) {
-        Preconditions.checkNotNull(assets);
+        checkNotNull(assets);
         for(Asset a : assets) {
             dm.recycleAssetRecursively(a);
         }

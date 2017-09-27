@@ -34,7 +34,7 @@ import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
-import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
+import nz.ac.aut.comp705.sortmystuff.ui.main.SwipeActivity;
 import nz.ac.aut.comp705.sortmystuff.utils.AppCode;
 
 import static android.app.Activity.RESULT_OK;
@@ -184,6 +184,11 @@ public class DetailsFragment extends Fragment implements IDetailsView{
     @Override
     public void setLoadingIndicator(boolean active) {
         //TODO: to be implemented
+    }
+
+    @Override
+    public boolean isReady() {
+        return mRootView != null;
     }
 
     //region PRIVATE STUFF

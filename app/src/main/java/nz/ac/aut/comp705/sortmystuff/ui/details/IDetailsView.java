@@ -10,10 +10,6 @@ import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
 import nz.ac.aut.comp705.sortmystuff.ui.IView;
 
-/**
- * Created by DonnaCello on 30 Apr 2017.
- */
-
 public interface IDetailsView extends IView<IDetailsPresenter> {
 
     /**
@@ -41,6 +37,13 @@ public interface IDetailsView extends IView<IDetailsPresenter> {
     void showLoadingDetailsError(Throwable exception);
 
     void setLoadingIndicator(boolean active);
+
+    /**
+     * Checks if the view is ready.
+     *
+     * @return true if the view is ready
+     */
+    boolean isReady();
 
 
     interface DetailsItemListener {

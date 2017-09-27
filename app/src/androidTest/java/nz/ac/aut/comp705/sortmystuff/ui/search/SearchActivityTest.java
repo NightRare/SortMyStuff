@@ -2,8 +2,8 @@ package nz.ac.aut.comp705.sortmystuff.ui.search;
 
 import android.app.Activity;
 import android.content.Context;
+import android.os.SystemClock;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.Espresso;
 import android.support.test.espresso.assertion.ViewAssertions;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
@@ -27,7 +27,7 @@ import java.io.IOException;
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
-import nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity;
+import nz.ac.aut.comp705.sortmystuff.ui.main.SwipeActivity;
 
 import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
@@ -44,10 +44,6 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.is;
-
-/**
- * Created by Donna on 28 May 2017.
- */
 
 @RunWith(AndroidJUnit4.class)
 public class SearchActivityTest {
@@ -110,7 +106,7 @@ public class SearchActivityTest {
     }
 
     @Test
-    public void search_twoResults(){
+    public void search_multipleResults(){
         search(TWO_RESULT_SEARCH_PREFIX);
         //there should be two items in result list: Apple and Apricot
         onView (withId (R.id.result_list)).check (ViewAssertions.matches (withListSize(2)));
@@ -154,9 +150,11 @@ public class SearchActivityTest {
 
     private void search(String keyword){
         onView(isAssignableFrom(EditText.class)).perform(typeText(keyword));
+        // wait for the animation
+        SystemClock.sleep(500);
     }
 
-    public static Matcher<View> withListSize (final int size) {
+    private static Matcher<View> withListSize (final int size) {
         return new TypeSafeMatcher<View>() {
             @Override public boolean matchesSafely (final View view) {
                 return ((ListView) view).getCount () == size;

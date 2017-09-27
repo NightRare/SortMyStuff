@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="nz.ac.aut.comp705.sortmystuff.ui.swipe.SwipeActivity">
+    tools:context="nz.ac.aut.comp705.sortmystuff.ui.main.SwipeActivity">
 
 
     <LinearLayout
