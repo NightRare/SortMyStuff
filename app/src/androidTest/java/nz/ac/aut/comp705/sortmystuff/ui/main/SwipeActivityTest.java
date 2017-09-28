@@ -62,7 +62,6 @@ import static android.support.test.espresso.assertion.ViewAssertions.doesNotExis
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.intent.Intents.intended;
 import static android.support.test.espresso.intent.Intents.intending;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.hasAction;
 import static android.support.test.espresso.intent.matcher.IntentMatchers.hasComponent;
 import static android.support.test.espresso.matcher.ViewMatchers.isChecked;
 import static android.support.test.espresso.matcher.ViewMatchers.isDescendantOfA;
@@ -85,55 +84,24 @@ import static org.hamcrest.Matchers.not;
 @RunWith(AndroidJUnit4.class)
 public class SwipeActivityTest {
 
-    //region PRIVATE MEMBERS
-
-    private static final String ROOT_ASSET_NAME = "Assets";
-    private static final CategoryType DEFAULT_CATEGORY = CategoryType.Miscellaneous;
-    private static final CategoryType SPECIFIED_CATEGORY = CategoryType.Food;
-
-    private static final String ASSET_NAME = "ASSET_NAME";
-    private static final String ASSET1_NAME = "ASSET1_NAME";
-    private static final String ASSET2_NAME = "ASSET2_NAME";
-    private static final String ASSET3_NAME = "ASSET3_NAME";
-    private static final String ASSET_LIVING_ROOM = "Living Room";
-    private static final String ASSET_DINING_ROOM = "Dining Room";
-    private static final String ASSET_TABLE_BIG = "table big";
-    private static final String ASSET_TABLE_SMALL = "table small";
-    private static final String PATH_BAR_0_PREFIX = "  ";
-    private static final String PATH_BAR_PREFIX = " >  ";
-
-    // Category Details List
-    private static final String[] MISCELLANEOUS_DETAIL_LABELS =
-            {CategoryType.BasicDetail.PHOTO, CategoryType.BasicDetail.NOTES};
-    private static final String[] FOOD_DETAIL_LABELS =
-            {CategoryType.BasicDetail.PHOTO, CategoryType.BasicDetail.NOTES,
-                    "Expiry Date", "Purchased From"};
-
-    private Context context;
-    private SortMyStuffApp app;
-    private Activity activity;
-    private IDataManager dm;
-
-    //endregion
-
     public SwipeActivityTest() {}
 
     @Before
     public void setup() {
-        context = InstrumentationRegistry.getTargetContext();
-        app = (SortMyStuffApp) context.getApplicationContext();
-        activity = swipeActivityRule.getActivity();
-        dm = app.getFactory().getDataManager();
+        mContext = InstrumentationRegistry.getTargetContext();
+        mApp = (SortMyStuffApp) mContext.getApplicationContext();
+        mActivity = swipeActivityRule.getActivity();
+        mDataManager = mApp.getFactory().getDataManager();
 
         cleanAssetsData();
     }
 
     @After
     public void tearDown() {
-        context = null;
-        app = null;
-        activity = null;
-        dm = null;
+        mContext = null;
+        mApp = null;
+        mActivity = null;
+        mDataManager = null;
     }
 
     @Rule
@@ -827,7 +795,7 @@ public class SwipeActivityTest {
 
         // check if the CameraActivity is inteded
         intended(hasComponent(CameraActivity.class.getName()));
-        dm.getAllAssetsAsync(new IDataManager.LoadAssetsCallback() {
+        mDataManager.getAllAssetsAsync(new IDataManager.LoadAssetsCallback() {
             @Override
             public void onAssetsLoaded(List<Asset> assets) {
                 boolean checked = false;
@@ -875,18 +843,18 @@ public class SwipeActivityTest {
         addAsset(ASSET_LIVING_ROOM);
 
         // update the photo of the newly added asset
-        dm.getAllAssetsAsync(new IDataManager.LoadAssetsCallback() {
+        mDataManager.getAllAssetsAsync(new IDataManager.LoadAssetsCallback() {
             @Override
             public void onAssetsLoaded(List<Asset> assets) {
                 for(Asset a : assets) {
                     if(a.getName().equals(ASSET_LIVING_ROOM)) {
 
-                        dm.getDetailsAsync(a, new IDataManager.LoadDetailsCallback() {
+                        mDataManager.getDetailsAsync(a, new IDataManager.LoadDetailsCallback() {
                             @Override
                             public void onDetailsLoaded(List<Detail> details) {
                                 for(Detail d : details) {
                                     if(d.getLabel().equals(CategoryType.BasicDetail.PHOTO)) {
-                                        dm.updateImageDetail((ImageDetail) d, d.getLabel(), customisedImage);
+                                        mDataManager.updateImageDetail((ImageDetail) d, d.getLabel(), customisedImage);
                                         break;
                                     }
                                 }
@@ -915,7 +883,7 @@ public class SwipeActivityTest {
         clickPhoto(true);
         onView(withText(R.string.photo_remove_confirm_button)).perform(click());
 
-        dm.getAllAssetsAsync(new IDataManager.LoadAssetsCallback() {
+        mDataManager.getAllAssetsAsync(new IDataManager.LoadAssetsCallback() {
             @Override
             public void onAssetsLoaded(List<Asset> assets) {
                 boolean checked = false;
@@ -937,17 +905,16 @@ public class SwipeActivityTest {
         });
     }
 
-
-    //region PRIVATE METHODS
+    //region PRIVATE STUFF
 
     private void cleanAssetsData() {
         File userDir = new File(
-                app.getFilesDir().getPath() + File.separator + "default-user");
+                mApp.getFilesDir().getPath() + File.separator + "default-user");
 
         try {
             FileUtils.cleanDirectory(userDir);
-            dm.refreshFromLocal();
-            dm.getRootAsset();
+            mDataManager.refreshFromLocal();
+            mDataManager.getRootAsset();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -979,7 +946,7 @@ public class SwipeActivityTest {
     }
 
     private String getToolbarTitle() {
-        Toolbar toolbar = (Toolbar) activity.findViewById(R.id.main_toolbar);
+        Toolbar toolbar = (Toolbar) mActivity.findViewById(R.id.main_toolbar);
         return toolbar.getTitle().toString();
     }
 
@@ -1063,6 +1030,33 @@ public class SwipeActivityTest {
                 .perform(replaceText(newDetail));
         onView(withText(R.string.edit_detail_confirm_button)).perform(click());
     }
+
+    private static final String ROOT_ASSET_NAME = "Assets";
+    private static final CategoryType DEFAULT_CATEGORY = CategoryType.Miscellaneous;
+    private static final CategoryType SPECIFIED_CATEGORY = CategoryType.Food;
+
+    private static final String ASSET_NAME = "ASSET_NAME";
+    private static final String ASSET1_NAME = "ASSET1_NAME";
+    private static final String ASSET2_NAME = "ASSET2_NAME";
+    private static final String ASSET3_NAME = "ASSET3_NAME";
+    private static final String ASSET_LIVING_ROOM = "Living Room";
+    private static final String ASSET_DINING_ROOM = "Dining Room";
+    private static final String ASSET_TABLE_BIG = "table big";
+    private static final String ASSET_TABLE_SMALL = "table small";
+    private static final String PATH_BAR_0_PREFIX = "  ";
+    private static final String PATH_BAR_PREFIX = " >  ";
+
+    // Category Details List
+    private static final String[] MISCELLANEOUS_DETAIL_LABELS =
+            {CategoryType.BasicDetail.PHOTO, CategoryType.BasicDetail.NOTES};
+    private static final String[] FOOD_DETAIL_LABELS =
+            {CategoryType.BasicDetail.PHOTO, CategoryType.BasicDetail.NOTES,
+                    "Expiry Date", "Purchased From"};
+
+    private Context mContext;
+    private SortMyStuffApp mApp;
+    private Activity mActivity;
+    private IDataManager mDataManager;
 
     //endregion
 

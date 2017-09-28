@@ -23,5 +23,7 @@ public interface IAsset {
 
     Byte[] getThumbData();
 
+    Bitmap getPhoto();
+
     CategoryType getCategoryType();
 }

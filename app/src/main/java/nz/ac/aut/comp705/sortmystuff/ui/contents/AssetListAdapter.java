@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import nz.ac.aut.comp705.sortmystuff.R;
-import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 
 /**
  * The Adapter class for the list view of assets list.
@@ -28,12 +28,12 @@ import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 
 public class AssetListAdapter extends BaseAdapter {
 
-    public AssetListAdapter(List<Asset> list, Context context, Boolean showCheckbox) {
-        this(list, context, showCheckbox, new ArrayList<Asset>());
+    public AssetListAdapter(List<IAsset> list, Context context, Boolean showCheckbox) {
+        this(list, context, showCheckbox, new ArrayList<IAsset>());
     }
 
-    public AssetListAdapter(List<Asset> list, Context context, Boolean showCheckbox
-            , List<Asset> movingAssets) {
+    public AssetListAdapter(List<IAsset> list, Context context, Boolean showCheckbox
+            , List<IAsset> movingAssets) {
         Preconditions.checkNotNull(list);
         Preconditions.checkNotNull(context);
         Preconditions.checkNotNull(movingAssets);
@@ -85,7 +85,7 @@ public class AssetListAdapter extends BaseAdapter {
         else
             holder = (ViewHolder) convertView.getTag();
 
-        Asset asset = assetList.get(position);
+        IAsset asset = assetList.get(position);
 
         if(showCheckbox)
             holder.checkbox.setVisibility(View.VISIBLE);
@@ -116,8 +116,8 @@ public class AssetListAdapter extends BaseAdapter {
         return selectStatusMap;
     }
 
-    public Map<Integer, Asset> getSelectedAssets() {
-        Map<Integer, Asset> selectedAssets = new HashMap<>();
+    public Map<Integer, IAsset> getSelectedAssets() {
+        Map<Integer, IAsset> selectedAssets = new HashMap<>();
         for (Map.Entry<Integer, Boolean> e : selectStatusMap.entrySet()) {
             if (e.getValue()) {
                 selectedAssets.put(e.getKey(), assetList.get(e.getKey()));
@@ -128,8 +128,8 @@ public class AssetListAdapter extends BaseAdapter {
 
     //region PRIVATE STUFF
 
-    private List<Asset> assetList;
-    private List<Asset> movingAssets;
+    private List<IAsset> assetList;
+    private List<IAsset> movingAssets;
 
     //Whether the checkbox is selected.
     private HashMap<Integer, Boolean> selectStatusMap;

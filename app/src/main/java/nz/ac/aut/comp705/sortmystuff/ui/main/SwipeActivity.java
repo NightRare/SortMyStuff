@@ -1,5 +1,6 @@
 package nz.ac.aut.comp705.sortmystuff.ui.main;
 
+import android.content.Intent;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
@@ -12,7 +13,12 @@ import android.view.MenuItem;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
+import nz.ac.aut.comp705.sortmystuff.ui.contents.IContentsView;
+import nz.ac.aut.comp705.sortmystuff.ui.details.IDetailsView;
+import nz.ac.aut.comp705.sortmystuff.ui.search.SearchActivity;
 import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SwipeActivity extends AppCompatActivity {
 
@@ -62,10 +68,31 @@ public class SwipeActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (mSwipeAdapter.getContentsPresenter().selectOptionItem(item))
-            return true;
-        return super.onOptionsItemSelected(item);
+        switch (item.getItemId()) {
+            case R.id.search_view_button:
+                Intent searchIntent = new Intent(this, SearchActivity.class);
+                this.startActivity(searchIntent);
+                return true;
 
+            case R.id.selection_mode_button:
+                mContentsViewListeners.onOptionsSelectionModeSelected();
+                return true;
+
+            case R.id.delete_current_asset_button:
+                mContentsViewListeners.onOptionsDeleteCurrentAssetSelected();
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    public void setContentsViewListeners(IContentsView.ViewListeners listener) {
+        mContentsViewListeners = checkNotNull(listener);
+    }
+
+    public void setDetailsViewListeners(IDetailsView.ViewListeners listener) {
+        mDetailsViewListeners = checkNotNull(listener);
     }
 
     public void setCurrentAsset(IAsset asset) {
@@ -98,10 +125,11 @@ public class SwipeActivity extends AppCompatActivity {
     private static final String CURRENT_ASSET_ID = "CURRENT_ASSET_ID";
     private Menu mMenu;
 
-
     private Point mScreenSize;
     private SwipeAdapter mSwipeAdapter;
     private ViewPager mViewPager;
+    private IContentsView.ViewListeners mContentsViewListeners;
+    private IDetailsView.ViewListeners mDetailsViewListeners;
 
 
     //endregion

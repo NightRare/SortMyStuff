@@ -1,8 +1,11 @@
 package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
+import android.view.View;
+import android.widget.AdapterView;
+
 import java.util.List;
 
-import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.ui.IView;
 
@@ -20,7 +23,7 @@ public interface IContentsView extends IView<IContentsPresenter> {
      *
      * @param asset the asset
      */
-    void showAssetTitle(IAsset asset);
+    void showTitle(IAsset asset);
 
     /**
      * Displays the assets as a list.
@@ -28,12 +31,7 @@ public interface IContentsView extends IView<IContentsPresenter> {
      * @param assets the assets
      * @param mode   the code of the display mode
      */
-    void showAssetContents(List<Asset> assets, int mode);
-
-    /**
-     * Displays the "add asset dialog".
-     */
-    void showAddDialog();
+    void showAssetContents(List<IAsset> assets, int mode);
 
     /**
      * Displays the path bar according to the order of the list: from left to right in view <=>
@@ -43,7 +41,7 @@ public interface IContentsView extends IView<IContentsPresenter> {
      *
      * @param assets the list of parent assets, excluding Root asset.
      */
-    void showPath(List<Asset> assets);
+    void showPath(List<IAsset> assets);
 
     /**
      * Displays the delete confirm dialog.
@@ -52,9 +50,42 @@ public interface IContentsView extends IView<IContentsPresenter> {
      */
     void showDeleteDialog(boolean deletingCurrentAsset);
 
-    /**
-     * Gets the list of assets that have been ticked.
-     * @return the list of assets that have been ticked.
-     */
-    List<Asset> getSelectedAssets();
+    void showMessage(String message);
+
+    void showLoadingContentsError(Throwable exception);
+
+    void setLoadingIndicator(boolean active);
+
+    interface ViewListeners {
+
+        void onContentAssetClick(AdapterView<?> parent, View view, int position, long id);
+
+        boolean onContentAssetLongClick();
+
+        void onOptionsDeleteCurrentAssetSelected();
+
+        void onOptionsSelectionModeSelected();
+
+        void onAddAssetFabClick();
+
+        void onAddAssetConfirmClick(String name, CategoryType category);
+
+        void onPathbarRootClick();
+
+        void onPathbarItemClick();
+
+        void onSelectionModeCancelClick();
+
+        void onSelectionModeSelectAllClick();
+
+        void onSelectionModeDeleteClick();
+
+        void onSelectionModeMoveClick();
+
+        void onMovingModeConfirmClick();
+
+        void onMovingModeCancelClick();
+
+        void onDeleteDialogConfirmClick(boolean deletingCurrentAsset);
+    }
 }

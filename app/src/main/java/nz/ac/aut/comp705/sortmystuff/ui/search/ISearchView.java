@@ -5,10 +5,6 @@ import java.util.List;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.ui.IView;
 
-/**
- * Created by DonnaCello on 23 May 2017.
- */
-
 public interface ISearchView extends IView<ISearchPresenter> {
 
     /**

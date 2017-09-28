@@ -212,6 +212,7 @@ public final class Asset implements IAsset{
      *
      * @return the photo
      */
+    @Override
     public Bitmap getPhoto() {
         return photo;
     }

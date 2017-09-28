@@ -34,6 +34,24 @@ public interface IDataManager {
 
     Observable<IAsset> getAsset(String id);
 
+    Observable<List<IAsset>> getContentAssets(String containerId);
+
+    /**
+     * Get the parent assets stored in a list.
+     *
+     * If rootToChildren is true, then the list will be ordered as the first element is the
+     * Root asset and the last element is the asset itself.
+     * For example, let the structure be Root -> A -> B -> C,
+     * if query the parent Assets of Drawer the items in list would be
+     * [Root, A, B, C].
+     * If rootToChildren is false, then the result will be [C, B, A, Root]
+     *
+     * @param assetId  the id of the asset whose parent assets are queried
+     * @param rootToChildren true if the result of the order is root to children
+     * @throws NullPointerException if assetId is {@code null}
+     */
+    Observable<List<IAsset>> getParentAssets(String assetId, boolean rootToChildren);
+
     //endregion
 
     //region CREATE DATA METHODS
@@ -261,6 +279,7 @@ public interface IDataManager {
      * @throws NullPointerException              if any argument is {@code null}
      * @throws UpdateLocalStorageFailedException if update local storage failed
      */
+    @Deprecated
     void moveAsset(@NonNull Asset asset, @NonNull String newContainerId);
 
     /**
@@ -289,6 +308,7 @@ public interface IDataManager {
      * @throws NullPointerException              if any argument is {@code null}
      * @throws UpdateLocalStorageFailedException if update local storage failed
      */
+    @Deprecated
     void recycleAssetRecursively(@NonNull Asset asset);
 
     /**

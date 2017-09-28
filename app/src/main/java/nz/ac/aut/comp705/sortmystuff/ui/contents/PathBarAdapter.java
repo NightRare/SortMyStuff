@@ -10,7 +10,7 @@ import android.widget.TextView;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
-import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 
 /**
  * The Adapter class for the recycler view of path bar.
@@ -28,7 +28,7 @@ public class PathBarAdapter extends
      * @param assets the list of assets to be showed in View
      * @param presenter the IContentsPresenter
      */
-    public PathBarAdapter(Context context, List<Asset> assets, IContentsPresenter presenter) {
+    public PathBarAdapter(Context context, List<IAsset> assets, IContentsPresenter presenter) {
         this.inflater = LayoutInflater.from(context);
         this.assets = assets;
         this.presenter = presenter;
@@ -72,10 +72,6 @@ public class PathBarAdapter extends
         return assets.size();
     }
 
-    //endregion
-
-    //region Inner class ViewHolder
-
     /**
      * A ViewHolder class for {@link PathBarAdapter}.
      */
@@ -98,8 +94,10 @@ public class PathBarAdapter extends
     //region Private stuff
 
     private LayoutInflater inflater;
-    private List<Asset> assets;
+    private List<IAsset> assets;
     private IContentsPresenter presenter;
 
     //endregion
+
+
 }

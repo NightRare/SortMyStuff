@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.SystemClock;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.assertion.ViewAssertions;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.view.View;
@@ -37,6 +36,7 @@ import static android.support.test.espresso.action.ViewActions.typeText;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.isAssignableFrom;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static android.support.test.espresso.matcher.ViewMatchers.withChild;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
@@ -48,27 +48,12 @@ import static org.hamcrest.Matchers.is;
 @RunWith(AndroidJUnit4.class)
 public class SearchActivityTest {
 
-    //region PRIVATE MEMBERS
-
-    private Context context;
-    private SortMyStuffApp app;
-    private Activity activity;
-    private IDataManager dm;
-
-    private static final String ONE_RESULT_SEARCH_ITEM = "Orange";
-    private static final String TWO_RESULT_SEARCH_PREFIX = "Ap";
-    private static final String TWO_RESULT_SEARCH_ITEM_1 = TWO_RESULT_SEARCH_PREFIX + "ple";
-    private static final String TWO_RESULT_SEARCH_ITEM_2 = TWO_RESULT_SEARCH_PREFIX + "ricot";
-    private static final String NO_RESULT_SEARCH_KEYWORD = "Ba";
-
-    //endregion
-
     @Before
     public void setup() {
-        context = InstrumentationRegistry.getTargetContext();
-        app = (SortMyStuffApp) context.getApplicationContext();
-        activity = swipeActivityTestRule.getActivity();
-        dm = app.getFactory().getDataManager();
+        mContext = InstrumentationRegistry.getTargetContext();
+        mApp = (SortMyStuffApp) mContext.getApplicationContext();
+        mActivity = swipeActivityTestRule.getActivity();
+        mDataManager = mApp.getFactory().getDataManager();
         cleanAssetsData();
 
         addAsset(ONE_RESULT_SEARCH_ITEM);
@@ -79,15 +64,17 @@ public class SearchActivityTest {
 
     @After
     public void tearDown() {
-        context = null;
-        app = null;
-        activity = null;
-        dm = null;
+        mContext = null;
+        mApp = null;
+        mActivity = null;
+        mDataManager = null;
     }
 
     @Rule
     public ActivityTestRule<SwipeActivity> swipeActivityTestRule
             = new ActivityTestRule<>(SwipeActivity.class);
+
+    //region TESTS
 
     @Test
     public void loadSearch_checkComponents(){
@@ -109,33 +96,44 @@ public class SearchActivityTest {
     public void search_multipleResults(){
         search(TWO_RESULT_SEARCH_PREFIX);
         //there should be two items in result list: Apple and Apricot
-        onView (withId (R.id.result_list)).check (ViewAssertions.matches (withListSize(2)));
+
+        onView(withChild(withText(TWO_RESULT_SEARCH_ITEM_1))).check(matches(isDisplayed()));
+        onView(withChild(withText(TWO_RESULT_SEARCH_ITEM_2))).check(matches(isDisplayed()));
+
+//        onData(anything()).inAdapterView(withId(R.id.result_list))
+//                .atPosition(0).onChildView(withId(R.id.search_result_title))
+//                .check(matches());
+//        onData(anything()).inAdapterView(withId(R.id.result_list))
+//                .atPosition(1).onChildView(withId(R.id.search_result_title))
+//                .check(matches(withText(TWO_RESULT_SEARCH_ITEM_2)));
     }
 
     @Test
     public void search_noResult(){
         search(NO_RESULT_SEARCH_KEYWORD);
         //No results shown, result list should be empty
-        onView (withId (R.id.result_list)).check(ViewAssertions.matches(withListSize(0)));
+        onView (withId (R.id.result_list)).check(matches(withListSize(0)));
     }
 
     @Test
     public void search_noKeyword(){
         search("");
         //Result list should be empty
-        onView (withId (R.id.result_list)).check(ViewAssertions.matches(withListSize(0)));
+        onView (withId (R.id.result_list)).check(matches(withListSize(0)));
     }
 
-    //region PRIVATE METHODS
+    //endregion
+
+    //region PRIVATE STUFF
 
     private void cleanAssetsData() {
         File userDir = new File(
-                app.getFilesDir().getPath() + File.separator + "default-user");
+                mApp.getFilesDir().getPath() + File.separator + "default-user");
 
         try {
             FileUtils.cleanDirectory(userDir);
-            dm.refreshFromLocal();
-            dm.getRootAsset();
+            mDataManager.refreshFromLocal();
+            mDataManager.getRootAsset();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -165,6 +163,17 @@ public class SearchActivityTest {
             }
         };
     }
+
+    private Context mContext;
+    private SortMyStuffApp mApp;
+    private Activity mActivity;
+    private IDataManager mDataManager;
+
+    private static final String ONE_RESULT_SEARCH_ITEM = "Orange";
+    private static final String TWO_RESULT_SEARCH_PREFIX = "Ap";
+    private static final String TWO_RESULT_SEARCH_ITEM_1 = TWO_RESULT_SEARCH_PREFIX + "ple";
+    private static final String TWO_RESULT_SEARCH_ITEM_2 = TWO_RESULT_SEARCH_PREFIX + "ricot";
+    private static final String NO_RESULT_SEARCH_KEYWORD = "Ba";
 
     //endregion
 }

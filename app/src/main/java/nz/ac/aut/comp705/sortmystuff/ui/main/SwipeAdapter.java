@@ -30,27 +30,28 @@ public class SwipeAdapter extends FragmentPagerAdapter {
 
     public SwipeAdapter(FragmentManager fm, SwipeActivity activity, String currentAssetId) {
         super(fm);
-        mActivity = checkNotNull(activity, "The activity cannot be null.");
+        checkNotNull(activity, "The activity cannot be null.");
         IFactory factory = ((SortMyStuffApp) activity.getApplication()).getFactory();
         mDataManager = factory.getDataManager();
         mSchedulerProvider = factory.getSchedulerProvider();
+        mImmediateSchedulerProvider = factory.getImmediateSchedulerProvider();
         mTabsAmount = DEFAULT_TABS_AMOUNT;
         initialiseViewsAndPresenters(currentAssetId);
     }
 
     @Override
     public Fragment getItem(int position) {
-        if(contentsView == null || detailsView == null) {
+        if(mContentsView == null || mDetailsView == null) {
             initialiseViewsAndPresenters(null);
         }
 
         switch (position) {
             case 0:
-                return (ContentsFragment) contentsView;
+                return (ContentsFragment) mContentsView;
             case 1:
-                return (DetailsFragment) detailsView;
+                return (DetailsFragment) mDetailsView;
             default:
-                return (ContentsFragment) contentsView;
+                return (ContentsFragment) mContentsView;
         }
     }
 
@@ -73,12 +74,21 @@ public class SwipeAdapter extends FragmentPagerAdapter {
 
     @Nullable
     public IContentsPresenter getContentsPresenter() {
-        return contentsPresenter;
+        return mContentsPresenter;
     }
 
     @Nullable
     public IDetailsPresenter getDetailsPresenter() {
-        return detailsPresenter;
+        return mDetailsPresenter;
+    }
+
+    @Nullable
+    public IContentsView getContentsView() {
+        return mContentsView;
+    }
+
+    public IDetailsView getDetailsView() {
+        return mDetailsView;
     }
 
     public void setTabsAmount(int amount) {
@@ -91,22 +101,23 @@ public class SwipeAdapter extends FragmentPagerAdapter {
     //region PRIVATE STUFF
 
     private void initialiseViewsAndPresenters(String currentAssetId) {
-        detailsView = DetailsFragment.newInstance();
-        detailsPresenter = new DetailsPresenter(mDataManager, detailsView,
+        mDetailsView = DetailsFragment.newInstance();
+        mDetailsPresenter = new DetailsPresenter(mDataManager, mDetailsView,
                 mSchedulerProvider, currentAssetId);
 
-        contentsView = ContentsFragment.newInstance();
-        contentsPresenter = new ContentsPresenter(mDataManager, contentsView, mActivity, currentAssetId);
+        mContentsView = ContentsFragment.newInstance();
+        mContentsPresenter = new ContentsPresenter(mDataManager, mContentsView,
+                mSchedulerProvider, mImmediateSchedulerProvider, currentAssetId);
     }
 
-    private IContentsView contentsView;
-    private IDetailsView detailsView;
-    private IContentsPresenter contentsPresenter;
-    private IDetailsPresenter detailsPresenter;
+    private IContentsView mContentsView;
+    private IDetailsView mDetailsView;
+    private IContentsPresenter mContentsPresenter;
+    private IDetailsPresenter mDetailsPresenter;
 
     private IDataManager mDataManager;
     private ISchedulerProvider mSchedulerProvider;
-    private SwipeActivity mActivity;
+    private ISchedulerProvider mImmediateSchedulerProvider;
     private int mTabsAmount;
 
     //endregion

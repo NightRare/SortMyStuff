@@ -1,11 +1,9 @@
 package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
-import android.view.MenuItem;
-
 import java.util.List;
 
-import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
+import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.ui.IPresenter;
 
 /**
@@ -47,12 +45,6 @@ public interface IContentsPresenter extends IPresenter {
     void setCurrentAssetIdToRoot();
 
     /**
-     * Sets the current asset id to the container of the current asset. If current asset is
-     * Root asset, then nothing will be done.
-     */
-    void setCurrentAssetIdToContainer();
-
-    /**
      * Gets the asset id of the current asset. This method is mainly for persist the state of
      * current asset in ContentsActivity.
      *
@@ -71,16 +63,9 @@ public interface IContentsPresenter extends IPresenter {
      * Move a list of assets to a new container.
      * @param assets the assets to move.
      */
-    void moveAssets(List<Asset> assets);
+    void moveAssets(List<IAsset> assets);
 
-    /**
-     * Performs corresponding action when the given menu item is selected (interacted with) by
-     * the user.
-     *
-     * @param item the menu item
-     * @return true if the corresponding action is performed as expected
-     */
-    boolean selectOptionItem(MenuItem item);
+    void deleteCurrentAsset();
 
     /**
      * Recycle the current asset and all its contained assets.
@@ -92,6 +77,6 @@ public interface IContentsPresenter extends IPresenter {
      *
      * @param assets the list of the assets to be recycled
      */
-    void recycleAssetsRecursively(List<Asset> assets);
+    void recycleAssetsRecursively(List<IAsset> assets);
 
 }

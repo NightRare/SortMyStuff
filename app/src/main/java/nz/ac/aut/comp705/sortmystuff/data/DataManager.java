@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,8 +23,8 @@ import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
-import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
 import nz.ac.aut.comp705.sortmystuff.utils.AppCode;
+import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
 import nz.ac.aut.comp705.sortmystuff.utils.Log;
 import nz.ac.aut.comp705.sortmystuff.utils.exceptions.ReadLocalStorageFailedException;
 import nz.ac.aut.comp705.sortmystuff.utils.exceptions.UpdateLocalStorageFailedException;
@@ -117,6 +118,57 @@ public class DataManager implements IDataManager {
 
         return Observable.just(cachedAssets.get(id));
     }
+
+    @Override
+    public Observable<List<IAsset>> getContentAssets(String containerId) {
+        checkNotNull(containerId);
+
+        if (dirtyCachedAssets || cachedAssets == null) {
+            int code = loadCachedAssetsFromLocal();
+            if (code != OK)
+                throw new ReadLocalStorageFailedException("Cannot load assets from storage. Error code: " + code);
+        }
+        if (!cachedAssets.containsKey(containerId)) {
+            throw new IllegalStateException("Asset " + containerId + " does not exist. Error code: " + ASSET_NOT_EXISTS);
+        }
+        Asset container = cachedAssets.get(containerId);
+
+        if (container.getContents() == null) {
+            throw new IllegalStateException("The data of asset " + containerId + " are damaged. Error code: " + LOCAL_DATA_CORRUPT);
+        }
+        return Observable.from(container.getContents())
+                .map(asset -> (IAsset) asset)
+                .toList();
+    }
+
+    @Override
+    public Observable<List<IAsset>> getParentAssets(String assetId, boolean rootToChildren) {
+        checkNotNull(assetId, "The assetId cannot be null.");
+
+        if (dirtyCachedAssets || cachedAssets == null) {
+            int code = loadCachedAssetsFromLocal();
+            if (code != OK)
+                throw new ReadLocalStorageFailedException("Cannot load assets from storage. Error code: " + code);
+        }
+        if (!cachedAssets.containsKey(assetId)) {
+            throw new IllegalStateException("Asset " + assetId + " does not exist. Error code: " + ASSET_NOT_EXISTS);
+        }
+
+        Asset asset = cachedAssets.get(assetId);
+        List<Asset> results = new ArrayList<>();
+        //children to root order
+        while (!asset.isRoot()) {
+            results.add(asset);
+            asset = asset.getContainer();
+        }
+        // add the root
+        results.add(asset);
+        if(rootToChildren) Collections.reverse(results);
+        return Observable.from(results)
+                .map(a -> (IAsset) a)
+                .toList();
+    }
+
 
     //endregion
 

@@ -1,24 +1,18 @@
 package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
-import android.content.Intent;
-import android.view.MenuItem;
-import android.widget.Toast;
-
-import com.google.common.base.Preconditions;
-
+import java.util.ArrayList;
 import java.util.List;
 
-import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
-import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
-import nz.ac.aut.comp705.sortmystuff.ui.search.SearchActivity;
-import nz.ac.aut.comp705.sortmystuff.ui.main.SwipeActivity;
-import nz.ac.aut.comp705.sortmystuff.utils.AppCode;
+import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
+import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
+import rx.Observable;
+import rx.Subscription;
+import rx.subscriptions.CompositeSubscription;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.CONTENTS_DEFAULT_MODE;
-import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.CONTENTS_SELECTION_MODE;
 
 /**
  * The implementation class of {@link IContentsPresenter}.
@@ -28,44 +22,34 @@ import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.CONTENTS_SELECTION_MOD
 
 public class ContentsPresenter implements IContentsPresenter {
 
-    /**
-     * Initialises a ContentsPresenter.
-     *
-     * @param dm       the IDataManager instance
-     * @param view     the IContentsView instance
-     * @param activity the ContentsActivity instance
-     */
-    public ContentsPresenter(IDataManager dm, IContentsView view, SwipeActivity activity, String currentAssetId) {
-        this.dm = dm;
-        this.view = view;
-        this.activity = activity;
-        this.currentAssetId = currentAssetId;
-        contentsDisplayMode = CONTENTS_DEFAULT_MODE;
+    public ContentsPresenter(IDataManager dataManager, IContentsView view,
+                             ISchedulerProvider schedulerProvider,
+                             ISchedulerProvider immediateSchedulerProvider, String currentAssetId) {
+        mDataManager = checkNotNull(dataManager, "The dataManager cannot be null.");
+        mView = checkNotNull(view, "The view cannot be null.");
+        mSchedulerProvider = checkNotNull(schedulerProvider, "The schedulerProvider cannot be null.");
+        mImmediateSchedulerProvider = checkNotNull(immediateSchedulerProvider, "The immediateSchedulerProvider cannot be null.");
+        mCurrentAssetId = checkNotNull(currentAssetId, "The currentAssetId cannot be null.");
 
-        view.setPresenter(this);
+        mContentsDisplayMode = CONTENTS_DEFAULT_MODE;
+        mSubscriptions = new CompositeSubscription();
+
+        mView.setPresenter(this);
     }
 
-    //region IContentsPresenter methods
+    //region IContentsPresenter METHODS
 
     /**
      * {@inheritDoc}
      */
     @Override
     public void subscribe() {
-        String intendedId = activity.getIntent().getStringExtra(AppCode.INTENT_ASSET_ID);
-        if(intendedId != null)
-            setCurrentAssetId(intendedId);
-
-        // if the app just launched, display Root Asset
-        else if (currentAssetId == null) {
-            setCurrentAssetId(dm.getRootAsset().getId());
-        }
         loadCurrentContents(true);
     }
 
     @Override
     public void unsubscribe() {
-        //TODO: to be implemented
+        mSubscriptions.clear();
     }
 
     /**
@@ -74,21 +58,48 @@ public class ContentsPresenter implements IContentsPresenter {
     @Override
     public void loadCurrentContents(boolean forceRefreshFromLocal) {
         if (forceRefreshFromLocal)
-            dm.refreshFromLocal();
+            mDataManager.refreshFromLocal();
 
-        dm.getAssetAsync(currentAssetId, new IDataManager.GetAssetCallback() {
-            @Override
-            public void onAssetLoaded(Asset asset) {
-                view.showAssetTitle(asset);
-                loadContents(asset);
-                loadPathBar(asset);
-            }
+        mView.setLoadingIndicator(true);
 
-            @Override
-            public void dataNotAvailable(int errorCode) {
+        mSubscriptions.clear();
+        Observable<List<IAsset>> contentAssetsObservable = mDataManager
+                .getContentAssets(mCurrentAssetId)
+                .subscribeOn(mSchedulerProvider.io());
 
-            }
-        });
+        Observable<List<IAsset>> parentAssetsObservable = mDataManager
+                .getParentAssets(mCurrentAssetId, true)
+                .flatMap(Observable::from)
+                //get rid of the root
+                .filter(a -> !a.isRoot())
+                .toList()
+                .subscribeOn(mSchedulerProvider.io());
+
+        Subscription subscription = mDataManager
+                .getAsset(mCurrentAssetId)
+                .zipWith(contentAssetsObservable, (currentAsset, contentAssets) -> {
+                    List<Object> args = new ArrayList<>();
+                    args.add(0, currentAsset);
+                    args.add(1, contentAssets);
+                    return args;
+                })
+                .zipWith(parentAssetsObservable, (args, parentAssets) -> {
+                    args.add(2, parentAssets);
+                    return args;
+                })
+                .subscribeOn(mSchedulerProvider.io())
+                .observeOn(mSchedulerProvider.ui())
+                .subscribe(
+                        //onNext
+                        args -> processContentResults((IAsset) args.get(0),
+                                (List<IAsset>) args.get(1),
+                                (List<IAsset>) args.get(2)),
+                        //onError
+                        throwable -> mView.showLoadingContentsError(throwable),
+                        //onCompleted
+                        () -> mView.setLoadingIndicator(false)
+                );
+        mSubscriptions.add(subscription);
     }
 
     /**
@@ -96,18 +107,13 @@ public class ContentsPresenter implements IContentsPresenter {
      */
     @Override
     public void loadCurrentContents(boolean forceRefreshFromLocal, int mode) {
-        contentsDisplayMode = mode;
+        mContentsDisplayMode = mode;
         loadCurrentContents(forceRefreshFromLocal);
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @param assetId the asset id
-     */
     @Override
     public void setCurrentAssetId(String assetId) {
-        currentAssetId = checkNotNull(assetId);
+        mCurrentAssetId = checkNotNull(assetId);
     }
 
     /**
@@ -115,40 +121,14 @@ public class ContentsPresenter implements IContentsPresenter {
      */
     @Override
     public void setCurrentAssetIdToRoot() {
-        setCurrentAssetId(dm.getRootAsset().getId());
+        setCurrentAssetId(mDataManager.getRootAsset().getId());
     }
 
     /**
      * {@inheritDoc}
      */
-    @Override
-    public void setCurrentAssetIdToContainer() {
-        // does nothing if the current asset is Root asset
-        if (currentAssetId.equals(dm.getRootAsset().getId()))
-            return;
-
-        dm.getParentAssetsAsync(currentAssetId, new IDataManager.LoadAssetsCallback() {
-            @Override
-            public void onAssetsLoaded(List<Asset> assets) {
-                if (!assets.isEmpty()) {
-                    ContentsPresenter.this.setCurrentAssetId(assets.get(0).getId());
-                }
-            }
-
-            @Override
-            public void dataNotAvailable(int errorCode) {
-
-            }
-        });
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String getCurrentAssetId() {
-        return currentAssetId;
+        return mCurrentAssetId;
     }
 
     /**
@@ -159,82 +139,51 @@ public class ContentsPresenter implements IContentsPresenter {
     @Override
     public void createAsset(String assetName, CategoryType category) {
         try {
-            dm.createAsset(assetName, currentAssetId, category);
-            Toast.makeText(activity, "Successfully added " + assetName, Toast.LENGTH_SHORT).show();
+            mDataManager.createAsset(assetName, mCurrentAssetId, category);
+            mView.showMessage("Successfully added " + assetName);
         } catch (NullPointerException | IllegalArgumentException e) {
-            Toast.makeText(activity, e.getMessage(), Toast.LENGTH_SHORT).show();
+            mView.showMessage(e.getMessage());
         }
         loadCurrentContents(false);
     }
 
     @Override
-    public void moveAssets(List<Asset> assets) {
+    public void moveAssets(List<IAsset> assets) {
         checkNotNull(assets, "The assets to move cannot be null.");
-        Preconditions.checkArgument(!assets.isEmpty(), "The assets to move cannot be empty");
+        if(assets.isEmpty()) return;
 
         //reject the attempt to move to current directory
-        if (assets.get(0).getContainerId().equals(currentAssetId)) {
-            Toast.makeText(activity, "The assets are already here :)", Toast.LENGTH_SHORT).show();
+        if (assets.get(0).getContainerId().equals(mCurrentAssetId)) {
+            mView.showMessage("The assets are already here");
             return;
         }
-
-        for (Asset a : assets) {
-            dm.moveAsset(a, currentAssetId);
+        for (IAsset a : assets) {
+            mDataManager.moveAsset(a.getId(), mCurrentAssetId);
         }
-
-        int size = assets.size();
-        String msg = " asset moved.";
-        if (size > 1)
-            msg = " assets moved.";
-        Toast.makeText(activity, size + msg, Toast.LENGTH_SHORT).show();
+        mView.showMessage(assets.size() + " asset" + (assets.size() > 1 ? "s" : "") + " moved");
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @param item the menu item
-     * @return
-     */
     @Override
-    public boolean selectOptionItem(MenuItem item) {
-        switch (item.getItemId()) {
-
-            case R.id.search_view_button:
-                Intent searchIntent = new Intent(activity, SearchActivity.class);
-                activity.startActivity(searchIntent);
-                return true;
-
-            case R.id.selection_mode_button:
-                loadCurrentContents(false, CONTENTS_SELECTION_MODE);
-                return true;
-
-            case R.id.delete_current_asset_button:
-                if (currentAssetId.equals(dm.getRootAsset().getId())) {
-                    Toast.makeText(activity, "Cannot delete the root asset", Toast.LENGTH_LONG).show();
-                    return false;
-                }
-                view.showDeleteDialog(true);
-                return true;
-
-            default:
-                return false;
-        }
+    public void deleteCurrentAsset() {
+        if(mCurrentAssetId.equals(mDataManager.getRootAsset().getId()))
+            mView.showMessage("Cannot delete the root asset");
+        else
+            mView.showDeleteDialog(true);
     }
-
 
     @Override
     public void recycleCurrentAssetRecursively() {
-        String deleteAssetId = currentAssetId;
+        String deleteAssetId = mCurrentAssetId;
         setCurrentAssetIdToContainer();
-        dm.recycleAssetRecursively(deleteAssetId);
+        mDataManager.recycleAssetRecursively(deleteAssetId);
         loadCurrentContents(true);
     }
 
     @Override
-    public void recycleAssetsRecursively(List<Asset> assets) {
+    public void recycleAssetsRecursively(List<IAsset> assets) {
         checkNotNull(assets);
-        for(Asset a : assets) {
-            dm.recycleAssetRecursively(a);
+        for (IAsset a : assets) {
+            mDataManager.recycleAssetRecursively(a.getId());
         }
         loadCurrentContents(true);
     }
@@ -243,53 +192,39 @@ public class ContentsPresenter implements IContentsPresenter {
 
     //region Private stuff
 
-    private SwipeActivity activity;
-    private IContentsView view;
-    private IDataManager dm;
-    private String currentAssetId;
-    private int contentsDisplayMode;
+    private void setCurrentAssetIdToContainer() {
+        // does nothing if the current asset is Root asset
+        if (mCurrentAssetId.equals(mDataManager.getRootAsset().getId()))
+            return;
 
-    /**
-     * Loads the contents of the asset.
-     *
-     * @param asset
-     */
-    private void loadContents(Asset asset) {
-        dm.getContentAssetsAsync(asset, new IDataManager.LoadAssetsCallback() {
-            @Override
-            public void onAssetsLoaded(List<Asset> assets) {
-                view.showAssetContents(assets, contentsDisplayMode);
-            }
-
-            @Override
-            public void dataNotAvailable(int errorCode) {
-
-            }
-        });
+        mSubscriptions.clear();
+        Subscription subscription = mDataManager
+                .getParentAssets(mCurrentAssetId, false)
+                .subscribeOn(mImmediateSchedulerProvider.io())
+                .observeOn(mImmediateSchedulerProvider.ui())
+                .subscribe(
+                        //onNext
+                        //the second one is the direct parent
+                        parents -> setCurrentAssetId(parents.get(1).getId()),
+                        //onError
+                        throwable -> mView.showLoadingContentsError(throwable)
+                );
+        mSubscriptions.add(subscription);
     }
 
-    /**
-     * Loads the path bar for the given asset.
-     *
-     * @param asset
-     */
-    private void loadPathBar(final Asset asset) {
-        dm.getParentAssetsDescAsync(asset, new IDataManager.LoadAssetsCallback() {
-            @Override
-            public void onAssetsLoaded(List<Asset> assets) {
-                // remove the Root
-                if (!assets.isEmpty())
-                    assets.remove(0);
-
-                view.showPath(assets);
-            }
-
-            @Override
-            public void dataNotAvailable(int errorCode) {
-
-            }
-        });
+    private void processContentResults(IAsset asset, List<IAsset> contentAssets, List<IAsset> parentAssets) {
+        mView.showTitle(asset);
+        mView.showAssetContents(contentAssets, mContentsDisplayMode);
+        mView.showPath(parentAssets);
     }
+
+    private IContentsView mView;
+    private IDataManager mDataManager;
+    private String mCurrentAssetId;
+    private int mContentsDisplayMode;
+    private ISchedulerProvider mSchedulerProvider;
+    private ISchedulerProvider mImmediateSchedulerProvider;
+    private CompositeSubscription mSubscriptions;
 
     //endregion
 

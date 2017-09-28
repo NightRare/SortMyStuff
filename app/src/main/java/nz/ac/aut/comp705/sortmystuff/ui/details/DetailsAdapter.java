@@ -23,11 +23,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class DetailsAdapter extends ArrayAdapter<IDetail> {
 
     public DetailsAdapter(Context context, List<IDetail> detailsList,
-                           IDetailsView.DetailsItemListener detailsItemListener) {
+                           IDetailsView.ViewListeners viewListeners) {
         super(context, R.layout.details_two_lines_list, detailsList);
         mContext = checkNotNull(context, "The context cannot be null.");
         mDetailList = checkNotNull(detailsList, "The context cannot be null.");
-        mDetailsItemListener = detailsItemListener;
+        mViewListeners = viewListeners;
     }
 
     @Override
@@ -59,11 +59,11 @@ public class DetailsAdapter extends ArrayAdapter<IDetail> {
                 imageFieldView.setImageBitmap((Bitmap) item.getField());
 
                 //Set a click listener on asset image to launch camera
-                imageFieldView.setOnClickListener(v1 -> mDetailsItemListener.onImageClick(item));
+                imageFieldView.setOnClickListener(v1 -> mViewListeners.onImageClick(item));
 
                 //Set a long-click listener on asset image to delete photo
                 imageFieldView.setOnLongClickListener(v12 -> {
-                    mDetailsItemListener.onImageLongClick((IDetail<Bitmap>) item);
+                    mViewListeners.onImageLongClick((IDetail<Bitmap>) item);
                     return true;
                 });
             }
@@ -91,7 +91,7 @@ public class DetailsAdapter extends ArrayAdapter<IDetail> {
 
     private Context mContext;
     private List<IDetail> mDetailList;
-    private IDetailsView.DetailsItemListener mDetailsItemListener;
+    private IDetailsView.ViewListeners mViewListeners;
 
     //endregion
 }

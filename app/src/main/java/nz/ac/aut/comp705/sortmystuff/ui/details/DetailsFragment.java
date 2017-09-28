@@ -52,7 +52,15 @@ public class DetailsFragment extends Fragment implements IDetailsView{
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mDetailsAdapter = new DetailsAdapter(mActivity, new ArrayList<>(), mDetailsItemListener);
+        mDetailsAdapter = new DetailsAdapter(mActivity, new ArrayList<>(), mViewListeners);
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        mActivity = (SwipeActivity) getActivity();
+        mActivity.setDetailsViewListeners(mViewListeners);
     }
 
     @Override
@@ -68,14 +76,6 @@ public class DetailsFragment extends Fragment implements IDetailsView{
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-
-        mActivity = (SwipeActivity) getActivity();
-    }
-
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -84,7 +84,7 @@ public class DetailsFragment extends Fragment implements IDetailsView{
         mDetails = (ListView) mRootView.findViewById(R.id.details_list);
         mDetails.setAdapter(mDetailsAdapter);
         mDetails.setOnItemClickListener((parent, view, position, id) ->
-                mDetailsItemListener.onItemClick(view, (IDetail) parent.getItemAtPosition(position)));
+                mViewListeners.onItemClick(view, (IDetail) parent.getItemAtPosition(position)));
 
         return mRootView;
     }
@@ -232,7 +232,7 @@ public class DetailsFragment extends Fragment implements IDetailsView{
         assetCategory.setText(categoryString);
     }
 
-    private DetailsItemListener mDetailsItemListener = new DetailsItemListener() {
+    private ViewListeners mViewListeners = new ViewListeners() {
 
         @Override
         public void onItemClick(View view, IDetail item) {

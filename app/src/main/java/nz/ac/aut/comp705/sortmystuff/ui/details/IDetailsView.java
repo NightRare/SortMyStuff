@@ -46,7 +46,7 @@ public interface IDetailsView extends IView<IDetailsPresenter> {
     boolean isReady();
 
 
-    interface DetailsItemListener {
+    interface ViewListeners {
 
         void onItemClick(View view, IDetail item);
 
