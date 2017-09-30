@@ -27,6 +27,8 @@ public class SwipeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.swipe_act);
 
+        isRootAsset = true;
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.main_toolbar);
         setSupportActionBar(toolbar);
 
@@ -60,10 +62,18 @@ public class SwipeActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         mMenu = menu;
+        getMenuInflater().inflate(R.menu.contents_menu, mMenu);
 
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.contents_menu, menu);
         return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        // set menu button visibility according to whether it's root asset
+        MenuItem deleteBtn = mMenu.findItem(R.id.delete_current_asset_button);
+        deleteBtn.setVisible(!isRootAsset);
+
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -97,6 +107,14 @@ public class SwipeActivity extends AppCompatActivity {
 
     public void setCurrentAsset(IAsset asset) {
         setTitle(asset.getName());
+
+        //if the current asset changing from (root asset/other assets) to (other assets/root asset)
+        //then prepare the options menu again
+        if(isRootAsset != asset.isRoot()) {
+            isRootAsset = asset.isRoot();
+            onPrepareOptionsMenu(mMenu);
+        }
+
         if(mSwipeAdapter == null) return;
         refreshDetails(asset.getId());
     }
@@ -130,6 +148,8 @@ public class SwipeActivity extends AppCompatActivity {
     private ViewPager mViewPager;
     private IContentsView.ViewListeners mContentsViewListeners;
     private IDetailsView.ViewListeners mDetailsViewListeners;
+
+    private boolean isRootAsset;
 
 
     //endregion

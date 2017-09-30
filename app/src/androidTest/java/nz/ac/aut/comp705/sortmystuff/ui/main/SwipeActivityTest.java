@@ -651,15 +651,10 @@ public class SwipeActivityTest {
     public void deleteAsset_deleteRootAsset() {
         addAsset(ASSET1_NAME);
 
+        // "Delete Current Asset" button should not be displayed in the options menu when
+        // the current asset is the root asset
         openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
-        onView(withText(R.string.delete_current_asset)).perform(click());
-
-        // delete asset dialog should not pop up
-        onView(withText(R.string.delete_asset_confirm_button)).check(doesNotExist());
-
-        // Root asset cannot be deleted
-        Assert.assertEquals(ROOT_ASSET_NAME, getToolbarTitle());
-        onView(withChild(withText(ASSET1_NAME))).check(matches(isDisplayed()));
+        onView(withChild(withText(R.string.delete_current_asset))).check(doesNotExist());
     }
 
     @Test
