@@ -169,7 +169,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
      */
     @Override
     public void showPath(List<IAsset> assets) {
-        PathBarAdapter pba = new PathBarAdapter(mActivity, assets, mPresenter);
+        PathBarAdapter pba = new PathBarAdapter(mActivity, assets, mViewListeners);
         mPathBar.setAdapter(pba);
     }
 
@@ -325,7 +325,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
             //if it's in selection mode
             if (adapter.isCheckboxShowed()) {
                 holder.checkbox.toggle();
-                adapter.getSelectStatusMap().put(position, holder.checkbox.isChecked());
+                adapter.getmSelectStatusMap().put(position, holder.checkbox.isChecked());
             } else {
                 //fetches the selected asset in the list
                 IAsset clickedAsset = (IAsset) parent.getItemAtPosition(position);
@@ -385,8 +385,9 @@ public class ContentsFragment extends Fragment implements IContentsView {
         }
 
         @Override
-        public void onPathbarItemClick() {
-
+        public void onPathbarItemClick(String intendingAssetId) {
+            mPresenter.setCurrentAssetId(intendingAssetId);
+            mPresenter.loadCurrentContents(false);
         }
 
         @Override
@@ -397,7 +398,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
         @Override
         public void onSelectionModeSelectAllClick() {
             for (int i = 0; i < mAdapter.getCount(); i++) {
-                mAdapter.getSelectStatusMap().put(i, true);
+                mAdapter.getmSelectStatusMap().put(i, true);
             }
             mAdapter.notifyDataSetChanged();
 

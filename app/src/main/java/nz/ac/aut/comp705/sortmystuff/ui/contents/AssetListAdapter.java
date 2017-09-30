@@ -11,9 +11,6 @@ import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.google.common.base.Preconditions;
-
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,46 +18,41 @@ import java.util.Map;
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+
 /**
  * The Adapter class for the list view of assets list.
- * Created by Jing on 5/05/17.
+ * @author Jing
  */
 
 public class AssetListAdapter extends BaseAdapter {
 
-    public AssetListAdapter(List<IAsset> list, Context context, Boolean showCheckbox) {
-        this(list, context, showCheckbox, new ArrayList<IAsset>());
-    }
-
     public AssetListAdapter(List<IAsset> list, Context context, Boolean showCheckbox
             , List<IAsset> movingAssets) {
-        Preconditions.checkNotNull(list);
-        Preconditions.checkNotNull(context);
-        Preconditions.checkNotNull(movingAssets);
-
-        this.assetList = list;
-        this.context = context;
-        this.showCheckbox = showCheckbox;
-        this.movingAssets = movingAssets;
-        inflater = LayoutInflater.from(context);
-        selectStatusMap = new HashMap<>();
+        mAssetList = checkNotNull(list, "The list cannot be null.");
+        mContext = checkNotNull(context, "The context cannot be null.");
+        mShowCheckbox = checkNotNull(showCheckbox, "The showCheckbox cannot be null.");
+        mMovingAssets = checkNotNull(movingAssets, "The movingAssets cannot be null.");
+        mInflater = LayoutInflater.from(context);
+        mSelectStatusMap = new HashMap<>();
         initSelectionStatus();
     }
 
     private void initSelectionStatus() {
-        for (int i = 0; i < assetList.size(); i++) {
-            selectStatusMap.put(i, false);
+        for (int i = 0; i < mAssetList.size(); i++) {
+            mSelectStatusMap.put(i, false);
         }
     }
 
     @Override
     public int getCount() {
-        return assetList.size();
+        return mAssetList.size();
     }
 
     @Override
     public Object getItem(int position) {
-        return assetList.get(position);
+        return mAssetList.get(position);
     }
 
     @Override
@@ -74,7 +66,7 @@ public class AssetListAdapter extends BaseAdapter {
 
         if (convertView == null) {
             holder = new ViewHolder();
-            convertView = inflater.inflate(R.layout.contents_assets_layout, null);
+            convertView = mInflater.inflate(R.layout.contents_assets_layout, null);
 
             holder.imageView = (ImageView) convertView.findViewById(R.id.contents_asset_image);
             holder.textView = (TextView) convertView.findViewById(R.id.asset_name);
@@ -85,9 +77,9 @@ public class AssetListAdapter extends BaseAdapter {
         else
             holder = (ViewHolder) convertView.getTag();
 
-        IAsset asset = assetList.get(position);
+        IAsset asset = mAssetList.get(position);
 
-        if(showCheckbox)
+        if(mShowCheckbox)
             holder.checkbox.setVisibility(View.VISIBLE);
         else
             holder.checkbox.setVisibility(View.GONE);
@@ -99,49 +91,50 @@ public class AssetListAdapter extends BaseAdapter {
             holder.imageView.setImageBitmap(photo);
 
         holder.textView.setText(asset.getName());
-        holder.checkbox.setChecked(selectStatusMap.get(position));
+        holder.checkbox.setChecked(mSelectStatusMap.get(position));
 
         //gray the asset name if it is in moving list
-        if(movingAssets.contains(assetList.get(position))) {
-            holder.textView.setTextColor(ContextCompat.getColor(context, R.color.light_grey));
+        if(mMovingAssets.contains(mAssetList.get(position))) {
+            holder.textView.setTextColor(ContextCompat.getColor(mContext, R.color.light_grey));
         }
         return convertView;
     }
 
     public boolean isCheckboxShowed() {
-        return showCheckbox;
+        return mShowCheckbox;
     }
 
-    public HashMap<Integer, Boolean> getSelectStatusMap() {
-        return selectStatusMap;
+    public HashMap<Integer, Boolean> getmSelectStatusMap() {
+        return mSelectStatusMap;
     }
 
     public Map<Integer, IAsset> getSelectedAssets() {
         Map<Integer, IAsset> selectedAssets = new HashMap<>();
-        for (Map.Entry<Integer, Boolean> e : selectStatusMap.entrySet()) {
+        for (Map.Entry<Integer, Boolean> e : mSelectStatusMap.entrySet()) {
             if (e.getValue()) {
-                selectedAssets.put(e.getKey(), assetList.get(e.getKey()));
+                selectedAssets.put(e.getKey(), mAssetList.get(e.getKey()));
             }
         }
         return selectedAssets;
     }
-
-    //region PRIVATE STUFF
-
-    private List<IAsset> assetList;
-    private List<IAsset> movingAssets;
-
-    //Whether the checkbox is selected.
-    private HashMap<Integer, Boolean> selectStatusMap;
-    private LayoutInflater inflater;
-    private Boolean showCheckbox;
-    private Context context;
-
-    //endregion
 
     public class ViewHolder {
         ImageView imageView;
         TextView textView;
         CheckBox checkbox;
     }
+
+    //region PRIVATE STUFF
+
+    private List<IAsset> mAssetList;
+    private List<IAsset> mMovingAssets;
+
+    //Whether the checkbox is selected.
+    private HashMap<Integer, Boolean> mSelectStatusMap;
+    private LayoutInflater mInflater;
+    private Boolean mShowCheckbox;
+    private Context mContext;
+
+    //endregion
+
 }

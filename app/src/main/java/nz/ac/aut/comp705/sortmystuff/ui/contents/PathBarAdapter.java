@@ -12,6 +12,8 @@ import java.util.List;
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * The Adapter class for the recycler view of path bar.
  *
@@ -21,24 +23,18 @@ import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 public class PathBarAdapter extends
         RecyclerView.Adapter<PathBarAdapter.ViewHolder> {
 
-    /**
-     * Initialises a new PathBarAdapter.
-     *
-     * @param context the context, normally the Application
-     * @param assets the list of assets to be showed in View
-     * @param presenter the IContentsPresenter
-     */
-    public PathBarAdapter(Context context, List<IAsset> assets, IContentsPresenter presenter) {
-        this.inflater = LayoutInflater.from(context);
-        this.assets = assets;
-        this.presenter = presenter;
+    public PathBarAdapter(Context context, List<IAsset> assets,
+                          IContentsView.ViewListeners viewListeners) {
+        mInflater = LayoutInflater.from(checkNotNull(context, "The context cannot be null."));
+        mAssets = checkNotNull(assets, "The assets cannot be null.");
+        mViewListeners = checkNotNull(viewListeners, "The viewListeners cannot be null.");
     }
 
     //region RecyclerView.Adapter methods
 
     @Override
     public PathBarAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = inflater.inflate(R.layout.contents_pathbar, parent, false);
+        View view = mInflater.inflate(R.layout.contents_pathbar, parent, false);
         ViewHolder vh = new ViewHolder(view);
         return vh;
     }
@@ -52,24 +48,18 @@ public class PathBarAdapter extends
         else
             sb.append(" >  ");
 
-        sb.append(assets.get(position).getName());
+        sb.append(mAssets.get(position).getName());
 
         holder.nameView.setText(sb.toString());
 
-        final String assetId = assets.get(position).getId();
-        holder.nameView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                presenter.setCurrentAssetId(assetId);
-                presenter.loadCurrentContents(false);
-            }
-        });
+        final String assetId = mAssets.get(position).getId();
+        holder.nameView.setOnClickListener(v -> mViewListeners.onPathbarItemClick(assetId));
     }
 
 
     @Override
     public int getItemCount() {
-        return assets.size();
+        return mAssets.size();
     }
 
     /**
@@ -93,9 +83,9 @@ public class PathBarAdapter extends
 
     //region Private stuff
 
-    private LayoutInflater inflater;
-    private List<IAsset> assets;
-    private IContentsPresenter presenter;
+    private LayoutInflater mInflater;
+    private List<IAsset> mAssets;
+    private IContentsView.ViewListeners mViewListeners;
 
     //endregion
 

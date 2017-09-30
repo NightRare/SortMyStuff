@@ -72,7 +72,7 @@ public interface IContentsView extends IView<IContentsPresenter> {
 
         void onPathbarRootClick();
 
-        void onPathbarItemClick();
+        void onPathbarItemClick(String intendingAssetId);
 
         void onSelectionModeCancelClick();
 
