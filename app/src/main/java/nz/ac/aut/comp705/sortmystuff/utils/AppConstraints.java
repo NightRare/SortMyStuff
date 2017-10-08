@@ -14,6 +14,10 @@ public class AppConstraints {
 
     public final static String ROOT_ASSET_ID = "RootAsset";
 
+    public final static int ASSET_THUMBNAIL_WIDTH = 128;
+
+    public final static int ASSET_THUMBNAIL_LENGTH = 128;
+
     //********************************************
     // DETAIL
     //********************************************

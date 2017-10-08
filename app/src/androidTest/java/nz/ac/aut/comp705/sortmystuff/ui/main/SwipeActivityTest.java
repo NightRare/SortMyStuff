@@ -46,9 +46,10 @@ import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
-import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
+import rx.Observable;
+import rx.schedulers.Schedulers;
 
 import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
@@ -790,26 +791,21 @@ public class SwipeActivityTest {
 
         // check if the CameraActivity is inteded
         intended(hasComponent(CameraActivity.class.getName()));
-        mDataManager.getAllAssetsAsync(new IDataManager.LoadAssetsCallback() {
-            @Override
-            public void onAssetsLoaded(List<Asset> assets) {
-                boolean checked = false;
-                for(Asset a : assets) {
-                    if(a.getName().equals(ASSET_LIVING_ROOM)) {
-                        // check whether the new image is updated to the asset
-                        Assert.assertTrue(newImage.sameAs(a.getPhoto()));
-                        checked = true;
-                        break;
-                    }
-                }
-                if(!checked) Assert.fail();
-            }
 
-            @Override
-            public void dataNotAvailable(int errorCode) {
-
-            }
-        });
+        mDataManager.getAssets()
+                .flatMap(Observable::from)
+                .filter(asset -> asset.getName().equals(ASSET_LIVING_ROOM))
+                .first()
+                .observeOn(Schedulers.immediate())
+                .subscribeOn(Schedulers.immediate())
+                .subscribe(asset -> {
+                    Asset a = (Asset) asset;
+                    Bitmap thumbnail = a.getThumbnail();
+                    a.setThumbnail(newImage);
+                    // check whether the thumbnail of the new image is the same as the
+                    // original thumbnail updated by the app
+                    Assert.assertTrue(thumbnail.sameAs(a.getThumbnail()));
+                });
     }
 
     @Test
@@ -837,70 +833,51 @@ public class SwipeActivityTest {
 
         addAsset(ASSET_LIVING_ROOM);
 
-        // update the photo of the newly added asset
-        mDataManager.getAllAssetsAsync(new IDataManager.LoadAssetsCallback() {
-            @Override
-            public void onAssetsLoaded(List<Asset> assets) {
-                for(Asset a : assets) {
-                    if(a.getName().equals(ASSET_LIVING_ROOM)) {
+        // change the photo of the newly added asset to the customisedImage
+        mDataManager.getAssets()
+                .flatMap(Observable::from)
+                .filter(asset -> asset.getName().equals(ASSET_LIVING_ROOM))
+                .first()
+                .flatMap(asset -> mDataManager.getDetails(asset.getId()))
+                .first()
+                .flatMap(Observable::from)
+                .filter(detail -> detail.getLabel().equals(CategoryType.BasicDetail.PHOTO))
+                .first()
+                .doOnNext(detail -> mDataManager
+                        .updateImageDetail((ImageDetail) detail, detail.getLabel(), customisedImage))
+                .observeOn(Schedulers.immediate())
+                .subscribeOn(Schedulers.immediate())
+                .subscribe(
+                        //onNext
+                        detail -> continueToRemovePhotoInApp(defaultImage)
+                );
 
-                        mDataManager.getDetailsAsync(a, new IDataManager.LoadDetailsCallback() {
-                            @Override
-                            public void onDetailsLoaded(List<Detail> details) {
-                                for(Detail d : details) {
-                                    if(d.getLabel().equals(CategoryType.BasicDetail.PHOTO)) {
-                                        mDataManager.updateImageDetail((ImageDetail) d, d.getLabel(), customisedImage);
-                                        break;
-                                    }
-                                }
-                            }
+    }
 
-                            @Override
-                            public void dataNotAvailable(int errorCode) {
+    //region PRIVATE STUFF
 
-                            }
-                        });
-
-                        // check whether the new image is updated to the asset
-                        break;
-                    }
-                }
-            }
-
-            @Override
-            public void dataNotAvailable(int errorCode) {
-
-            }
-        });
+    private void continueToRemovePhotoInApp(Bitmap defaultImage) {
 
         clickAsset(0);
         swipeToDetailsPage();
         clickPhoto(true);
         onView(withText(R.string.photo_remove_confirm_button)).perform(click());
 
-        mDataManager.getAllAssetsAsync(new IDataManager.LoadAssetsCallback() {
-            @Override
-            public void onAssetsLoaded(List<Asset> assets) {
-                boolean checked = false;
-                for(Asset a : assets) {
-                    if(a.getName().equals(ASSET_LIVING_ROOM)) {
-                        // check whether the new image is updated to the asset
-                        Assert.assertTrue(defaultImage.sameAs(a.getPhoto()));
-                        checked = true;
-                        break;
-                    }
-                }
-                if(!checked) Assert.fail();
-            }
-
-            @Override
-            public void dataNotAvailable(int errorCode) {
-
-            }
-        });
+        mDataManager.getAssets()
+                .flatMap(Observable::from)
+                .filter(asset -> asset.getName().equals(ASSET_LIVING_ROOM))
+                .first()
+                .observeOn(Schedulers.immediate())
+                .subscribeOn(Schedulers.immediate())
+                .subscribe(asset -> {
+                    Asset a = (Asset) asset;
+                    Bitmap thumbnail = a.getThumbnail();
+                    a.setThumbnail(defaultImage);
+                    // check whether the thumbnail of the new image is the same as the
+                    // original thumbnail updated by the app
+                    Assert.assertTrue(thumbnail.sameAs(a.getThumbnail()));
+                });
     }
-
-    //region PRIVATE STUFF
 
     private void cleanAssetsData() {
         File userDir = new File(

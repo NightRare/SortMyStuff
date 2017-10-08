@@ -755,7 +755,7 @@ public class DataManager implements IDataManager {
             if (asset.isRoot()) {
                 cachedRootAsset = asset;
             } else {
-                asset.setPhoto(loadPhoto(asset.getId()));
+                asset.setThumbnail(loadPhoto(asset.getId()));
             }
 
         }
@@ -915,7 +915,7 @@ public class DataManager implements IDataManager {
                     // if it is the "Photo" detail of an asset, need to set the
                     // photo of asset as well
                     if(d.getLabel().equals(CategoryType.BasicDetail.PHOTO)) {
-                        cachedAssets.get(assetId).setPhoto((Bitmap) field);
+                        cachedAssets.get(assetId).setThumbnail((Bitmap) field);
                     }
                 }
                 break;

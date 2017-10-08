@@ -4,13 +4,15 @@ import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.google.common.base.Preconditions;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.ASSET_THUMBNAIL_LENGTH;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.ASSET_THUMBNAIL_WIDTH;
 
 /**
  * Represents an asset instance in the app.
@@ -60,10 +62,6 @@ public final class Asset implements IAsset{
     //region STATIC FACTORIES
 
     /**
-     * <p><em>
-     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
-     * </em></p>
-     * <p>
      * Static factory to create an asset with the given name and has a categoryType type as given.
      *
      * @param name      the name of the Asset
@@ -73,10 +71,9 @@ public final class Asset implements IAsset{
      * @throws NullPointerException     if name or container is {@code null}
      * @throws IllegalArgumentException if name is empty or exceeds the length limit
      */
-    @Deprecated
     public static Asset create(String name, Asset container, CategoryType category) {
         checkIllegalName(name);
-        Preconditions.checkNotNull(container);
+        checkNotNull(container);
 
         String id = UUID.randomUUID().toString();
         Long ct = System.currentTimeMillis();
@@ -93,10 +90,6 @@ public final class Asset implements IAsset{
     }
 
     /**
-     * <p><em>
-     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
-     * </em></p>
-     * <p>
      * Static factory to create an asset with the given name and has a categoryType type as "Miscellaneous".
      *
      * @param name      the name of the asset.
@@ -105,21 +98,15 @@ public final class Asset implements IAsset{
      * @throws NullPointerException     if name or container is {@code null}
      * @throws IllegalArgumentException if name is empty or exceeds the length limit
      */
-    @Deprecated
     public static Asset createAsMisc(String name, Asset container) {
         return create(name, container, CategoryType.Miscellaneous);
     }
 
     /**
-     * <p><em>
-     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
-     * </em></p>
-     * <p>
      * Static factory to create a Root Asset.
      *
      * @return the Root Asset instance
      */
-    @Deprecated
     public static Asset createRoot() {
         String id = AppConstraints.ROOT_ASSET_ID;
 
@@ -203,18 +190,8 @@ public final class Asset implements IAsset{
     }
 
     @Override
-    public Byte[] getThumbData() {
-        return null;
-    }
-
-    /**
-     * Gets the photo of the asset.
-     *
-     * @return the photo
-     */
-    @Override
-    public Bitmap getPhoto() {
-        return photo;
+    public Bitmap getThumbnail() {
+        return thumbnail;
     }
 
     /**
@@ -228,30 +205,20 @@ public final class Asset implements IAsset{
     }
 
     /**
-     * <p><em>
-     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
-     * </em></p>
-     * <p>
      * Gets the container asset.
      *
      * @return the container asset
      */
-    @Deprecated
     @Nullable
     public Asset getContainer() {
         return container;
     }
 
     /**
-     * <p><em>
-     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
-     * </em></p>
-     * <p>
      * Gets the contents assets of the assets.
      *
      * @return the list of contents assets
      */
-    @Deprecated
     public List<Asset> getContents() {
         return new ArrayList<>(contents);
     }
@@ -262,17 +229,12 @@ public final class Asset implements IAsset{
     //region MODIFIERS
 
     /**
-     * <p><em>
-     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
-     * </em></p>
-     * <p>
      * Sets the name of the asset.
      *
      * @param name the new name.
      * @throws NullPointerException     if name is {@code null}
      * @throws IllegalArgumentException if name is empty or exceeds the length limit
      */
-    @Deprecated
     public void setName(@NonNull String name) {
         checkIllegalName(name);
 
@@ -283,19 +245,14 @@ public final class Asset implements IAsset{
     }
 
     /**
-     * <p><em>
-     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
-     * </em></p>
-     * <p>
      * Moves this asset to a new container.
      *
      * @param containerObj the new container asset.
      * @return true if the asset is moved to the new container successfully.
      * @throws NullPointerException if containerObj is {@code null}
      */
-    @Deprecated
     public boolean moveTo(@NonNull Asset containerObj) {
-        Preconditions.checkNotNull(containerObj);
+        checkNotNull(containerObj);
 
         // cannot move Root asset and cannot move to its children asset
         if (isRoot() || isParentOf(containerObj))
@@ -310,10 +267,6 @@ public final class Asset implements IAsset{
     }
 
     /**
-     * <p><em>
-     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
-     * </em></p>
-     * <p>
      * Attaches the asset to its container to form a tree structure of assets. The tree structure
      * is not recorded in data storage, therefore in order to be used as an Asset instance,
      * they should be "attached" to its containers and contents after the assets have been retrieved
@@ -321,7 +274,6 @@ public final class Asset implements IAsset{
      * @param containerObj the container asset
      * @true if attach successfully
      */
-    @Deprecated
     public boolean attachToTree(@Nullable Asset containerObj) {
         if (contents == null)
             contents = new ArrayList<>();
@@ -341,26 +293,16 @@ public final class Asset implements IAsset{
     }
 
     /**
-     * <p><em>
-     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
-     * </em></p>
-     * <p>
      * Updates the {@link #modifyTimestamp } to {@link System#currentTimeMillis()}.
      */
-    @Deprecated
     public void updateTimeStamp() {
         if (isRoot()) return;
         modifyTimestamp = System.currentTimeMillis();
     }
 
     /**
-     * <p><em>
-     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
-     * </em></p>
-     * <p>
      * Marks the Asset as being recycled.
      */
-    @Deprecated
     public void recycle() {
         if (!isRoot()) {
             isRecycled = true;
@@ -368,29 +310,17 @@ public final class Asset implements IAsset{
     }
 
     /**
-     * <p><em>
-     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
-     * </em></p>
-     * <p>
      * Marks the asset as not being recycled.
      */
-    @Deprecated
     public void restore() {
         if (!isRoot()) {
             isRecycled = false;
         }
     }
 
-    /**
-     * <p><em>
-     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
-     * </em></p>
-     * <p>
-     * Sets the photo.
-     */
-    @Deprecated
-    public void setPhoto(Bitmap photo) {
-        this.photo = photo;
+    public void setThumbnail(Bitmap photo) {
+        this.thumbnail = Bitmap.createScaledBitmap(checkNotNull(photo),
+                ASSET_THUMBNAIL_WIDTH, ASSET_THUMBNAIL_LENGTH, false);
     }
 
     //endregion
@@ -437,22 +367,10 @@ public final class Asset implements IAsset{
 
     //region PRIVATE STUFF
 
-    @Nullable
-    // the container asset of the asset
-    private transient Asset container;
-
-    @NonNull
-    // list of assets this certain asset contains
-    // just for convenience
-    private transient List<Asset> contents;
-
-    @Nullable
-    private transient Bitmap photo;
-
     private Asset(@NonNull String id, @NonNull String name, @NonNull String containerId,
                   CategoryType categoryType, @Nullable Asset container, boolean isRoot, @NonNull List<Asset> contents,
                   @NonNull Long createdTimestamp, @NonNull Long modifiedTimestamp,
-                  boolean isRecycled, @Nullable Bitmap photo) {
+                  boolean isRecycled, @Nullable Bitmap thumbnail) {
         this.id = id;
         this.name = name;
         this.containerId = containerId;
@@ -463,7 +381,7 @@ public final class Asset implements IAsset{
         this.createTimestamp = createdTimestamp;
         this.modifyTimestamp = modifiedTimestamp;
         this.isRecycled = isRecycled;
-        this.photo = photo;
+        this.thumbnail = thumbnail;
     }
 
     /**
@@ -488,13 +406,25 @@ public final class Asset implements IAsset{
      * @param name
      */
     private static void checkIllegalName(String name) {
-        Preconditions.checkNotNull(name);
+        checkNotNull(name);
         if (name.isEmpty())
             throw new IllegalArgumentException("The name cannot be empty");
         if (name.length() > AppConstraints.ASSET_NAME_CAP)
             throw new IllegalArgumentException("The length of the name should be shorter than "
                     + AppConstraints.ASSET_NAME_CAP);
     }
+
+    @Nullable
+    // the container asset of the asset
+    private transient Asset container;
+
+    @NonNull
+    // list of assets this certain asset contains
+    // just for convenience
+    private transient List<Asset> contents;
+
+    @Nullable
+    private transient Bitmap thumbnail;
 
     //endregion
 }

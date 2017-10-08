@@ -84,11 +84,11 @@ public class AssetListAdapter extends BaseAdapter {
         else
             holder.checkbox.setVisibility(View.GONE);
 
-        Bitmap photo = asset.getPhoto();
-        if (photo == null)
+        Bitmap thumbnail = asset.getThumbnail();
+        if (thumbnail == null)
             holder.imageView.setImageResource(R.drawable.default_square);
         else
-            holder.imageView.setImageBitmap(photo);
+            holder.imageView.setImageBitmap(thumbnail);
 
         holder.textView.setText(asset.getName());
         holder.checkbox.setChecked(mSelectStatusMap.get(position));
