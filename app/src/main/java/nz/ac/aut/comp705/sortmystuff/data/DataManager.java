@@ -52,7 +52,7 @@ public class DataManager implements IDataManager {
         dirtyCachedDetails = true;
     }
 
-    //region RXJAVA METHODS
+    //region IDataManger METHODS
 
     @Override
     public Observable<List<IAsset>> getAssets() {
@@ -170,9 +170,6 @@ public class DataManager implements IDataManager {
     }
 
 
-    //endregion
-
-    //region IDataManger METHODS
 
     /**
      * {@inheritDoc}
@@ -251,7 +248,7 @@ public class DataManager implements IDataManager {
      * {@inheritDoc}
      */
     @Override
-    public Asset getRootAsset() {
+    public IAsset getRootAsset() {
         if (dirtyCachedAssets || cachedRootAsset == null) {
             int code = loadCachedAssetsFromLocal();
             if (code == AppCode.NO_ROOT_ASSET) {
@@ -264,221 +261,6 @@ public class DataManager implements IDataManager {
             }
         }
         return cachedRootAsset;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getAllAssetsAsync(@NonNull LoadAssetsCallback callback) {
-        checkNotNull(callback);
-
-        if (dirtyCachedAssets || cachedAssets == null) {
-            int code = loadCachedAssetsFromLocal();
-            if (code != OK) {
-                callback.dataNotAvailable(code);
-                return;
-            }
-        }
-
-        List<Asset> list = new LinkedList<>(cachedAssets.values());
-        callback.onAssetsLoaded(list);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getRecycledAssetsAsync(@NonNull LoadAssetsCallback callback) {
-        checkNotNull(callback);
-
-        if (dirtyCachedAssets || cachedRecycledAssets == null) {
-            int code = loadCachedAssetsFromLocal();
-            if (code != OK) {
-                callback.dataNotAvailable(code);
-                return;
-            }
-        }
-
-        List<Asset> list = new LinkedList<>(cachedRecycledAssets.values());
-        callback.onAssetsLoaded(list);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getContentAssetsAsync(@NonNull Asset container, @NonNull LoadAssetsCallback callback) {
-        checkNotNull(container);
-
-        getContentAssetsAsync(container.getId(), callback);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getContentAssetsAsync(@NonNull String containerId, @NonNull LoadAssetsCallback callback) {
-        checkNotNull(containerId);
-        checkNotNull(callback);
-
-        if (dirtyCachedAssets || cachedAssets == null) {
-            int code = loadCachedAssetsFromLocal();
-            if (code != OK) {
-                callback.dataNotAvailable(code);
-                return;
-            }
-        }
-
-        if (!cachedAssets.containsKey(containerId)) {
-            callback.dataNotAvailable(ASSET_NOT_EXISTS);
-            return;
-        }
-        Asset container = cachedAssets.get(containerId);
-
-        if (container.getContents() == null) {
-            callback.dataNotAvailable(LOCAL_DATA_CORRUPT);
-            return;
-        }
-        callback.onAssetsLoaded(container.getContents());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getParentAssetsAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback) {
-        checkNotNull(asset);
-
-        getParentAssetsAsync(asset.getId(), callback);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getParentAssetsAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback) {
-        checkNotNull(assetId);
-        checkNotNull(callback);
-
-        if (dirtyCachedAssets || cachedAssets == null) {
-            int code = loadCachedAssetsFromLocal();
-            if (code != OK) {
-                callback.dataNotAvailable(code);
-                return;
-            }
-        }
-        if (!cachedAssets.containsKey(assetId)) {
-            callback.dataNotAvailable(ASSET_NOT_EXISTS);
-            return;
-        }
-
-        Asset asset = cachedAssets.get(assetId);
-        List<Asset> parents = new LinkedList<>();
-        while (!asset.isRoot()) {
-            parents.add(asset.getContainer());
-            asset = asset.getContainer();
-        }
-        callback.onAssetsLoaded(parents);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getParentAssetsDescAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback) {
-        checkNotNull(asset);
-
-        getParentAssetsDescAsync(asset.getId(), callback);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getParentAssetsDescAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback) {
-        checkNotNull(assetId);
-
-        if (dirtyCachedAssets || cachedAssets == null) {
-            int code = loadCachedAssetsFromLocal();
-            if (code != OK) {
-                callback.dataNotAvailable(code);
-                return;
-            }
-        }
-        if (!cachedAssets.containsKey(assetId)) {
-            callback.dataNotAvailable(ASSET_NOT_EXISTS);
-            return;
-        }
-
-        Asset asset = cachedAssets.get(assetId);
-        List<Asset> parents = new LinkedList<>();
-        while (!asset.isRoot()) {
-            parents.add(0, asset);
-            asset = asset.getContainer();
-        }
-        // add the root
-        parents.add(0, asset);
-        callback.onAssetsLoaded(parents);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getAssetAsync(@NonNull String assetId, @NonNull GetAssetCallback callback) {
-        checkNotNull(assetId);
-        checkNotNull(callback);
-
-        if (dirtyCachedAssets || cachedAssets == null) {
-            int code = loadCachedAssetsFromLocal();
-            if (code != OK) {
-                callback.dataNotAvailable(code);
-                return;
-            }
-        }
-
-        if (!cachedAssets.containsKey(assetId)) {
-            callback.dataNotAvailable(ASSET_NOT_EXISTS);
-            return;
-        }
-        callback.onAssetLoaded(cachedAssets.get(assetId));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getDetailsAsync(@NonNull Asset asset, @NonNull LoadDetailsCallback callback) {
-        checkNotNull(asset);
-
-        getDetailsAsync(asset.getId(), callback);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getDetailsAsync(@NonNull String assetId, @NonNull LoadDetailsCallback callback) {
-        checkNotNull(assetId);
-        checkNotNull(callback);
-
-        // if get the Details of the Root asset, always return empty list
-        if (assetId.equals(getRootAsset().getId())) {
-            callback.onDetailsLoaded(new LinkedList<Detail>());
-            return;
-        }
-
-        int code = loadCachedDetailsFromLocal(assetId);
-        if (code != OK) {
-            callback.dataNotAvailable(code);
-            return;
-        }
-        if (!cachedDetails.containsKey(assetId)) {
-            callback.dataNotAvailable(UNEXPECTED_ERROR);
-            return;
-        }
-        callback.onDetailsLoaded(cachedDetails.get(assetId));
     }
 
     /**
@@ -706,6 +488,225 @@ public class DataManager implements IDataManager {
     public void refreshFromLocal() {
         dirtyCachedAssets = true;
         dirtyCachedDetails = true;
+    }
+
+    //endregion
+
+    //region DEPRECATED METHODS
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void getAllAssetsAsync(@NonNull LoadAssetsCallback callback) {
+        checkNotNull(callback);
+
+        if (dirtyCachedAssets || cachedAssets == null) {
+            int code = loadCachedAssetsFromLocal();
+            if (code != OK) {
+                callback.dataNotAvailable(code);
+                return;
+            }
+        }
+
+        List<Asset> list = new LinkedList<>(cachedAssets.values());
+        callback.onAssetsLoaded(list);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void getRecycledAssetsAsync(@NonNull LoadAssetsCallback callback) {
+        checkNotNull(callback);
+
+        if (dirtyCachedAssets || cachedRecycledAssets == null) {
+            int code = loadCachedAssetsFromLocal();
+            if (code != OK) {
+                callback.dataNotAvailable(code);
+                return;
+            }
+        }
+
+        List<Asset> list = new LinkedList<>(cachedRecycledAssets.values());
+        callback.onAssetsLoaded(list);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void getContentAssetsAsync(@NonNull Asset container, @NonNull LoadAssetsCallback callback) {
+        checkNotNull(container);
+
+        getContentAssetsAsync(container.getId(), callback);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void getContentAssetsAsync(@NonNull String containerId, @NonNull LoadAssetsCallback callback) {
+        checkNotNull(containerId);
+        checkNotNull(callback);
+
+        if (dirtyCachedAssets || cachedAssets == null) {
+            int code = loadCachedAssetsFromLocal();
+            if (code != OK) {
+                callback.dataNotAvailable(code);
+                return;
+            }
+        }
+
+        if (!cachedAssets.containsKey(containerId)) {
+            callback.dataNotAvailable(ASSET_NOT_EXISTS);
+            return;
+        }
+        Asset container = cachedAssets.get(containerId);
+
+        if (container.getContents() == null) {
+            callback.dataNotAvailable(LOCAL_DATA_CORRUPT);
+            return;
+        }
+        callback.onAssetsLoaded(container.getContents());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void getParentAssetsAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback) {
+        checkNotNull(asset);
+
+        getParentAssetsAsync(asset.getId(), callback);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void getParentAssetsAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback) {
+        checkNotNull(assetId);
+        checkNotNull(callback);
+
+        if (dirtyCachedAssets || cachedAssets == null) {
+            int code = loadCachedAssetsFromLocal();
+            if (code != OK) {
+                callback.dataNotAvailable(code);
+                return;
+            }
+        }
+        if (!cachedAssets.containsKey(assetId)) {
+            callback.dataNotAvailable(ASSET_NOT_EXISTS);
+            return;
+        }
+
+        Asset asset = cachedAssets.get(assetId);
+        List<Asset> parents = new LinkedList<>();
+        while (!asset.isRoot()) {
+            parents.add(asset.getContainer());
+            asset = asset.getContainer();
+        }
+        callback.onAssetsLoaded(parents);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void getParentAssetsDescAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback) {
+        checkNotNull(asset);
+
+        getParentAssetsDescAsync(asset.getId(), callback);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void getParentAssetsDescAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback) {
+        checkNotNull(assetId);
+
+        if (dirtyCachedAssets || cachedAssets == null) {
+            int code = loadCachedAssetsFromLocal();
+            if (code != OK) {
+                callback.dataNotAvailable(code);
+                return;
+            }
+        }
+        if (!cachedAssets.containsKey(assetId)) {
+            callback.dataNotAvailable(ASSET_NOT_EXISTS);
+            return;
+        }
+
+        Asset asset = cachedAssets.get(assetId);
+        List<Asset> parents = new LinkedList<>();
+        while (!asset.isRoot()) {
+            parents.add(0, asset);
+            asset = asset.getContainer();
+        }
+        // add the root
+        parents.add(0, asset);
+        callback.onAssetsLoaded(parents);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void getAssetAsync(@NonNull String assetId, @NonNull GetAssetCallback callback) {
+        checkNotNull(assetId);
+        checkNotNull(callback);
+
+        if (dirtyCachedAssets || cachedAssets == null) {
+            int code = loadCachedAssetsFromLocal();
+            if (code != OK) {
+                callback.dataNotAvailable(code);
+                return;
+            }
+        }
+
+        if (!cachedAssets.containsKey(assetId)) {
+            callback.dataNotAvailable(ASSET_NOT_EXISTS);
+            return;
+        }
+        callback.onAssetLoaded(cachedAssets.get(assetId));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void getDetailsAsync(@NonNull Asset asset, @NonNull LoadDetailsCallback callback) {
+        checkNotNull(asset);
+
+        getDetailsAsync(asset.getId(), callback);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void getDetailsAsync(@NonNull String assetId, @NonNull LoadDetailsCallback callback) {
+        checkNotNull(assetId);
+        checkNotNull(callback);
+
+        // if get the Details of the Root asset, always return empty list
+        if (assetId.equals(getRootAsset().getId())) {
+            callback.onDetailsLoaded(new LinkedList<Detail>());
+            return;
+        }
+
+        int code = loadCachedDetailsFromLocal(assetId);
+        if (code != OK) {
+            callback.dataNotAvailable(code);
+            return;
+        }
+        if (!cachedDetails.containsKey(assetId)) {
+            callback.dataNotAvailable(UNEXPECTED_ERROR);
+            return;
+        }
+        callback.onDetailsLoaded(cachedDetails.get(assetId));
     }
 
     //endregion

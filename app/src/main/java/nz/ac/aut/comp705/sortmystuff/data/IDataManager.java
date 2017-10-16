@@ -24,21 +24,67 @@ import rx.Observable;
 
 public interface IDataManager {
 
-    //region RXJAVA METHODS
+    //region READ DATA METHODS
 
+    /**
+     * Get the Root asset from the local data source.
+     *
+     * @return the Root asset of the current user or null if something goes wrong
+     */
+    IAsset getRootAsset();
+
+    /**
+     * Get all the non-recycled assets (including root asset).
+     *
+     * @return the Observable which emits one list of Assets
+     * @throws ReadLocalStorageFailedException if error occurred during reading data from local storage
+     */
     Observable<List<IAsset>> getAssets();
 
+    /**
+     * Get all the recycled assets.
+     *
+     * @return the Observable which emits one list of Assets
+     * @throws ReadLocalStorageFailedException if error occurred during reading data from local storage
+     */
     Observable<List<IAsset>> getRecycledAssets();
 
+    /**
+     * Get the list of details of the owner asset.
+     *
+     * @param assetId the id of the owner asset
+     * @return the Observable which emits one list of Details
+     * @throws NullPointerException if any argument is {@code null}
+     * @throws ReadLocalStorageFailedException if error occurred during reading data from local storage
+     * @throws IllegalStateException if there is no such Asset with the given id
+     */
     Observable<List<IDetail>> getDetails(String assetId);
 
+    /**
+     * Get an asset according to the id.
+     *
+     * @param id the id of the Asset
+     * @return the Observable emitting one Asset
+     * @throws NullPointerException if any argument is {@code null}
+     * @throws ReadLocalStorageFailedException if error occurred during reading data from local storage
+     * @throws IllegalStateException if there is no such Asset with the given id
+     */
     Observable<IAsset> getAsset(String id);
 
+    /**
+     * Get the content assets of the given asset.
+     *
+     * @param containerId the id of the container asset
+     * @return the Observable emitting one list of Assets
+     * @throws NullPointerException if any argument is {@code null}
+     * @throws ReadLocalStorageFailedException if error occurred during reading data from local storage
+     * @throws IllegalStateException if there is no such Asset with the given id
+     */
     Observable<List<IAsset>> getContentAssets(String containerId);
 
     /**
      * Get the parent assets stored in a list.
-     *
+     * <p>
      * If rootToChildren is true, then the list will be ordered as the first element is the
      * Root asset and the last element is the asset itself.
      * For example, let the structure be Root -> A -> B -> C,
@@ -46,9 +92,11 @@ public interface IDataManager {
      * [Root, A, B, C].
      * If rootToChildren is false, then the result will be [C, B, A, Root]
      *
-     * @param assetId  the id of the asset whose parent assets are queried
+     * @param assetId        the id of the asset whose parent assets are queried
      * @param rootToChildren true if the result of the order is root to children
      * @throws NullPointerException if assetId is {@code null}
+     * @throws ReadLocalStorageFailedException if error occurred during reading data from local storage
+     * @throws IllegalStateException if there is no such Asset with the given id
      */
     Observable<List<IAsset>> getParentAssets(String assetId, boolean rootToChildren);
 
@@ -115,131 +163,6 @@ public interface IDataManager {
      */
     @Deprecated
     String createTextDetail(@NonNull String assetId, @NonNull String label, @NonNull String field);
-
-    //endregion
-
-    //region READ DATA METHODS
-
-    /**
-     * Get the Root asset from the local data source.
-     *
-     * @return the Root asset of the current user
-     */
-    Asset getRootAsset();
-
-    /**
-     * Get all the non-recycled assets (including root asset).
-     *
-     * @param callback see {@link LoadAssetsCallback}
-     * @throws NullPointerException if callback is {@code null}
-     */
-    void getAllAssetsAsync(@NonNull LoadAssetsCallback callback);
-
-    /**
-     * Get all the recycled assets.
-     *
-     * @param callback see {@link LoadAssetsCallback}
-     * @throws NullPointerException if callback is {@code null}
-     */
-    void getRecycledAssetsAsync(@NonNull LoadAssetsCallback callback);
-
-    /**
-     * Get the list of assets which are contents to the given Asset.
-     *
-     * @param container the container Asset
-     * @param callback  see {@link LoadAssetsCallback}
-     * @throws NullPointerException if any argument is {@code null}
-     */
-    void getContentAssetsAsync(@NonNull Asset container, @NonNull LoadAssetsCallback callback);
-
-    /**
-     * Get the list of assets which are contents to the Asset whose id as given.
-     *
-     * @param containerId the id of the container Asset
-     * @param callback    see {@link LoadAssetsCallback}
-     * @throws NullPointerException if any argument is {@code null}
-     */
-    void getContentAssetsAsync(@NonNull String containerId, @NonNull LoadAssetsCallback callback);
-
-    /**
-     * Get the parent assets stored in a list in which the first element is the container of the
-     * asset and the last element is the Root asset (if this asset is not contained by Root).
-     * For example, Root -> Apartment -> Bookshelf -> Drawer, if query the parent Assets of Drawer
-     * the items in list would be [Bookshelf, Apartment, Root].
-     *
-     * @param asset    the asset whose parent assets are queried
-     * @param callback see {@link LoadAssetsCallback}
-     * @throws NullPointerException if any argument is {@code null}
-     */
-    void getParentAssetsAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback);
-
-    /**
-     * Get the parent assets stored in a list in which the first element is the container of the
-     * asset and the last element is the Root asset (if this asset is not contained by Root).
-     * For example, Root -> Apartment -> Bookshelf -> Drawer, if query the parent Assets of Drawer
-     * the items in list would be [Bookshelf, Apartment, Root].
-     *
-     * @param assetId  the id of the asset whose parent assets are queried
-     * @param callback see {@link LoadAssetsCallback}
-     * @throws NullPointerException if any argument is {@code null}
-     */
-    void getParentAssetsAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback);
-
-    /**
-     * Get the parent assets stored in a list in which the first element is the Root asset
-     * and the last element is the asset itself (if this asset is not contained by Root).
-     * For example, Root -> Apartment -> Bookshelf -> Drawer, if query the parent Assets of Drawer
-     * in descendant order, the items in list would be [Root, Apartment, Bookshelf, Drawer].
-     *
-     * @param asset    the asset whose parent assets are queried
-     * @param callback see {@link LoadAssetsCallback}
-     * @throws NullPointerException if any argument is {@code null}
-     */
-    void getParentAssetsDescAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback);
-
-    /**
-     * Get the parent assets stored in a list in which the first element is the Root asset
-     * and the last element is the asset itself (if this asset is not contained by Root).
-     * For example, Root -> Apartment -> Bookshelf -> Drawer, if query the parent Assets of Drawer
-     * in descendant order, the items in list would be [Root, Apartment, Bookshelf, Drawer].
-     *
-     * @param assetId  the id of the asset whose parent assets are queried
-     * @param callback see {@link LoadAssetsCallback}
-     * @throws NullPointerException if any argument is {@code null}
-     */
-    void getParentAssetsDescAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback);
-
-
-    /**
-     * Get an asset according to the id.
-     *
-     * @param assetId  the id
-     * @param callback see {@link GetAssetCallback}
-     * @throws NullPointerException if any argument is {@code null}
-     */
-    void getAssetAsync(@NonNull String assetId, @NonNull GetAssetCallback callback);
-
-    /**
-     * Get the list of details of the owner asset.
-     *
-     * @param asset    the owner asset
-     * @param callback see {@link LoadDetailsCallback}
-     * @throws NullPointerException if any argument is {@code null}
-     */
-    void getDetailsAsync(@NonNull Asset asset, @NonNull LoadDetailsCallback callback);
-
-    /**
-     * Get the list of details of the owner asset.
-     *
-     * @param assetId  the id of the owner asset
-     * @param callback see {@link LoadDetailsCallback}
-     * @throws NullPointerException if any argument is {@code null}
-     */
-    void getDetailsAsync(@NonNull String assetId, @NonNull LoadDetailsCallback callback);
-
-    /*
-    TODO add getDetailAsync(@NonNull String detailId, @NonNull GetDetailCallback callback) method
-     */
 
     //endregion
 
@@ -465,6 +388,131 @@ public interface IDataManager {
          */
         void onDetailLoaded(Detail detail);
     }
+
+    //endregion
+
+    //region DEPRECATED METHODS
+
+    /**
+     * Get all the non-recycled assets (including root asset).
+     *
+     * @param callback see {@link LoadAssetsCallback}
+     * @throws NullPointerException if callback is {@code null}
+     */
+    @Deprecated
+    void getAllAssetsAsync(@NonNull LoadAssetsCallback callback);
+
+    /**
+     * Get all the recycled assets.
+     *
+     * @param callback see {@link LoadAssetsCallback}
+     * @throws NullPointerException if callback is {@code null}
+     */
+    @Deprecated
+    void getRecycledAssetsAsync(@NonNull LoadAssetsCallback callback);
+
+    /**
+     * Get the list of assets which are contents to the given Asset.
+     *
+     * @param container the container Asset
+     * @param callback  see {@link LoadAssetsCallback}
+     * @throws NullPointerException if any argument is {@code null}
+     */
+    @Deprecated
+    void getContentAssetsAsync(@NonNull Asset container, @NonNull LoadAssetsCallback callback);
+
+    /**
+     * Get the list of assets which are contents to the Asset whose id as given.
+     *
+     * @param containerId the id of the container Asset
+     * @param callback    see {@link LoadAssetsCallback}
+     * @throws NullPointerException if any argument is {@code null}
+     */
+    @Deprecated
+    void getContentAssetsAsync(@NonNull String containerId, @NonNull LoadAssetsCallback callback);
+
+    /**
+     * Get the parent assets stored in a list in which the first element is the container of the
+     * asset and the last element is the Root asset (if this asset is not contained by Root).
+     * For example, Root -> Apartment -> Bookshelf -> Drawer, if query the parent Assets of Drawer
+     * the items in list would be [Bookshelf, Apartment, Root].
+     *
+     * @param asset    the asset whose parent assets are queried
+     * @param callback see {@link LoadAssetsCallback}
+     * @throws NullPointerException if any argument is {@code null}
+     */
+    @Deprecated
+    void getParentAssetsAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback);
+
+    /**
+     * Get the parent assets stored in a list in which the first element is the container of the
+     * asset and the last element is the Root asset (if this asset is not contained by Root).
+     * For example, Root -> Apartment -> Bookshelf -> Drawer, if query the parent Assets of Drawer
+     * the items in list would be [Bookshelf, Apartment, Root].
+     *
+     * @param assetId  the id of the asset whose parent assets are queried
+     * @param callback see {@link LoadAssetsCallback}
+     * @throws NullPointerException if any argument is {@code null}
+     */
+    @Deprecated
+    void getParentAssetsAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback);
+
+    /**
+     * Get the parent assets stored in a list in which the first element is the Root asset
+     * and the last element is the asset itself (if this asset is not contained by Root).
+     * For example, Root -> Apartment -> Bookshelf -> Drawer, if query the parent Assets of Drawer
+     * in descendant order, the items in list would be [Root, Apartment, Bookshelf, Drawer].
+     *
+     * @param asset    the asset whose parent assets are queried
+     * @param callback see {@link LoadAssetsCallback}
+     * @throws NullPointerException if any argument is {@code null}
+     */
+    @Deprecated
+    void getParentAssetsDescAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback);
+
+    /**
+     * Get the parent assets stored in a list in which the first element is the Root asset
+     * and the last element is the asset itself (if this asset is not contained by Root).
+     * For example, Root -> Apartment -> Bookshelf -> Drawer, if query the parent Assets of Drawer
+     * in descendant order, the items in list would be [Root, Apartment, Bookshelf, Drawer].
+     *
+     * @param assetId  the id of the asset whose parent assets are queried
+     * @param callback see {@link LoadAssetsCallback}
+     * @throws NullPointerException if any argument is {@code null}
+     */
+    @Deprecated
+    void getParentAssetsDescAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback);
+
+
+    /**
+     * Get an asset according to the id.
+     *
+     * @param assetId  the id
+     * @param callback see {@link GetAssetCallback}
+     * @throws NullPointerException if any argument is {@code null}
+     */
+    @Deprecated
+    void getAssetAsync(@NonNull String assetId, @NonNull GetAssetCallback callback);
+
+    /**
+     * Get the list of details of the owner asset.
+     *
+     * @param asset    the owner asset
+     * @param callback see {@link LoadDetailsCallback}
+     * @throws NullPointerException if any argument is {@code null}
+     */
+    @Deprecated
+    void getDetailsAsync(@NonNull Asset asset, @NonNull LoadDetailsCallback callback);
+
+    /**
+     * Get the list of details of the owner asset.
+     *
+     * @param assetId  the id of the owner asset
+     * @param callback see {@link LoadDetailsCallback}
+     * @throws NullPointerException if any argument is {@code null}
+     */
+    @Deprecated
+    void getDetailsAsync(@NonNull String assetId, @NonNull LoadDetailsCallback callback);
 
     //endregion
 }

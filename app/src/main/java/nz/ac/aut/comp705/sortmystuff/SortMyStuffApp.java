@@ -6,8 +6,8 @@ import android.graphics.Bitmap;
 import java.util.Map;
 
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
-import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
+import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.di.Factory;
 import nz.ac.aut.comp705.sortmystuff.di.IFactory;
 import nz.ac.aut.comp705.sortmystuff.utils.DemoDebugger;
@@ -40,7 +40,7 @@ public class SortMyStuffApp extends Application {
         DemoDebugger dd = new DemoDebugger(this);
         dd.cleanExistingData();
 
-        Asset root = dm.getRootAsset();
+        IAsset root = dm.getRootAsset();
 
         String studyRoomId = dm.createAsset("Study Room", root.getId(), CategoryType.Places);
         dd.setPhoto(studyRoomId, photos.get("StudyRoom.png"));
