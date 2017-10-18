@@ -32,8 +32,8 @@ import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.testutils.TestUtil;
-import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
 import nz.ac.aut.comp705.sortmystuff.utils.AppCode;
+import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
 import nz.ac.aut.comp705.sortmystuff.utils.exceptions.UpdateLocalStorageFailedException;
 
 import static nz.ac.aut.comp705.sortmystuff.testutils.TestUtil.areIdenticalAssets;
@@ -282,7 +282,7 @@ public class DataManagerTest {
     @Test
     public void getRootAsset_getRootAsset() {
         Asset root = prepareRootAsset();
-        Asset asset = dataManager.getRootAsset();
+        Asset asset = (Asset) dataManager.getRootAsset();
         Assert.assertTrue(areIdenticalAssets(root, asset));
     }
 
