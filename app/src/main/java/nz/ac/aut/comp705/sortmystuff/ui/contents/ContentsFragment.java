@@ -29,6 +29,7 @@ import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.ui.main.SwipeActivity;
+import nz.ac.aut.comp705.sortmystuff.utils.Log;
 
 import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.CONTENTS_DEFAULT_MODE;
 import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.CONTENTS_MOVING_MODE;
@@ -205,6 +206,8 @@ public class ContentsFragment extends Fragment implements IContentsView {
 
     @Override
     public void showLoadingContentsError(Throwable exception) {
+        Log.e("LoadingAssetsError", "LoadingAssetsError", exception);
+        showMessage("Loading assets error.");
         //TODO: to be implemented
     }
 

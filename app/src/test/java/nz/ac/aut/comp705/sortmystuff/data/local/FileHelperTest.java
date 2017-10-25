@@ -46,9 +46,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * Created by Yuan on 2017/5/5.
- */
 @RunWith(RobolectricTestRunner.class)
 @Config(constants = BuildConfig.class)
 public class FileHelperTest {

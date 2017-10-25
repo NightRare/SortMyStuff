@@ -2,6 +2,8 @@ package nz.ac.aut.comp705.sortmystuff.data.models;
 
 import android.graphics.Bitmap;
 
+import java.util.List;
+
 public interface IAsset {
 
     String getId();
@@ -9,6 +11,8 @@ public interface IAsset {
     String getName();
 
     String getContainerId();
+
+    List<String> getContentIds();
 
     boolean isRecycled();
 

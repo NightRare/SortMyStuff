@@ -12,17 +12,17 @@ public class AssetDataGenerator {
 
     public AssetDataGenerator(IDataManager dataManager) {
         mDataManager = dataManager;
-        mCurrentContainerId = mDataManager.getRootAsset().getId();
+        mCurrentContainerId = mDataManager.getRoot().getId();
         mData = new LinkedHashMap<>();
     }
 
     public AssetDataGenerator toRoot() {
-        mCurrentContainerId = mDataManager.getRootAsset().getId();
+        mCurrentContainerId = mDataManager.getRoot().getId();
         return this;
     }
 
     public AssetDataGenerator toParent() {
-        if(mCurrentContainerId.equals(mDataManager.getRootAsset().getId())) return this;
+        if(mCurrentContainerId.equals(mDataManager.getRoot().getId())) return this;
         Subscription subscription = mDataManager.getParentAssets(mCurrentContainerId, false)
                 .subscribe(assets -> mCurrentContainerId = assets.get(1).getId());
         return waitFor(subscription::isUnsubscribed, 2000, () -> this);

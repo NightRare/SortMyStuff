@@ -7,10 +7,6 @@ import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 
-/**
- * Created by Yuan on 2017/5/6.
- */
-
 public class TestUtil {
 
     public static final String TEST_DEFAULT_PHOTO = "testimages/default.png";

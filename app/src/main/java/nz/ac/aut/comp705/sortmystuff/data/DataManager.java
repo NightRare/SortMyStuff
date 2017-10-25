@@ -85,7 +85,7 @@ public class DataManager implements IDataManager {
         checkNotNull(assetId);
 
         // if get the Details of the Root asset, always return empty list
-        if (assetId.equals(getRootAsset().getId())) {
+        if (assetId.equals(getRoot().getId())) {
             return Observable.just(new ArrayList<>());
         }
 
@@ -237,7 +237,7 @@ public class DataManager implements IDataManager {
         Preconditions.checkArgument(field.length() < AppConstraints.TEXTDETAIL_FIELD_CAP);
 
         // cannot createAsMisc detail for Root asset
-        if (assetId.equals(getRootAsset().getId()))
+        if (assetId.equals(getRoot().getId()))
             return null;
 
         TextDetail td = (TextDetail) addDetail(assetId, DetailType.Text, label, field);
@@ -248,7 +248,7 @@ public class DataManager implements IDataManager {
      * {@inheritDoc}
      */
     @Override
-    public IAsset getRootAsset() {
+    public IAsset getRoot() {
         if (dirtyCachedAssets || cachedRootAsset == null) {
             int code = loadCachedAssetsFromLocal();
             if (code == AppCode.NO_ROOT_ASSET) {
@@ -261,6 +261,11 @@ public class DataManager implements IDataManager {
             }
         }
         return cachedRootAsset;
+    }
+
+    @Override
+    public Observable<IAsset> getRootAsset() {
+        return null;
     }
 
     /**
@@ -446,20 +451,14 @@ public class DataManager implements IDataManager {
         modifyDetail(assetId, detailId, label, field);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void resetImageDetail(@NonNull ImageDetail detail) {
-        checkNotNull(detail);
-
-        modifyDetail(detail.getAssetId(), detail.getId(), detail.getLabel()
-                , resLoader.getDefaultPhoto());
-    }
-
     @Override
     public void resetImageDetail(@NonNull IDetail<Bitmap> detail) {
         resetImageDetail((ImageDetail) detail);
+    }
+
+    @Override
+    public void resetImageDetail(String assetId, String detailId) {
+
     }
 
     /**
@@ -481,6 +480,11 @@ public class DataManager implements IDataManager {
         updateImageDetail((ImageDetail) detail, label, field);
     }
 
+    @Override
+    public void updateImageDetail(String assetId, String detailId, String label, Bitmap field) {
+
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -488,6 +492,11 @@ public class DataManager implements IDataManager {
     public void refreshFromLocal() {
         dirtyCachedAssets = true;
         dirtyCachedDetails = true;
+    }
+
+    @Override
+    public void reCacheFromRemoteDataSource() {
+
     }
 
     //endregion
@@ -692,7 +701,7 @@ public class DataManager implements IDataManager {
         checkNotNull(callback);
 
         // if get the Details of the Root asset, always return empty list
-        if (assetId.equals(getRootAsset().getId())) {
+        if (assetId.equals(getRoot().getId())) {
             callback.onDetailsLoaded(new LinkedList<Detail>());
             return;
         }

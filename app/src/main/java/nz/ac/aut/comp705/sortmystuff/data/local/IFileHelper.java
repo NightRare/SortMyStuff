@@ -6,6 +6,7 @@ import java.util.List;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.Category;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.models.FAsset;
 
 /**
  * IFileHelper is responsible for serialising/deserialising objects to/from files stored in
@@ -66,6 +67,8 @@ public interface IFileHelper {
      * @throws NullPointerException if asset is {@code null}
      */
     boolean serialiseAsset(final Asset asset);
+
+    boolean serialiseAsset(final FAsset asset);
 
     /**
      * Serialised a list of details and write the data to the corresponding json file

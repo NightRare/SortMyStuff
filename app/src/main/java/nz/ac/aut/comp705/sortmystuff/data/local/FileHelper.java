@@ -23,6 +23,7 @@ import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.Category;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
+import nz.ac.aut.comp705.sortmystuff.data.models.FAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.utils.JsonDetailAdapter;
 import nz.ac.aut.comp705.sortmystuff.utils.Log;
@@ -156,11 +157,8 @@ public class FileHelper implements IFileHelper {
         return Arrays.asList(categories);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public boolean serialiseAsset(final Asset asset) {
+    public boolean serialiseAsset(Asset asset) {
         Preconditions.checkNotNull(asset);
 
         final File assetDir, file;
@@ -182,6 +180,34 @@ public class FileHelper implements IFileHelper {
         file = new File(assetDir, ASSET_FILENAME);
 
         return writeJsonFile(asset, file, Asset.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean serialiseAsset(final FAsset asset) {
+        Preconditions.checkNotNull(asset);
+
+        final File assetDir, file;
+        if (asset.isRoot()) {
+            if (rootExists()) {
+                Log.e(getClass().getName(), "Already have a Root asset.");
+                return false;
+            }
+
+            assetDir = prepareAssetDir(ROOT_ASSET_DIR);
+        } else if (!rootExists()) {
+            Log.e(Log.FILE_NOT_EXISTS, "Cannot serialise \"" + asset.getId()
+                    + "\". Must serialise Root asset at first.");
+            return false;
+        } else {
+            assetDir = prepareAssetDir(asset.getId());
+        }
+
+        file = new File(assetDir, ASSET_FILENAME);
+
+        return writeJsonFile(asset, file, FAsset.class);
     }
 
     /**

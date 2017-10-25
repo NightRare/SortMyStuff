@@ -4,8 +4,6 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
-import com.google.common.base.Preconditions;
-
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
 
@@ -15,17 +13,21 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
 import nz.ac.aut.comp705.sortmystuff.utils.Log;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Takes in the AssetManager of Android and loads the assets into memory.
  * <p>
- * Created by Yuan on 2017/5/18.
+ * @author Yuan
  */
 
 public class LocalResourceLoader {
 
     private static final String TAG_DEFAULT_PHOTO = "TAG_DEFAULT_PHOTO";
+    private static final String TAG_DEFAULT_THUMBNAIL = "TAG_DEFAULT_THUMBNAIL";
     private static final String TAG_CATEGORIES_JSON = "TAG_CATEGORIES_JSON";
     private static final String TAG_DEMO_PHOTOS = "TAG_DEMO_PHOTOS";
 
@@ -33,7 +35,7 @@ public class LocalResourceLoader {
      * When change the value of this constant, also need to change the format in
      * {@link FileHelper#writeToImageFile(Bitmap, File)}
      */
-    public final static String IMAGE_DETAIL_FORMAT = ".png";
+    public final static String IMAGE_DETAIL_FORMAT = ".jpg";
     public final static String DEFAULT_PHOTO_FILENAME = "default_square" + IMAGE_DETAIL_FORMAT;
     public final static String DEFAULT_PHOTO_PATH = "images" + File.separator + DEFAULT_PHOTO_FILENAME;
     public final static String CATEGORIES_FILE_NAME = "categories.json";
@@ -47,8 +49,7 @@ public class LocalResourceLoader {
      * @throws NullPointerException if am is {@code null}
      */
     public LocalResourceLoader(AssetManager am) {
-        Preconditions.checkNotNull(am);
-        this.am = am;
+        mAssetManager = checkNotNull(am);
         loadResources();
     }
 
@@ -59,7 +60,7 @@ public class LocalResourceLoader {
      * @return the categories definition json file.
      */
     public String getCategoriesJson() {
-        return (String) resDict.get(TAG_CATEGORIES_JSON);
+        return (String) mResources.get(TAG_CATEGORIES_JSON);
     }
 
     /**
@@ -69,12 +70,16 @@ public class LocalResourceLoader {
      * @return the default photo (placeholder image) of an asset
      */
     public Bitmap getDefaultPhoto() {
-        return (Bitmap) resDict.get(TAG_DEFAULT_PHOTO);
+        return (Bitmap) mResources.get(TAG_DEFAULT_PHOTO);
+    }
+
+    public Bitmap getDefaultThumbnail() {
+        return (Bitmap) mResources.get(TAG_DEFAULT_THUMBNAIL);
     }
 
     public Map<String, Bitmap> getDemoPhotos() {
         Map<String, Bitmap> m = new HashMap<String, Bitmap>();
-        m.putAll((Map<? extends String, ? extends Bitmap>) resDict.get(TAG_DEMO_PHOTOS));
+        m.putAll((Map<? extends String, ? extends Bitmap>) mResources.get(TAG_DEMO_PHOTOS));
         return m;
     }
 
@@ -87,24 +92,22 @@ public class LocalResourceLoader {
 
     //region PRIVATE STUFF
 
-    private Map<String, Object> resDict;
-
-    private AssetManager am;
-
     private void loadResources() {
-        resDict = new HashMap<>();
+        mResources = new HashMap<>();
         InputStream is = null;
         // default photo of assets
         try {
             // default photo
-            is = am.open(DEFAULT_PHOTO_PATH);
+            is = mAssetManager.open(DEFAULT_PHOTO_PATH);
             Bitmap defaultPhoto = BitmapFactory.decodeStream(is);
-            resDict.put(TAG_DEFAULT_PHOTO, defaultPhoto);
+            mResources.put(TAG_DEFAULT_PHOTO, defaultPhoto);
 
-            is = am.open(CATEGORIES_FILE_NAME);
-            resDict.put(TAG_CATEGORIES_JSON, IOUtils.toString(is, Charsets.UTF_8));
+            mResources.put(TAG_DEFAULT_THUMBNAIL, BitmapHelper.toThumbnail(defaultPhoto));
 
-            resDict.put(TAG_DEMO_PHOTOS, loadPhotosInDir(DEMO_PHOTO_DIR));
+            is = mAssetManager.open(CATEGORIES_FILE_NAME);
+            mResources.put(TAG_CATEGORIES_JSON, IOUtils.toString(is, Charsets.UTF_8));
+
+            mResources.put(TAG_DEMO_PHOTOS, loadPhotosInDir(DEMO_PHOTO_DIR));
         } catch (IOException e) {
             Log.e(Log.ASSETMANAGER_READ_FAILED, "Load application assets failed", e);
         } finally {
@@ -122,8 +125,8 @@ public class LocalResourceLoader {
         HashMap<String, Bitmap> dict = new HashMap<>();
         InputStream is = null;
         try {
-            for (String imageName : am.list(dirPath)) {
-                is = am.open(dirPath + File.separator + imageName);
+            for (String imageName : mAssetManager.list(dirPath)) {
+                is = mAssetManager.open(dirPath + File.separator + imageName);
                 dict.put(imageName, BitmapFactory.decodeStream(is));
                 is.close();
             }
@@ -140,6 +143,9 @@ public class LocalResourceLoader {
         }
         return dict;
     }
+
+    private Map<String, Object> mResources;
+    private AssetManager mAssetManager;
 
     //endregion
 

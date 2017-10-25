@@ -18,11 +18,6 @@ import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 
-/**
- * Created by Yuan on 2017/4/25.
- */
-
-
 public class JsonDetailAdapter implements JsonSerializer<Detail>, JsonDeserializer<Detail> {
 
     private static final String TYPE = "type";

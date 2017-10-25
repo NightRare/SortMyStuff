@@ -886,7 +886,7 @@ public class SwipeActivityTest {
         try {
             FileUtils.cleanDirectory(userDir);
             mDataManager.refreshFromLocal();
-            mDataManager.getRootAsset();
+            mDataManager.getRoot();
         } catch (IOException e) {
             e.printStackTrace();
         }

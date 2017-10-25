@@ -8,11 +8,14 @@ import java.util.List;
 import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.models.FAsset;
+import nz.ac.aut.comp705.sortmystuff.data.models.FDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
-import nz.ac.aut.comp705.sortmystuff.utils.exceptions.*;
+import nz.ac.aut.comp705.sortmystuff.utils.exceptions.ReadLocalStorageFailedException;
+import nz.ac.aut.comp705.sortmystuff.utils.exceptions.UpdateLocalStorageFailedException;
 import rx.Observable;
 
 /**
@@ -24,14 +27,12 @@ import rx.Observable;
 
 public interface IDataManager {
 
+
     //region READ DATA METHODS
 
-    /**
-     * Get the Root asset from the local data source.
-     *
-     * @return the Root asset of the current user or null if something goes wrong
-     */
-    IAsset getRootAsset();
+    IAsset getRoot();
+
+    Observable<IAsset> getRootAsset();
 
     /**
      * Get all the non-recycled assets (including root asset).
@@ -87,8 +88,8 @@ public interface IDataManager {
      * <p>
      * If rootToChildren is true, then the list will be ordered as the first element is the
      * Root asset and the last element is the asset itself.
-     * For example, let the structure be Root -> A -> B -> C,
-     * if query the parent Assets of Drawer the items in list would be
+     * For example, let the structure be Root -> A -> B -> C -> D,
+     * if query the parent Assets of D the items in list would be
      * [Root, A, B, C].
      * If rootToChildren is false, then the result will be [C, B, A, Root]
      *
@@ -178,6 +179,7 @@ public interface IDataManager {
      * @throws IllegalArgumentException          if newName is empty or length exceeds app constraints
      * @throws UpdateLocalStorageFailedException if update local storage failed
      */
+    @Deprecated
     void updateAssetName(@NonNull Asset asset, @NonNull String newName);
 
 
@@ -245,6 +247,7 @@ public interface IDataManager {
      *                                           label or field exceeds app constraints
      * @throws UpdateLocalStorageFailedException if update local storage failed
      */
+    @Deprecated
     void updateTextDetail(@NonNull TextDetail detail,
                           @NonNull String label, @NonNull String field);
 
@@ -268,9 +271,10 @@ public interface IDataManager {
      *
      * @param detail the ImageDetail to be reset
      */
-    void resetImageDetail(@NonNull ImageDetail detail);
-
+    @Deprecated
     void resetImageDetail(@NonNull IDetail<Bitmap> detail);
+
+    void resetImageDetail(String assetId, String detailId);
 
     /**
      * Update the ImageDetail according to the given arguments.
@@ -286,7 +290,10 @@ public interface IDataManager {
     @Deprecated
     void updateImageDetail(@NonNull ImageDetail detail, @NonNull String label, @NonNull Bitmap field);
 
+    @Deprecated
     void updateImageDetail(@NonNull IDetail<Bitmap> detail, @NonNull String label, @NonNull Bitmap field);
+
+    void updateImageDetail(String assetId, String detailId, String label, Bitmap field);
 
     /*
     TODO methods to be added in the future
@@ -306,6 +313,7 @@ public interface IDataManager {
      * @throws NullPointerException              if any argument is {@code null}
      * @throws UpdateLocalStorageFailedException if update local storage failed
      */
+    @Deprecated
     void removeDetail(@NonNull Detail detail);
 
     /**
@@ -316,6 +324,7 @@ public interface IDataManager {
      * @throws NullPointerException              if any argument is {@code null}
      * @throws UpdateLocalStorageFailedException if update local storage failed
      */
+    @Deprecated
     void removeDetail(@NonNull String assetId, @NonNull String detailId);
 
     //endregion
@@ -325,7 +334,10 @@ public interface IDataManager {
     /**
      * Force reload data from local storage.
      */
+    @Deprecated
     void refreshFromLocal();
+
+    void reCacheFromRemoteDataSource();
 
     /*
     TODO methods to be added in the future
@@ -335,6 +347,24 @@ public interface IDataManager {
     //endregion
 
     //region CALLBACK INTERFACES
+
+    interface onDataChangeCallback {
+
+    }
+
+    interface OnAssetsDataChangeCallback extends onDataChangeCallback{
+        void onAssetAdded(FAsset asset);
+        void onAssetChanged(FAsset asset);
+        void onAssetRemoved(FAsset asset);
+        void onAssetMoved(FAsset asset);
+    }
+
+    interface OnDetailsDataChangeCallback extends onDataChangeCallback {
+        void onDetailAdded(FDetail detail);
+        void onDetailChanged(FDetail detail);
+        void onDetailRemoved(FDetail detail);
+        void onDetailMoved(FDetail detail);
+    }
 
     /**
      * A callback interface for asynchronised loading methods.

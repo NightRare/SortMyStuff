@@ -39,6 +39,10 @@ dependencies {
     //firebase
     compile 'com.google.firebase:firebase-core:11.4.2'
     compile 'com.google.firebase:firebase-database:11.4.2'
+    compile 'com.google.firebase:firebase-storage:11.4.2'
+
+    //rxfirebase
+    compile 'com.kelvinapps:rxfirebase:0.0.15'
 
     compile fileTree(dir: 'libs', include: ['*.jar'])
 

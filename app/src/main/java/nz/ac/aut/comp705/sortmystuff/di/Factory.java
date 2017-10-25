@@ -2,18 +2,26 @@ package nz.ac.aut.comp705.sortmystuff.di;
 
 import android.app.Application;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.google.gson.GsonBuilder;
 
 import java.io.File;
 
-import nz.ac.aut.comp705.sortmystuff.data.DataManager;
+import nz.ac.aut.comp705.sortmystuff.data.FDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
+import nz.ac.aut.comp705.sortmystuff.data.IDataRepository;
 import nz.ac.aut.comp705.sortmystuff.data.local.FileHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.IFileHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
+import nz.ac.aut.comp705.sortmystuff.data.remote.FirebaseHelper;
 import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
 import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ImmediateSchedularProvider;
-import nz.ac.aut.comp705.sortmystuff.utils.schedulers.SchedularProvider;
+import nz.ac.aut.comp705.sortmystuff.utils.schedulers.SchedulerProvider;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * An implementation of {@link IFactory}.
@@ -23,8 +31,9 @@ import nz.ac.aut.comp705.sortmystuff.utils.schedulers.SchedularProvider;
 
 public class Factory implements IFactory {
 
-    public Factory (Application app) {
-        this.app = app;
+    public Factory(Application app, String userId) {
+        mApp = checkNotNull(app);
+        mUserId = checkNotNull(userId);
     }
 
     @Override
@@ -34,50 +43,97 @@ public class Factory implements IFactory {
 
     @Override
     public ISchedulerProvider getSchedulerProvider() {
-        return SchedularProvider.getInstance();
+        return SchedulerProvider.getInstance();
     }
 
     @Override
     public synchronized IDataManager getDataManager() {
-        if(dataManager != null)
-            return dataManager;
+        if (mDataManager != null)
+            return mDataManager;
 
-        dataManager = new DataManager(getFileHelper(), getLocalResourceLoader());
-        return dataManager;
+//        dataManager = new DataManager(getFileHelper(), getLocalResourceLoader());
+        mDataManager = new FDataManager(getRemoteRepository(), getFileHelper(),
+                getLocalResourceLoader(), getSchedulerProvider());
+        return mDataManager;
     }
 
     public synchronized IFileHelper getFileHelper() {
-        if(fileHelper != null)
-            return fileHelper;
+        if (mFileHelper != null)
+            return mFileHelper;
 
         File userDir = new File(
-                app.getFilesDir().getPath() + File.separator + "default-user");
+                mApp.getFilesDir().getPath() + File.separator + mUserId);
 
-        fileHelper = new FileHelper(getLocalResourceLoader(), userDir, new GsonBuilder());
-        return fileHelper;
+        mFileHelper = new FileHelper(getLocalResourceLoader(), userDir, new GsonBuilder());
+        return mFileHelper;
+    }
+
+    @Override
+    public IDataRepository getRemoteRepository() {
+        if (mRemoteRepo != null)
+            return mRemoteRepo;
+
+        mRemoteRepo = new FirebaseHelper(getLocalResourceLoader(),
+                getDatabaseReference(), getStorageReference());
+        return mRemoteRepo;
+    }
+
+    @Override
+    public IDataRepository getLocalRepository() {
+        if(mLocalRepo != null)
+            return mLocalRepo;
+
+        return null;
     }
 
     @Override
     public LocalResourceLoader getLocalResourceLoader() {
-        if(resLoader != null)
-            return resLoader;
+        if (mResLoader != null)
+            return mResLoader;
 
-        resLoader = new LocalResourceLoader(app.getAssets());
-        return resLoader;
+        mResLoader = new LocalResourceLoader(mApp.getAssets());
+        return mResLoader;
+    }
+
+    @Override
+    public DatabaseReference getDatabaseReference() {
+        return FirebaseDatabase.getInstance().getReference().child(mUserId);
+    }
+
+    @Override
+    public StorageReference getStorageReference() {
+        return FirebaseStorage.getInstance().getReference().child(mUserId);
+    }
+
+    @Override
+    public void setUserId(String userId) {
+        if(checkNotNull(userId).equals(mUserId)) return;
+
+        mUserId = userId;
+        mFileHelper = null;
+        mRemoteRepo = null;
+        mLocalRepo = null;
+        mDataManager = null;
+    }
+
+    @Override
+    public String getUserId() {
+        return mUserId;
     }
 
 
     //region Private stuff
 
-    private Application app;
+    private Application mApp;
+    private String mUserId;
+    private LocalResourceLoader mResLoader;
+    private IFileHelper mFileHelper;
+    private IDataRepository mRemoteRepo;
+    private IDataRepository mLocalRepo;
+    private IDataManager mDataManager;
 
-    private IDataManager dataManager;
-
-    private IFileHelper fileHelper;
-
-    private LocalResourceLoader resLoader;
-
-    private Factory() { }
+    private Factory() {
+    }
 
     //endregion
 }

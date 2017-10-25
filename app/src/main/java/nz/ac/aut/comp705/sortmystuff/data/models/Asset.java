@@ -149,6 +149,11 @@ public final class Asset implements IAsset{
         return containerId;
     }
 
+    @Override
+    public List<String> getContentIds() {
+        throw new IllegalStateException("Not implemented");
+    }
+
     /**
      * Gets the status whether the asset has been recycled.
      *

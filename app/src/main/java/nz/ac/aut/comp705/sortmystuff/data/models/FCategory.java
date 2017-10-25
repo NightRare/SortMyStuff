@@ -2,7 +2,6 @@ package nz.ac.aut.comp705.sortmystuff.data.models;
 
 import android.graphics.Bitmap;
 
-import com.google.common.base.Preconditions;
 import com.google.firebase.database.Exclude;
 
 import java.util.ArrayList;
@@ -22,7 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Created by Yuan on 2017/5/27.
  */
 
-public class Category {
+public class FCategory {
 
     //region DATA FIELDS
 
@@ -34,6 +33,9 @@ public class Category {
 
     //region STATIC FACTORY
 
+    public FCategory() {
+        // Default constructor required for calls to DataSnapshot.getValue(Post.class)
+    }
     /**
      * Static factory to create a Category whose name is as given.
      *
@@ -43,11 +45,11 @@ public class Category {
      * @throws IllegalArgumentException if name if whitespaces, empty, or exceeds the length
      *                                  {@link AppConstraints#CATEGORY_NAME_CAP}
      */
-    public static Category create(String name) {
+    public static FCategory create(String name) {
         checkIllegalName(name);
         List<Detail> details = new ArrayList<>();
 
-        return new Category(name, details);
+        return new FCategory(name, details);
     }
 
     //region ACCESSORS
@@ -97,6 +99,11 @@ public class Category {
         this.name = name;
     }
 
+    @Deprecated
+    public void setDetails(List<Detail> details) {
+        this.details = checkNotNull(details);
+    }
+
     /**
      * <p><em>
      * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
@@ -108,6 +115,7 @@ public class Category {
      * @return true if add successfully
      */
     @Deprecated
+    @Exclude
     public boolean addDetail(Detail detail) {
         return hasLabel(detail.getLabel()) ?
                 false : details.add(duplicateDetail(DUMMY_ASSET_ID, detail));
@@ -124,6 +132,7 @@ public class Category {
      * @return true if remove successfully
      */
     @Deprecated
+    @Exclude
     public boolean removeDetail(String label) {
         for (Detail d : details) {
             if (d.getLabel().equals(label))
@@ -148,8 +157,9 @@ public class Category {
      * @throws NullPointerException if asssetId is {@code null}
      */
     @Deprecated
+    @Exclude
     public List<Detail> generateDetails(String assetId) {
-        Preconditions.checkNotNull(assetId);
+        checkNotNull(assetId);
 
         List<Detail> clone = new ArrayList<>();
         for (Detail d : details) {
@@ -172,9 +182,10 @@ public class Category {
 
     //region PRIVATE STUFF
 
+    @Exclude
     private static final String DUMMY_ASSET_ID = "DUMMY_ASSET_ID";
 
-    private Category(String name, List<Detail> details) {
+    private FCategory(String name, List<Detail> details) {
         this.name = name;
         this.details = details;
     }
@@ -185,6 +196,7 @@ public class Category {
      * @param label
      * @return
      */
+    @Exclude
     private boolean hasLabel(String label) {
         for (Detail d : details) {
             if (d.getLabel().equals(label))
@@ -193,14 +205,16 @@ public class Category {
         return false;
     }
 
+    @Exclude
     private static void checkIllegalName(String name) {
-        Preconditions.checkNotNull(name);
+        checkNotNull(name);
         if (name.isEmpty())
             throw new IllegalArgumentException("cannot be empty");
         if (name.length() > AppConstraints.CATEGORY_NAME_CAP)
             throw new IllegalArgumentException("string length exceeds cap");
     }
 
+    @Exclude
     private static Detail duplicateDetail(String assetId, Detail detail) {
         if (detail instanceof ImageDetail) {
             return ImageDetail.create(assetId, detail.getLabel(), (Bitmap) detail.getField());

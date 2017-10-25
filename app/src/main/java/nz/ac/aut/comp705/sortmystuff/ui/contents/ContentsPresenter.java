@@ -13,6 +13,7 @@ import rx.subscriptions.CompositeSubscription;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.CONTENTS_DEFAULT_MODE;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.ROOT_ASSET_ID;
 
 /**
  * The implementation class of {@link IContentsPresenter}.
@@ -121,7 +122,7 @@ public class ContentsPresenter implements IContentsPresenter {
      */
     @Override
     public void setCurrentAssetIdToRoot() {
-        setCurrentAssetId(mDataManager.getRootAsset().getId());
+        setCurrentAssetId(ROOT_ASSET_ID);
     }
 
     /**
@@ -165,7 +166,7 @@ public class ContentsPresenter implements IContentsPresenter {
 
     @Override
     public void deleteCurrentAsset() {
-        if(mCurrentAssetId.equals(mDataManager.getRootAsset().getId()))
+        if(mCurrentAssetId.equals(ROOT_ASSET_ID))
             mView.showMessage("Cannot delete the root asset");
         else
             mView.showDeleteDialog(true);
@@ -194,7 +195,7 @@ public class ContentsPresenter implements IContentsPresenter {
 
     private void setCurrentAssetIdToContainer() {
         // does nothing if the current asset is Root asset
-        if (mCurrentAssetId.equals(mDataManager.getRootAsset().getId()))
+        if (mCurrentAssetId.equals(ROOT_ASSET_ID))
             return;
 
         mSubscriptions.clear();

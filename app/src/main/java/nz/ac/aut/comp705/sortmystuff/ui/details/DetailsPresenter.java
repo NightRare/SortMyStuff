@@ -5,16 +5,14 @@ import android.graphics.Bitmap;
 import java.util.AbstractMap;
 
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
-import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
 import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
-
-import rx.Observable;
 import rx.Subscription;
 import rx.subscriptions.CompositeSubscription;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.ROOT_ASSET_ID;
 
 public class DetailsPresenter implements IDetailsPresenter {
 
@@ -53,7 +51,7 @@ public class DetailsPresenter implements IDetailsPresenter {
     public void loadDetails() {
         if(!mView.isReady()) return;
 
-        if (mCurrentAssetId.equals(mDataManager.getRootAsset().getId())) {
+        if (mCurrentAssetId.equals(ROOT_ASSET_ID)) {
             mView.showRootAssetDetailPage();
             return;
         }

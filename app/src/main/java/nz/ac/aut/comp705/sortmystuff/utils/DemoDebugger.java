@@ -2,100 +2,55 @@ package nz.ac.aut.comp705.sortmystuff.utils;
 
 import android.graphics.Bitmap;
 
-import org.apache.commons.io.FileUtils;
-
-import java.io.IOException;
-import java.util.List;
-
-import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
-import nz.ac.aut.comp705.sortmystuff.data.local.IFileHelper;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
-import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
-import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
+import nz.ac.aut.comp705.sortmystuff.di.IFactory;
+import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
+import rx.Observable;
 
-/**
- * Created by Vince on 2017/6/16.
- */
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class DemoDebugger {
 
-    private SortMyStuffApp app;
-    private IFileHelper fh;
-    private IDataManager dm;
+    private IFactory mFactory;
+    private IDataManager mDataManager;
+    private ISchedulerProvider mSchedulerProvider;
 
-    public DemoDebugger(SortMyStuffApp app) {
-        this.app = app;
-        fh = app.getFactory().getFileHelper();
-        dm = app.getFactory().getDataManager();
+    public DemoDebugger(IFactory factory) {
+        mFactory = checkNotNull(factory);
+        mDataManager = mFactory.getDataManager();
+        mSchedulerProvider = mFactory.getSchedulerProvider();
     }
 
     public void cleanExistingData() {
-
-        try {
-            FileUtils.cleanDirectory(fh.getUserDir());
-            dm.refreshFromLocal();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        mFactory.getDatabaseReference().removeValue();
+        mFactory.getStorageReference().delete();
+        mDataManager.reCacheFromRemoteDataSource();
     }
 
     public void setPhoto(String assetId, final Bitmap photo) {
-        dm.getDetailsAsync(assetId, new IDataManager.LoadDetailsCallback() {
-            @Override
-            public void onDetailsLoaded(List<Detail> details) {
-                for (Detail d : details) {
-                    if (d.getLabel().equals(CategoryType.BasicDetail.PHOTO)
-                            && d.getType().equals(DetailType.Image)) {
-                        dm.updateImageDetail((ImageDetail) d, d.getLabel(), photo);
-                    }
-                }
-            }
-
-            @Override
-            public void dataNotAvailable(int errorCode) {
-
-            }
-        });
+        mDataManager.getDetails(assetId)
+                .subscribeOn(mSchedulerProvider.io())
+                .flatMap(Observable::from)
+                .filter(d -> d.getLabel().equals(CategoryType.BasicDetail.PHOTO)
+                        && d.getType().equals(DetailType.Image))
+                .subscribe(
+                        //onNext
+                        d -> mDataManager.updateImageDetail(assetId, d.getId(), d.getLabel(), photo)
+                );
     }
 
-    public void resetPhoto(String assetId) {
-        dm.getDetailsAsync(assetId, new IDataManager.LoadDetailsCallback() {
-            @Override
-            public void onDetailsLoaded(List<Detail> details) {
-                for (Detail d : details) {
-                    if (d.getLabel().equals(CategoryType.BasicDetail.PHOTO)
-                            && d.getType().equals(DetailType.Image)) {
-                        dm.resetImageDetail((ImageDetail) d);
-                    }
-                }
-            }
-
-            @Override
-            public void dataNotAvailable(int errorCode) {
-
-            }
-        });
-    }
-
-    public void updateTextDetail(String assetId, final String label, final String field) {
-        dm.getDetailsAsync(assetId, new IDataManager.LoadDetailsCallback() {
-            @Override
-            public void onDetailsLoaded(List<Detail> details) {
-                for (Detail d : details) {
-                    if (d.getLabel().equals(label)
-                            && (d instanceof TextDetail)) {
-                        dm.updateTextDetail((TextDetail) d, label, field);
-                    }
-                }
-            }
-
-            @Override
-            public void dataNotAvailable(int errorCode) {
-
-            }
-        });
+    public void updateTextDetail(String assetId, String label, String field) {
+        mDataManager.getDetails(assetId)
+                .subscribeOn(mSchedulerProvider.io())
+                .flatMap(Observable::from)
+                .filter(d -> d.getLabel().equals(label)
+                        && (d instanceof TextDetail))
+                .subscribe(
+                        //onNext
+                        d -> mDataManager.updateTextDetail(assetId, d.getId(), label, field)
+                );
     }
 }

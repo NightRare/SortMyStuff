@@ -7,14 +7,11 @@ import java.util.Map;
 
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
-import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.di.Factory;
 import nz.ac.aut.comp705.sortmystuff.di.IFactory;
 import nz.ac.aut.comp705.sortmystuff.utils.DemoDebugger;
 
-/**
- * Created by Yuan on 2017/4/25.
- */
+import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.ROOT_ASSET_ID;
 
 public class SortMyStuffApp extends Application {
 
@@ -24,9 +21,9 @@ public class SortMyStuffApp extends Application {
     public void onCreate() {
         super.onCreate();
 
-        factory = new Factory(this);
+        factory = new Factory(this, "default-user");
 
-        prepareDemoData();
+//        prepareDemoData();
     }
 
     public IFactory getFactory() {
@@ -37,43 +34,39 @@ public class SortMyStuffApp extends Application {
         IDataManager dm = factory.getDataManager();
         Map<String, Bitmap> photos = factory.getLocalResourceLoader().getDemoPhotos();
 
-        DemoDebugger dd = new DemoDebugger(this);
+        DemoDebugger dd = new DemoDebugger(factory);
         dd.cleanExistingData();
 
-        IAsset root = dm.getRootAsset();
+        String studyRoomId = dm.createAsset("Study Room", ROOT_ASSET_ID, CategoryType.Places);
+        dd.setPhoto(studyRoomId, photos.get("StudyRoom.jpg"));
 
-        String studyRoomId = dm.createAsset("Study Room", root.getId(), CategoryType.Places);
-        dd.setPhoto(studyRoomId, photos.get("StudyRoom.png"));
+        String office = dm.createAsset("Office", ROOT_ASSET_ID, CategoryType.Places);
+        dd.setPhoto(office, photos.get("Office.jpg"));
 
-        String office = dm.createAsset("Office", root.getId(), CategoryType.Places);
-        dd.setPhoto(office, photos.get("Office.png"));
-
-        String bedroomId = dm.createAsset("Bedroom", root.getId(), CategoryType.Places);
-        dd.setPhoto(bedroomId, photos.get("Bedroom.png"));
+        String bedroomId = dm.createAsset("Bedroom", ROOT_ASSET_ID, CategoryType.Places);
+        dd.setPhoto(bedroomId, photos.get("Bedroom.jpg"));
 
         String bookshelfPhilosophyId = dm.createAsset("Bookshelf Philosophy", studyRoomId, CategoryType.Miscellaneous);
-        dd.setPhoto(bookshelfPhilosophyId, photos.get("BookshelfPhilosophy.png"));
+        dd.setPhoto(bookshelfPhilosophyId, photos.get("BookshelfPhilosophy.jpg"));
 
         String bookshelfLiteratureId = dm.createAsset("Bookshelf Literature", studyRoomId, CategoryType.Miscellaneous);
-        dd.setPhoto(bookshelfLiteratureId, photos.get("BookshelfLiterature.png"));
+        dd.setPhoto(bookshelfLiteratureId, photos.get("BookshelfLiterature.jpg"));
 
         String kindleId = dm.createAsset("Kindle", bedroomId, CategoryType.Appliances);
-        dd.setPhoto(kindleId, photos.get("Kindle.png"));
+        dd.setPhoto(kindleId, photos.get("Kindle.jpg"));
         dd.updateTextDetail(kindleId, "Purchase Date", "14/01/2016");
         dd.updateTextDetail(kindleId, "Warranty Expiry", "14/01/2019");
         dd.updateTextDetail(kindleId, "Model Number", "B0186FET66");
         dd.updateTextDetail(kindleId, "Serial Number", "9Q8EWR7923");
 
         String theEssentialHusserlId = dm.createAsset("The Essential Husserl", bookshelfPhilosophyId, CategoryType.Books);
-        dd.setPhoto(theEssentialHusserlId, photos.get("TheEssentialHusserl.png"));
+        dd.setPhoto(theEssentialHusserlId, photos.get("TheEssentialHusserl.jpg"));
 
         String theRepublicId = dm.createAsset("The Republic", bookshelfPhilosophyId, CategoryType.Books);
-        dd.setPhoto(theRepublicId, photos.get("TheRepublic.png"));
+        dd.setPhoto(theRepublicId, photos.get("TheRepublic.jpg"));
 
         String beingAndTimeId = dm.createAsset("Being and Time", bookshelfPhilosophyId, CategoryType.Books);
-        dd.setPhoto(beingAndTimeId, photos.get("BeingAndTime.png"));
-
-
+        dd.setPhoto(beingAndTimeId, photos.get("BeingAndTime.jpg"));
     }
 
 

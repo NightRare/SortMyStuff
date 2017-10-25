@@ -7,15 +7,11 @@ import rx.Scheduler;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
-/**
- * Created by YuanY on 2017/9/23.
- */
+public class SchedulerProvider implements ISchedulerProvider {
 
-public class SchedularProvider implements ISchedulerProvider {
-
-    public static synchronized SchedularProvider getInstance() {
+    public static synchronized SchedulerProvider getInstance() {
         if (INSTANCE == null) {
-            INSTANCE = new SchedularProvider();
+            INSTANCE = new SchedulerProvider();
         }
         return INSTANCE;
     }
@@ -39,7 +35,7 @@ public class SchedularProvider implements ISchedulerProvider {
     }
 
     @Nullable
-    private static SchedularProvider INSTANCE;
+    private static SchedulerProvider INSTANCE;
 
-    private SchedularProvider() {};
+    private SchedulerProvider() {};
 }

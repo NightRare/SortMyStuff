@@ -49,10 +49,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * Created by Yuan on 2017/4/29.
- */
-
 @RunWith(RobolectricTestRunner.class)
 @Config(constants = BuildConfig.class)
 public class DataManagerTest {
@@ -282,13 +278,13 @@ public class DataManagerTest {
     @Test
     public void getRootAsset_getRootAsset() {
         Asset root = prepareRootAsset();
-        Asset asset = (Asset) dataManager.getRootAsset();
+        Asset asset = (Asset) dataManager.getRoot();
         Assert.assertTrue(areIdenticalAssets(root, asset));
     }
 
     @Test
     public void getRootAsset_createRootAssetAndSaveToJsonFileWhenRootAssetNotExists() {
-        final String rootId = dataManager.getRootAsset().getId();
+        final String rootId = dataManager.getRoot().getId();
         verify(mockFileHelper).serialiseAsset(argThat(new ArgumentMatcher<Asset>() {
             @Override
             public boolean matches(Asset argument) {
@@ -304,11 +300,11 @@ public class DataManagerTest {
 
         verify(mockFileHelper, never()).deserialiseAllAssets();
         // first time load from local file
-        dataManager.getRootAsset();
+        dataManager.getRoot();
         verify(mockFileHelper, times(1)).deserialiseAllAssets();
 
         // second time do not load from local file
-        dataManager.getRootAsset();
+        dataManager.getRoot();
         verify(mockFileHelper, times(1)).deserialiseAllAssets();
     }
 
@@ -318,7 +314,7 @@ public class DataManagerTest {
         when(mockFileHelper.serialiseAsset(any(Asset.class))).thenReturn(false);
 
         try {
-            dataManager.getRootAsset();
+            dataManager.getRoot();
         } catch (UpdateLocalStorageFailedException e) {
             // pass test
             return;
@@ -1076,7 +1072,7 @@ public class DataManagerTest {
         // check whether serialised
         verify(mockFileHelper, never()).serialiseAsset(any(Asset.class));
 
-        Assert.assertFalse(dataManager.getRootAsset().isRecycled());
+        Assert.assertFalse(dataManager.getRoot().isRecycled());
 
         dataManager.getRecycledAssetsAsync(mockLoadAssetsCallback);
         verify(mockLoadAssetsCallback).onAssetsLoaded(argThat(new ArgumentMatcher<List<Asset>>() {
@@ -1545,12 +1541,12 @@ public class DataManagerTest {
 
         verify(mockFileHelper, never()).deserialiseAllAssets();
         // first time load from local file
-        dataManager.getRootAsset();
+        dataManager.getRoot();
         verify(mockFileHelper, times(1)).deserialiseAllAssets();
         dataManager.refreshFromLocal();
 
         // should have loaded again
-        dataManager.getRootAsset();
+        dataManager.getRoot();
         verify(mockFileHelper, times(2)).deserialiseAllAssets();
     }
 
