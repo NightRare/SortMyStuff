@@ -118,6 +118,9 @@ public class FDataManager implements IDataManager {
     public Observable<IAsset> getAsset(String id) {
         checkNotNull(id);
 
+        if(id.equals(ROOT_ASSET_ID))
+            return getRootAsset();
+
         if (mDirtyCachedAssets || mCachedAssets == null) {
             return mRemoteRepo.retrieveAsset(id)
                     .map(asset -> (IAsset) asset);
@@ -132,12 +135,25 @@ public class FDataManager implements IDataManager {
 
         if (mDirtyCachedAssets || mCachedAssets == null) {
             return mRemoteRepo.retrieveAsset(assetId)
-                    .flatMap(fAsset -> Observable.from(fAsset.getContentIds()))
+                    .flatMap(asset -> {
+                        if (asset == null) {
+                            // if the root asset has not been initialised/stored yet
+                            if (assetId.equals(ROOT_ASSET_ID)) {
+                                return Observable.from(new ArrayList<>());
+                            } else
+                                throw new IllegalArgumentException("Asset not exists, id: " + assetId);
+                        }
+
+                        return Observable.from(asset.getContentIds());
+                    })
                     .flatMap(this::getAsset)
                     .toList();
         }
 
         FAsset container = mCachedAssets.get(assetId);
+        if (container == null)
+            throw new IllegalArgumentException("Asset not exists, id: " + assetId);
+
         List<IAsset> contents = new ArrayList<>();
         for (String childId : container.getContentIds()) {
             contents.add(mCachedAssets.get(childId));
@@ -150,18 +166,29 @@ public class FDataManager implements IDataManager {
         checkNotNull(assetId, "The assetId cannot be null.");
 
         if (mDirtyCachedAssets || mCachedAssets == null) {
-            return mRemoteRepo.retrieveAllAssetsAsMap()
-                    .map(allAssets -> getParentAssetsList(
-                            allAssets.get(assetId), rootToChildren, allAssets))
+            return mRemoteRepo.retrieveAllAssets()
                     .flatMap(Observable::from)
-                    .map(fAsset -> (IAsset) fAsset)
-                    .toList();
+                    .filter(asset -> !asset.isRecycled())
+                    .toMap(FAsset::getId)
+                    .map(allNonRecycledAssets -> {
+                        // if the root asset has not been initialised/stored yet
+                        if (allNonRecycledAssets == null || allNonRecycledAssets.isEmpty()) {
+                            return new ArrayList<IAsset>();
+                        }
+                        FAsset asset = allNonRecycledAssets.get(assetId);
+                        if (asset == null)
+                            throw new IllegalArgumentException("Asset not exists, id: " + assetId);
+
+                        return getParentAssetsList(asset, rootToChildren, allNonRecycledAssets);
+                    });
         }
 
-        List<FAsset> results = getParentAssetsList(mCachedAssets.get(assetId), rootToChildren);
-        return Observable.from(results)
-                .map(a -> (IAsset) a)
-                .toList();
+        FAsset asset = mCachedAssets.get(assetId);
+        if (asset == null)
+            throw new IllegalArgumentException("Asset not exists, id: " + assetId);
+
+        List<IAsset> results = getParentAssetsList(asset, rootToChildren, mCachedAssets);
+        return Observable.just(results);
     }
 
     @Override
@@ -542,12 +569,10 @@ public class FDataManager implements IDataManager {
         mCachedRecycledAssets = new HashMap<>();
 
         getRootAsset()
+                .subscribeOn(mSchedulerProvider.computation())
                 .flatMap(asset -> mRemoteRepo.retrieveAllAssets())
-                .doOnNext(assets -> {
-                    for (FAsset a : assets) {
-                        putAssetIntoCacheObjects(a);
-                    }
-                })
+                .flatMap(Observable::from)
+                .doOnNext(this::putAssetIntoCacheObjects)
                 .doOnCompleted(() -> {
                     // apply logged changes to the cache as the caching has ended
                     while (!mActionsQueue.isEmpty()) {
@@ -640,17 +665,13 @@ public class FDataManager implements IDataManager {
         }
     }
 
-    private List<FAsset> getParentAssetsList(FAsset asset, boolean rootToChildren) {
-        return getParentAssetsList(asset, rootToChildren, mCachedAssets);
-    }
-
-    private List<FAsset> getParentAssetsList(FAsset asset, boolean rootToChildren,
-                                             Map<String, FAsset> assetsMap) {
-        List<FAsset> results = new ArrayList<>();
+    private List<IAsset> getParentAssetsList(FAsset asset, boolean rootToChildren,
+                                             Map<String, FAsset> allNonRecycledAssets) {
+        List<IAsset> results = new ArrayList<>();
         //children to root order
         while (!asset.isRoot()) {
             results.add(asset);
-            asset = assetsMap.get(asset.getContainerId());
+            asset = allNonRecycledAssets.get(asset.getContainerId());
         }
         // add the root
         results.add(asset);

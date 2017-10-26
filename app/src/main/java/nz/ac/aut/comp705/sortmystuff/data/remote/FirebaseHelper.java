@@ -47,13 +47,6 @@ public class FirebaseHelper implements IDataRepository {
     }
 
     @Override
-    public Observable<Map<String, FAsset>> retrieveAllAssetsAsMap() {
-        return RxFirebaseDatabase
-                .observeSingleValueEvent(mDatabase.child(DB_ASSETS))
-                .map(dataSnapshot -> dataToMap(dataSnapshot, FAsset.class));
-    }
-
-    @Override
     public Observable<FAsset> retrieveAsset(String assetId) {
         return RxFirebaseDatabase
                 .observeSingleValueEvent(mDatabase.child(DB_ASSETS).child(checkNotNull(assetId)))
@@ -68,26 +61,11 @@ public class FirebaseHelper implements IDataRepository {
     }
 
     @Override
-    public Observable<Map<String, FDetail>> retrieveAllDetailsAsMap() {
-        return RxFirebaseDatabase
-                .observeSingleValueEvent(mDatabase.child(DB_DETAILS))
-                .map(dataSnapshot -> dataToMap(dataSnapshot, FDetail.class));
-    }
-
-    @Override
     public Observable<List<FDetail>> retrieveDetails(String assetId) {
         return retrieveAsset(assetId)
                 .flatMap(asset -> Observable.from(asset.getDetailIds()))
                 .flatMap(this::retrieveDetail)
                 .toSortedList();
-    }
-
-    @Override
-    public Observable<Map<String, FDetail>> retrieveDetailsAsMap(String assetId) {
-        return retrieveAsset(assetId)
-                .flatMap(asset -> Observable.from(asset.getDetailIds()))
-                .flatMap(this::retrieveDetail)
-                .toMap(FDetail::getId);
     }
 
     @Override
@@ -99,11 +77,6 @@ public class FirebaseHelper implements IDataRepository {
 
     @Override
     public Observable<List<FCategory>> retrieveCategories() {
-        return null;
-    }
-
-    @Override
-    public Observable<Map<String, FCategory>> retrieveCategoriesAsMap() {
         return null;
     }
 

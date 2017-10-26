@@ -3,7 +3,6 @@ package nz.ac.aut.comp705.sortmystuff.data;
 import com.google.android.gms.tasks.Task;
 
 import java.util.List;
-import java.util.Map;
 
 import nz.ac.aut.comp705.sortmystuff.data.models.FAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.FCategory;
@@ -16,23 +15,15 @@ public interface IDataRepository {
 
     Observable<List<FAsset>> retrieveAllAssets();
 
-    Observable<Map<String, FAsset>> retrieveAllAssetsAsMap();
-
     Observable<FAsset> retrieveAsset(String assetId);
 
     Observable<List<FDetail>> retrieveAllDetails();
 
-    Observable<Map<String, FDetail>> retrieveAllDetailsAsMap();
-
     Observable<List<FDetail>> retrieveDetails(String assetId);
-
-    Observable<Map<String, FDetail>> retrieveDetailsAsMap(String assetId);
 
     Observable<FDetail> retrieveDetail(String detailId);
 
     Observable<List<FCategory>> retrieveCategories();
-
-    Observable<Map<String, FCategory>> retrieveCategoriesAsMap();
 
     //endregion
 

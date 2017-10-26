@@ -1,6 +1,5 @@
 package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
@@ -64,42 +63,66 @@ public class ContentsPresenter implements IContentsPresenter {
         mView.setLoadingIndicator(true);
 
         mSubscriptions.clear();
+        Observable<IAsset> currentAssetObservable = mDataManager
+                .getAsset(mCurrentAssetId)
+                .subscribeOn(mSchedulerProvider.io());
+
         Observable<List<IAsset>> contentAssetsObservable = mDataManager
                 .getContentAssets(mCurrentAssetId)
                 .subscribeOn(mSchedulerProvider.io());
 
         Observable<List<IAsset>> parentAssetsObservable = mDataManager
                 .getParentAssets(mCurrentAssetId, true)
+                .subscribeOn(mSchedulerProvider.io())
                 .flatMap(Observable::from)
                 //get rid of the root
                 .filter(a -> !a.isRoot())
-                .toList()
-                .subscribeOn(mSchedulerProvider.io());
+                .toList();
 
-        Subscription subscription = mDataManager
-                .getAsset(mCurrentAssetId)
-                .zipWith(contentAssetsObservable, (currentAsset, contentAssets) -> {
-                    List<Object> args = new ArrayList<>();
-                    args.add(0, currentAsset);
-                    args.add(1, contentAssets);
-                    return args;
-                })
-                .zipWith(parentAssetsObservable, (args, parentAssets) -> {
-                    args.add(2, parentAssets);
-                    return args;
+        Subscription subscription = Observable.zip(currentAssetObservable, contentAssetsObservable,
+                parentAssetsObservable, (currentAsset, contentAssets, parentAssets) -> {
+                    if(currentAsset == null || contentAssets == null || parentAssets == null)
+                        throw new IllegalStateException("Something went wrong trying to get data for Contents View");
+
+                    return new Object[] {currentAsset, contentAssets, parentAssets};
                 })
                 .subscribeOn(mSchedulerProvider.io())
                 .observeOn(mSchedulerProvider.ui())
                 .subscribe(
-                        //onNext
-                        args -> processContentResults((IAsset) args.get(0),
-                                (List<IAsset>) args.get(1),
-                                (List<IAsset>) args.get(2)),
+                        //onNext nothing needs to be done
+                        args -> processContentResults((IAsset) args[0], (List<IAsset>) args[1],
+                                (List<IAsset>) args[2]),
                         //onError
                         throwable -> mView.showLoadingContentsError(throwable),
                         //onCompleted
                         () -> mView.setLoadingIndicator(false)
                 );
+
+//
+//        Subscription subscription2 = mDataManager
+//                .getAsset(mCurrentAssetId)
+//                .zipWith(contentAssetsObservable, (currentAsset, contentAssets) -> {
+//                    List<Object> args = new ArrayList<>();
+//                    args.add(0, currentAsset);
+//                    args.add(1, contentAssets);
+//                    return args;
+//                })
+//                .zipWith(parentAssetsObservable, (args, parentAssets) -> {
+//                    args.add(2, parentAssets);
+//                    return args;
+//                })
+//                .subscribeOn(mSchedulerProvider.io())
+//                .observeOn(mSchedulerProvider.ui())
+//                .subscribe(
+//                        //onNext
+//                        args -> processContentResults((IAsset) args.get(0),
+//                                (List<IAsset>) args.get(1),
+//                                (List<IAsset>) args.get(2)),
+//                        //onError
+//                        throwable -> mView.showLoadingContentsError(throwable),
+//                        //onCompleted
+//                        () -> mView.setLoadingIndicator(false)
+//                );
         mSubscriptions.add(subscription);
     }
 

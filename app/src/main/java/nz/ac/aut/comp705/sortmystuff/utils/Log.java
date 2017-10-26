@@ -15,7 +15,7 @@ public class Log {
 
     //endregion
 
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
 
     public static void i(String tag, String msg) {
         if (DEBUG)
