@@ -9,6 +9,8 @@ import java.io.ByteArrayOutputStream;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.ASSET_THUMBNAIL_LENGTH;
 import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.ASSET_THUMBNAIL_WIDTH;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.DETAIL_IMAGE_LENGTH;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.DETAIL_IMAGE_WIDTH;
 
 public class BitmapHelper {
 
@@ -36,9 +38,13 @@ public class BitmapHelper {
         return BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
     }
 
+    public static Bitmap rescaleToImageDetailSize(Bitmap original) {
+        return Bitmap.createScaledBitmap(checkNotNull(original),
+                DETAIL_IMAGE_WIDTH, DETAIL_IMAGE_LENGTH, false);
+    }
+
     public static Bitmap toThumbnail(Bitmap original) {
-        Bitmap t = Bitmap.createScaledBitmap(checkNotNull(original),
+        return Bitmap.createScaledBitmap(checkNotNull(original),
                 ASSET_THUMBNAIL_WIDTH, ASSET_THUMBNAIL_LENGTH, false);
-        return t;
     }
 }

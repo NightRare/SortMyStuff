@@ -12,11 +12,11 @@ import rx.Observable;
 
 public interface IDataRepository {
 
+    //region RETRIEVE METHODS
+
     Observable<List<FAsset>> retrieveAllAssets();
 
     Observable<Map<String, FAsset>> retrieveAllAssetsAsMap();
-
-    Observable<FAsset> retrieveAllAssetsAsStream();
 
     Observable<FAsset> retrieveAsset(String assetId);
 
@@ -24,13 +24,9 @@ public interface IDataRepository {
 
     Observable<Map<String, FDetail>> retrieveAllDetailsAsMap();
 
-    Observable<FDetail> retrieveAllDetailsAsStream();
-
     Observable<List<FDetail>> retrieveDetails(String assetId);
 
     Observable<Map<String, FDetail>> retrieveDetailsAsMap(String assetId);
-
-    Observable<FDetail> retrieveDetailsAsStream(String assetId);
 
     Observable<FDetail> retrieveDetail(String detailId);
 
@@ -38,35 +34,29 @@ public interface IDataRepository {
 
     Observable<Map<String, FCategory>> retrieveCategoriesAsMap();
 
-    Observable<FCategory> retrieveCategoriesAsStream();
+    //endregion
 
-    @Deprecated
-    List<FCategory> loadCategories();
-
-    void addOrUpdateAsset(FAsset asset);
+    //region CREATE METHODS
 
     void addOrUpdateAsset(FAsset asset, OnUpdatedCallback onUpdatedCallback);
 
-    void updateAsset(String assetId, String key, Object value);
+    void addDetail(FDetail detail, OnUpdatedCallback onUpdatedCallback);
+
+    //endregion
+
+    //region UPDATE METHODS
 
     void updateAsset(String assetId, String key, Object value, OnUpdatedCallback onUpdatedCallback);
 
-    /**
-     * Adds the detail to the data repository if not exists, otherwise updates the existing record
-     * of the detail. If updatingImage is set to true, then the field of the image detail will be updated
-     * to the data repository. If the detail is not an image detail then this argument will be
-     * ignored.
-     *
-     * @param detail the detail to be added or updated
-     * @param updatingImage set to true only if the field of the image detail is updated; set to false
-     *                      if no image is updated or the detail is just created
-     * @throws NullPointerException if detail is {@code null}
-     */
-    void addOrUpdateDetail(FDetail detail, boolean updatingImage);
+    void updateDetail(FDetail detail, boolean updatingField, OnUpdatedCallback onUpdatedCallback);
 
-    void addOrUpdateDetail(FDetail detail, boolean updatingImage, OnUpdatedCallback onUpdatedCallback);
+    //endregion
+
+    //region OTHER METHODS
 
     void setOnDataChangeCallback(IDataManager.onDataChangeCallback onDataChangeCallback);
+
+    //endregion
 
     interface OnUpdatedCallback {
 

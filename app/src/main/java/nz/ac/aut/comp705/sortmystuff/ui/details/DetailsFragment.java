@@ -36,6 +36,7 @@ import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
 import nz.ac.aut.comp705.sortmystuff.ui.main.SwipeActivity;
 import nz.ac.aut.comp705.sortmystuff.utils.AppCode;
+import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
 
 import static android.app.Activity.RESULT_OK;
 import static android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
@@ -122,7 +123,9 @@ public class DetailsFragment extends Fragment implements IDetailsView{
                 try {
                     Bitmap bm = MediaStore.Images.Media.getBitmap(
                             mActivity.getContentResolver(), photoUri);
-                    mPresenter.updateAssetPhoto(mPhotoToBeReplaced, bm);
+                    mPresenter.updateAssetPhoto(mPhotoToBeReplaced, BitmapHelper.rescaleToImageDetailSize(bm));
+                    bm.recycle();
+
                     mPhotoToBeReplaced = null;
                 } catch (IOException e) {
                     e.printStackTrace();

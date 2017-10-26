@@ -15,4 +15,8 @@ public interface IDetail<T> {
     Long getCreateTimestamp();
 
     Long getModifyTimestamp();
+
+    int getPosition();
+
+    boolean isDefaultFieldValue();
 }

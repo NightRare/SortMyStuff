@@ -31,6 +31,7 @@ import nz.ac.aut.comp705.sortmystuff.utils.Log;
 import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
 import rx.Observable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static nz.ac.aut.comp705.sortmystuff.data.models.FAsset.ASSET_CONTAINERID;
 import static nz.ac.aut.comp705.sortmystuff.data.models.FAsset.ASSET_CONTENTIDS;
@@ -181,7 +182,7 @@ public class FDataManager implements IDataManager {
         List<FDetail> details = getCategory(categoryType).generateFDetails(asset.getId());
         for (FDetail d : details) {
             asset.addDetailId(d.getId());
-            mRemoteRepo.addOrUpdateDetail(d, false, mOnDetailUpdated);
+            mRemoteRepo.addDetail(d, mOnDetailUpdated);
         }
         mRemoteRepo.addOrUpdateAsset(asset, mOnAssetUpdated);
 
@@ -403,7 +404,7 @@ public class FDataManager implements IDataManager {
         checkNotNull(assetId);
         checkNotNull(detailId);
 
-        updateDetail(assetId, detailId, null, mResLoader.getDefaultPhoto());
+        updateDetailWithDefaultFieldValue(assetId, detailId, null);
     }
 
     @Override
@@ -583,7 +584,7 @@ public class FDataManager implements IDataManager {
 
     private FAsset createRootAsset() {
         FAsset root = FAsset.createRoot();
-        mRemoteRepo.addOrUpdateAsset(root);
+        mRemoteRepo.addOrUpdateAsset(root, null);
         return root;
     }
 
@@ -701,19 +702,25 @@ public class FDataManager implements IDataManager {
         mRemoteRepo.updateAsset(assetId, ASSET_THUMBNAIL, thumbnailDataString, mOnAssetUpdated);
     }
 
-    private <E> void updateDetail(String assetId, String detailId, String newLabel, E newField) {
+    private void updateDetailWithDefaultFieldValue(String assetId, String detailId, String newLabel) {
+        checkNotNull(assetId, "The assetId cannot be null.");
+        checkNotNull(detailId, "The detailId cannot be null.");
+
         if (mDirtyCachedDetails) {
             initCachedDetails();
         }
-
-        // if field and label are all null then nothing is changed
-        long modifyTimestamp = (newLabel == null && newField == null) ? 0L : System.currentTimeMillis();
+        long modifyTimestamp = System.currentTimeMillis();
 
         if (mCachedDetails.containsKey(assetId)) {
             for (FDetail detail : mCachedDetails.get(assetId)) {
                 if (detail.getId().equals(detailId)) {
-                    long newTimestamp = modifyTimestamp == 0 ? detail.getModifyTimestamp() : modifyTimestamp;
-                    updateDetailAndUpdateInRemote(detail, newLabel, newField, newTimestamp);
+                    if (detail.getType().equals(DetailType.Text) || detail.getType().equals(DetailType.Date)) {
+                        updateDetailAndUpdateInRemote(detail, newLabel, mResLoader.getDefaultText(),
+                                true, modifyTimestamp);
+                    } else if (detail.getType().equals(DetailType.Image)) {
+                        updateDetailAndUpdateInRemote(detail, newLabel, mResLoader.getDefaultPhoto(),
+                                true, modifyTimestamp);
+                    }
                     updateAssetModifyTimestamp(detail.getAssetId(), modifyTimestamp);
                     break;
                 }
@@ -722,25 +729,50 @@ public class FDataManager implements IDataManager {
             mRemoteRepo.retrieveDetail(detailId)
                     .subscribeOn(mSchedulerProvider.io())
                     .doOnNext(detail -> {
-                        long newTimestamp = modifyTimestamp == 0 ? detail.getModifyTimestamp() : modifyTimestamp;
-                        updateDetailAndUpdateInRemote(detail, newLabel, newField, newTimestamp);
+                        if (detail.getType().equals(DetailType.Text) || detail.getType().equals(DetailType.Date)) {
+                            updateDetailAndUpdateInRemote(detail, newLabel, mResLoader.getDefaultText(),
+                                    true, modifyTimestamp);
+                        } else if (detail.getType().equals(DetailType.Image)) {
+                            updateDetailAndUpdateInRemote(detail, newLabel, mResLoader.getDefaultPhoto(),
+                                    true, modifyTimestamp);
+                        }
                         updateAssetModifyTimestamp(detail.getAssetId(), modifyTimestamp);
                     })
                     .subscribe();
         }
     }
 
-    /**
-     * Updates the label and/or the field of the detail, and update the changes to the remote repository.
-     *
-     * @param detail          the detail
-     * @param newLabel        the newLabel; or {@code null} if it won't be changed
-     * @param newField        the newField; or {@code null} if it won't be changed
-     * @param modifyTimestamp the modifyTimestamp
-     * @param <E>             the type of the field
-     */
+    private <E> void updateDetail(String assetId, String detailId, String newLabel, E newField) {
+        checkNotNull(assetId, "The assetId cannot be null.");
+        checkNotNull(detailId, "The detailId cannot be null.");
+        checkArgument(newLabel != null || newField != null, "The newLabel and newField cannot both be null.");
+
+        if (mDirtyCachedDetails) {
+            initCachedDetails();
+        }
+        long modifyTimestamp = System.currentTimeMillis();
+
+        if (mCachedDetails.containsKey(assetId)) {
+            for (FDetail detail : mCachedDetails.get(assetId)) {
+                if (detail.getId().equals(detailId)) {
+                    updateDetailAndUpdateInRemote(detail, newLabel, newField, false, modifyTimestamp);
+                    updateAssetModifyTimestamp(detail.getAssetId(), modifyTimestamp);
+                    break;
+                }
+            }
+        } else {
+            mRemoteRepo.retrieveDetail(detailId)
+                    .subscribeOn(mSchedulerProvider.io())
+                    .doOnNext(detail -> {
+                        updateDetailAndUpdateInRemote(detail, newLabel, newField, false, modifyTimestamp);
+                        updateAssetModifyTimestamp(detail.getAssetId(), modifyTimestamp);
+                    })
+                    .subscribe();
+        }
+    }
+
     private <E> void updateDetailAndUpdateInRemote(FDetail<E> detail, String newLabel,
-                                                   E newField, long modifyTimestamp) {
+                                                   E newField, boolean defaultFieldValue, long modifyTimestamp) {
         Class fieldType = newField == null ? null : newField.getClass();
 
         if (fieldType != null) {
@@ -751,18 +783,18 @@ public class FDataManager implements IDataManager {
         if (newLabel != null)
             detail.setLabel(newLabel);
 
-        if (newField != null)
-            detail.setField(newField);
+        boolean updatingField = newField != null;
+        if (updatingField)
+            detail.setField(newField, defaultFieldValue);
 
         detail.setModifyTimestamp(modifyTimestamp);
 
-        boolean updatingImage = detail.getType().equals(DetailType.Image)
-                && (fieldType == null ? false : fieldType.equals(DetailType.Image.getFieldClass()));
+        mRemoteRepo.updateDetail(detail, updatingField, mOnDetailUpdated);
 
-        mRemoteRepo.addOrUpdateDetail(detail, updatingImage, mOnDetailUpdated);
-        if (updatingImage) {
-            boolean usingDefaultPhoto = mResLoader.getDefaultPhoto().sameAs((Bitmap) newField);
-            updateAssetThumbnailAndUpdateInRemote(detail.getAssetId(), (Bitmap) newField, usingDefaultPhoto);
+        // if the detail is "Photo", then the thumbnail of the asset should also be updated
+        if (updatingField && detail.getType().equals(DetailType.Image) &&
+                detail.getLabel().equals(CategoryType.BasicDetail.PHOTO)) {
+            updateAssetThumbnailAndUpdateInRemote(detail.getAssetId(), (Bitmap) newField, defaultFieldValue);
         }
     }
 
@@ -812,7 +844,7 @@ public class FDataManager implements IDataManager {
 
                 for (FDetail d : mCachedDetails.get(detail.getAssetId())) {
                     if (d.getId().equals(detail.getId())) {
-                        if(!d.getModifyTimestamp().equals(detail.getModifyTimestamp()))
+                        if (!d.getModifyTimestamp().equals(detail.getModifyTimestamp()))
                             d.overwrittenBy(detail);
                         break;
                     }

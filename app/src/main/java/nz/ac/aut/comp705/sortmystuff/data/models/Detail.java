@@ -127,6 +127,16 @@ public abstract class Detail<T> implements IDetail<T>{
         return 0L;
     }
 
+    @Override
+    public int getPosition() {
+        return -1;
+    }
+
+    @Override
+    public boolean isDefaultFieldValue() {
+        return true;
+    }
+
     //endregion
 
     //region MODIFIERS

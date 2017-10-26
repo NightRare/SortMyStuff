@@ -34,6 +34,12 @@ public class SchedulerProvider implements ISchedulerProvider {
         return AndroidSchedulers.mainThread();
     }
 
+    @NonNull
+    @Override
+    public Scheduler newThread() {
+        return Schedulers.newThread();
+    }
+
     @Nullable
     private static SchedulerProvider INSTANCE;
 

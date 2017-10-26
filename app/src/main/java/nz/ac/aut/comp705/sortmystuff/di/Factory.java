@@ -74,7 +74,7 @@ public class Factory implements IFactory {
             return mRemoteRepo;
 
         mRemoteRepo = new FirebaseHelper(getLocalResourceLoader(),
-                getDatabaseReference(), getStorageReference());
+                getDatabaseReference(), getStorageReference(), getSchedulerProvider());
         return mRemoteRepo;
     }
 

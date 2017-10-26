@@ -28,6 +28,7 @@ public class LocalResourceLoader {
 
     private static final String TAG_DEFAULT_PHOTO = "TAG_DEFAULT_PHOTO";
     private static final String TAG_DEFAULT_THUMBNAIL = "TAG_DEFAULT_THUMBNAIL";
+    private static final String TAG_DEFAULT_TEXT = "TAG_DEFAULT_TEXT";
     private static final String TAG_CATEGORIES_JSON = "TAG_CATEGORIES_JSON";
     private static final String TAG_DEMO_PHOTOS = "TAG_DEMO_PHOTOS";
 
@@ -77,6 +78,10 @@ public class LocalResourceLoader {
         return (Bitmap) mResources.get(TAG_DEFAULT_THUMBNAIL);
     }
 
+    public String getDefaultText() {
+        return (String) mResources.get(TAG_DEFAULT_TEXT);
+    }
+
     public Map<String, Bitmap> getDemoPhotos() {
         Map<String, Bitmap> m = new HashMap<String, Bitmap>();
         m.putAll((Map<? extends String, ? extends Bitmap>) mResources.get(TAG_DEMO_PHOTOS));
@@ -103,6 +108,8 @@ public class LocalResourceLoader {
             mResources.put(TAG_DEFAULT_PHOTO, defaultPhoto);
 
             mResources.put(TAG_DEFAULT_THUMBNAIL, BitmapHelper.toThumbnail(defaultPhoto));
+
+            mResources.put(TAG_DEFAULT_TEXT, "");
 
             is = mAssetManager.open(CATEGORIES_FILE_NAME);
             mResources.put(TAG_CATEGORIES_JSON, IOUtils.toString(is, Charsets.UTF_8));

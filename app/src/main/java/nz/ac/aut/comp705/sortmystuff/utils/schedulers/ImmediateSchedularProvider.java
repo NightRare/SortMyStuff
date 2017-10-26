@@ -28,4 +28,12 @@ public class ImmediateSchedularProvider implements ISchedulerProvider {
     public Scheduler ui() {
         return Schedulers.immediate();
     }
+
+    @NonNull
+    @Override
+    public Scheduler newThread() {
+        return Schedulers.newThread();
+    }
+
+
 }

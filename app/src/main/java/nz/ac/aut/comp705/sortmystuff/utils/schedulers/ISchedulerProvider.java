@@ -4,10 +4,6 @@ import android.support.annotation.NonNull;
 
 import rx.Scheduler;
 
-/**
- * Created by YuanY on 2017/9/23.
- */
-
 public interface ISchedulerProvider {
 
     @NonNull
@@ -18,4 +14,7 @@ public interface ISchedulerProvider {
 
     @NonNull
     Scheduler ui();
+
+    @NonNull
+    Scheduler newThread();
 }

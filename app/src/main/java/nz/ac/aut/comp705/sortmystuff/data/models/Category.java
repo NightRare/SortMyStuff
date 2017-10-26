@@ -163,9 +163,13 @@ public class Category {
         checkNotNull(assetId);
 
         List<FDetail> clone = new ArrayList<>();
+
+        int index = 0;
         for (Detail d : details) {
             FDetail fDetail = FDetail.fromDetail(duplicateDetail(assetId, d));
+            fDetail.setPosition(index);
             clone.add(fDetail);
+            index++;
         }
         return clone;
     }

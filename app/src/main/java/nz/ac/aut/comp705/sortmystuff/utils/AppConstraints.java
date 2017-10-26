@@ -28,6 +28,10 @@ public class AppConstraints {
 
     public final static int TEXTDETAIL_FIELD_CAP = 400;
 
+    public final static int DETAIL_IMAGE_WIDTH = 1024;
+
+    public final static int DETAIL_IMAGE_LENGTH = 1024;
+
     //********************************************
     // IDataManager
     //********************************************
