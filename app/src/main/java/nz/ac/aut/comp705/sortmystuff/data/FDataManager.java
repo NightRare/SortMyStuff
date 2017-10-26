@@ -301,7 +301,7 @@ public class FDataManager implements IDataManager {
             FAsset from = mCachedAssets.get(asset.getContainerId());
             FAsset to = mCachedAssets.get(newContainerId);
 
-            if(asset == null || from == null || to == null) return;
+            if (asset == null || from == null || to == null) return;
 
             if (isParentOf(asset, to) || !asset.move(from, to)) {
                 Log.e(getClass().getName(), "move asset failed, asset id: " + asset.getId()
@@ -325,7 +325,7 @@ public class FDataManager implements IDataManager {
                     .subscribeOn(mSchedulerProvider.io());
 
             Observable.zip(assetObservable, fromObservable, toObservable, (asset, from, to) -> {
-                if(asset == null || from == null || to == null) return null;
+                if (asset == null || from == null || to == null) return null;
 
                 if (isParentOf(asset, to) || !asset.move(from, to)) {
                     Log.e(getClass().getName(), "move asset failed, asset id: " + asset.getId()
@@ -832,7 +832,13 @@ public class FDataManager implements IDataManager {
 
         @Override
         public void onAssetChanged(FAsset asset) {
-            LoggedAction updateCache = executedFromLog -> mCachedAssets.put(asset.getId(), asset);
+            LoggedAction updateCache = executedFromLog -> {
+                FAsset cachedOne = mCachedAssets.get(asset.getId());
+                if (cachedOne == null) return;
+
+                cachedOne.overwrittenBy(asset);
+            };
+
             if (mDirtyCachedAssets) {
                 mActionsQueue.add(updateCache);
             } else {
@@ -869,8 +875,7 @@ public class FDataManager implements IDataManager {
 
                 for (FDetail d : mCachedDetails.get(detail.getAssetId())) {
                     if (d.getId().equals(detail.getId())) {
-                        if (!d.getModifyTimestamp().equals(detail.getModifyTimestamp()))
-                            d.overwrittenBy(detail);
+                        d.overwrittenBy(detail);
                         break;
                     }
                 }

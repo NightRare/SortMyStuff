@@ -183,6 +183,21 @@ public final class FAsset implements IAsset {
         return map;
     }
 
+    @Exclude
+    public void overwrittenBy(FAsset source) {
+        checkNotNull(source, "The source asset cannot be null.");
+        id = source.getId();
+        name = source.getName();
+        containerId = source.getContainerId();
+        contentIds = source.getContentIds();
+        categoryType = source.getCategoryType();
+        createTimestamp = source.getCreateTimestamp();
+        modifyTimestamp = source.getModifyTimestamp();
+        recycled = source.isRecycled();
+        detailIds = source.getDetailIds();
+        thumbnail = source.getThumbnail();
+    }
+
     //endregion
 
     //region ACCESSORS
