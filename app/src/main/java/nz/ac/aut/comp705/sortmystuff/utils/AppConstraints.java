@@ -1,9 +1,5 @@
 package nz.ac.aut.comp705.sortmystuff.utils;
 
-/**
- * Created by Vince on 2017/4/24.
- */
-
 public class AppConstraints {
 
     //********************************************
@@ -41,5 +37,4 @@ public class AppConstraints {
     //********************************************
     // IDataRepostiory
     //********************************************
-    public static final long MAX_DOWNLOAD_BYTES = 20 * 1024 * 1024; //50MB
 }

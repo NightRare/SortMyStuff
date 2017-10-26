@@ -36,7 +36,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static nz.ac.aut.comp705.sortmystuff.data.models.FAsset.ASSET_CONTAINERID;
 import static nz.ac.aut.comp705.sortmystuff.data.models.FAsset.ASSET_CONTENTIDS;
 import static nz.ac.aut.comp705.sortmystuff.data.models.FAsset.ASSET_MODIFYTIMESTAMP;
-import static nz.ac.aut.comp705.sortmystuff.data.models.FAsset.ASSET_NAME;
 import static nz.ac.aut.comp705.sortmystuff.data.models.FAsset.ASSET_RECYCLED;
 import static nz.ac.aut.comp705.sortmystuff.data.models.FAsset.ASSET_THUMBNAIL;
 import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.ROOT_ASSET_ID;
@@ -186,7 +185,7 @@ public class FDataManager implements IDataManager {
         }
         mRemoteRepo.addOrUpdateAsset(asset, mOnAssetUpdated);
 
-        LoggedAction updateCacheData = () -> {
+        LoggedAction updateCacheData = executedFromLog -> {
             mCachedAssets.get(containerId).addContentId(asset.getId());
             mCachedAssets.put(asset.getId(), asset);
         };
@@ -201,7 +200,7 @@ public class FDataManager implements IDataManager {
                         mActionsQueue.add(updateCacheData);
                     });
         } else {
-            updateCacheData.execute();
+            updateCacheData.execute(false);
             mRemoteRepo.addOrUpdateAsset(mCachedAssets.get(containerId), mOnAssetUpdated);
         }
 
@@ -258,21 +257,32 @@ public class FDataManager implements IDataManager {
         Preconditions.checkArgument(!newName.replaceAll(" ", "").isEmpty());
         Preconditions.checkArgument(newName.length() < AppConstraints.ASSET_NAME_CAP);
 
-        LoggedAction updateAsset = () -> mCachedAssets.get(assetId).setName(newName);
+        LoggedAction updateAsset = executedFromLog -> {
+            FAsset asset = mCachedAssets.get(assetId);
+            if (asset == null) return;
+
+            asset.setName(newName);
+            if (!executedFromLog)
+                mRemoteRepo.addOrUpdateAsset(asset, mOnAssetUpdated);
+        };
 
         if (mDirtyCachedAssets) {
-            mActionsQueue.add(updateAsset);
+            mRemoteRepo.retrieveAsset(assetId)
+                    .doOnNext(asset -> {
+                        if (asset == null) return;
+                        asset.setName(newName);
+                        mRemoteRepo.addOrUpdateAsset(asset, mOnAssetUpdated);
+                    })
+                    .subscribe(asset -> {
+                        if (asset != null)
+                            mActionsQueue.add(updateAsset);
+                    });
 
         } else {
-            updateAsset.execute();
+            updateAsset.execute(false);
         }
-
-        mRemoteRepo.updateAsset(assetId, ASSET_NAME, newName, mOnAssetUpdated);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Deprecated
     @Override
     public void moveAsset(Asset asset, String newContainerId) {
@@ -286,44 +296,57 @@ public class FDataManager implements IDataManager {
         checkNotNull(assetId);
         checkNotNull(newContainerId);
 
-        if (mDirtyCachedAssets) {
-            mRemoteRepo.retrieveAsset(assetId)
-                    .subscribeOn(mSchedulerProvider.io())
-                    .flatMap(asset -> mRemoteRepo.retrieveAsset(asset.getContainerId()))
-                    .zipWith(mRemoteRepo.retrieveAsset(assetId), (from, asset) -> {
-                        List<FAsset> args = new ArrayList<>();
-                        args.add(0, asset);
-                        args.add(1, from);
-                        return args;
-                    })
-                    .zipWith(mRemoteRepo.retrieveAsset(newContainerId), (args, to) -> {
-                        args.add(2, to);
-                        return args;
-                    })
-                    .subscribe(
-                            //onNext
-                            args -> {
-                                FAsset asset = args.get(0);
-                                FAsset from = args.get(1);
-                                FAsset to = args.get(2);
-
-                                moveAssetAndUpdateRemoteRepo(asset, from, to);
-                                mActionsQueue.add(() -> moveAssetUpdateCache(asset, from, to));
-                            }
-                    );
-
-        } else {
+        LoggedAction moveAsset = executedFromLog -> {
             FAsset asset = mCachedAssets.get(assetId);
             FAsset from = mCachedAssets.get(asset.getContainerId());
             FAsset to = mCachedAssets.get(newContainerId);
-            moveAssetAndUpdateRemoteRepo(asset, from, to);
-            moveAssetUpdateCache(asset, from, to);
+
+            if(asset == null || from == null || to == null) return;
+
+            if (isParentOf(asset, to) || !asset.move(from, to)) {
+                Log.e(getClass().getName(), "move asset failed, asset id: " + asset.getId()
+                        + " container id: " + to.getId());
+                return;
+            }
+
+            if (!executedFromLog)
+                moveAssetUpdateRemoteRepo(asset, from, to);
+        };
+
+        if (mDirtyCachedAssets) {
+            Observable<FAsset> assetObservable = mRemoteRepo.retrieveAsset(assetId)
+                    .subscribeOn(mSchedulerProvider.io());
+
+            Observable<FAsset> fromObservable = mRemoteRepo.retrieveAsset(assetId)
+                    .subscribeOn(mSchedulerProvider.io())
+                    .flatMap(asset -> mRemoteRepo.retrieveAsset(asset.getContainerId()));
+
+            Observable<FAsset> toObservable = mRemoteRepo.retrieveAsset(newContainerId)
+                    .subscribeOn(mSchedulerProvider.io());
+
+            Observable.zip(assetObservable, fromObservable, toObservable, (asset, from, to) -> {
+                if(asset == null || from == null || to == null) return null;
+
+                if (isParentOf(asset, to) || !asset.move(from, to)) {
+                    Log.e(getClass().getName(), "move asset failed, asset id: " + asset.getId()
+                            + " container id: " + to.getId());
+                    return null;
+                }
+
+                moveAssetUpdateRemoteRepo(asset, from, to);
+                return null;
+            }).subscribe(o -> mActionsQueue.add(moveAsset));
+
+        } else {
+            moveAsset.execute(false);
         }
     }
 
     @Override
     public void recycleAssetRecursively(String assetId) {
         checkNotNull(assetId);
+
+        if (assetId.equals(ROOT_ASSET_ID)) return;
 
         if (mDirtyCachedAssets) {
             mRemoteRepo.retrieveAsset(assetId)
@@ -507,7 +530,7 @@ public class FDataManager implements IDataManager {
 
     interface LoggedAction {
 
-        void execute();
+        void execute(boolean executedFromLog);
     }
 
     //region PRIVATE STUFF
@@ -528,7 +551,7 @@ public class FDataManager implements IDataManager {
                 .doOnCompleted(() -> {
                     // apply logged changes to the cache as the caching has ended
                     while (!mActionsQueue.isEmpty()) {
-                        mActionsQueue.remove(0).execute();
+                        mActionsQueue.remove(0).execute(true);
                     }
                     mDirtyCachedAssets = false;
                 })
@@ -589,11 +612,12 @@ public class FDataManager implements IDataManager {
     }
 
     private void updateAssetModifyTimestamp(String assetId, long modifyTimestamp) {
-        LoggedAction updateModifyTimestamp = () -> mCachedAssets.get(assetId).setModifyTimestamp(modifyTimestamp);
+        LoggedAction updateModifyTimestamp = executedFromLog ->
+                mCachedAssets.get(assetId).setModifyTimestamp(modifyTimestamp);
         if (mDirtyCachedAssets) {
             mActionsQueue.add(updateModifyTimestamp);
         } else {
-            updateModifyTimestamp.execute();
+            updateModifyTimestamp.execute(false);
         }
         mRemoteRepo.updateAsset(assetId, ASSET_MODIFYTIMESTAMP, modifyTimestamp, mOnAssetUpdated);
     }
@@ -634,37 +658,38 @@ public class FDataManager implements IDataManager {
         return results;
     }
 
-    private void moveAssetAndUpdateRemoteRepo(FAsset asset, FAsset from, FAsset to) {
-        if (isParentOf(asset, to) || !asset.move(from, to)) {
-            Log.e(getClass().getName(), "move asset failed, asset id: " + asset.getId()
-                    + " container id: " + to.getId());
-            return;
-        }
-
-        // update remote repo
+    private void moveAssetUpdateRemoteRepo(FAsset asset, FAsset from, FAsset to) {
         mRemoteRepo.updateAsset(asset.getId(), ASSET_CONTAINERID, asset.getContainerId(), mOnAssetUpdated);
         mRemoteRepo.updateAsset(from.getId(), ASSET_CONTENTIDS, from.getContentIds(), mOnAssetUpdated);
         mRemoteRepo.updateAsset(to.getId(), ASSET_CONTENTIDS, to.getContentIds(), mOnAssetUpdated);
     }
 
-    private void moveAssetUpdateCache(FAsset asset, FAsset from, FAsset to) {
-        mCachedAssets.put(asset.getId(), asset);
-        mCachedAssets.put(from.getId(), from);
-        mCachedAssets.put(to.getId(), to);
-    }
-
     private void recycleAsset(FAsset asset) {
         checkNotNull(asset);
 
-        LoggedAction recycleAction = () -> {
+        LoggedAction recycleAction = executedFromLog -> {
+            // the containerId of the recycled asset is not removed on purpose
+            // in case it needs to be restored in the future
+            FAsset container = mCachedAssets.get(asset.getContainerId());
+            container.removeContentId(asset.getId());
             mCachedAssets.get(asset.getId()).setRecycled(true);
             mCachedRecycledAssets.put(asset.getId(), mCachedAssets.remove(asset.getId()));
+
+            if (!executedFromLog)
+                mRemoteRepo.updateAsset(container.getId(), ASSET_CONTENTIDS,
+                        container.getContentIds(), mOnAssetUpdated);
         };
 
         if (mDirtyCachedAssets) {
-            mActionsQueue.add(recycleAction);
+            mRemoteRepo.retrieveAsset(asset.getContainerId())
+                    .doOnNext(container -> {
+                        container.removeContentId(asset.getId());
+                        mRemoteRepo.updateAsset(container.getId(),
+                                ASSET_CONTENTIDS, container.getContentIds(), mOnAssetUpdated);
+                    })
+                    .subscribe(container -> mActionsQueue.add(recycleAction));
         } else {
-            recycleAction.execute();
+            recycleAction.execute(false);
         }
 
         mRemoteRepo.updateAsset(asset.getId(), ASSET_RECYCLED, true, mOnAssetUpdated);
@@ -686,7 +711,7 @@ public class FDataManager implements IDataManager {
                 mResLoader.getDefaultThumbnail() : BitmapHelper.toThumbnail(originalPhoto);
         String thumbnailDataString = usingDefaultPhoto ? null : BitmapHelper.toString(thumbnail);
 
-        LoggedAction updateThumbnail = () -> {
+        LoggedAction updateThumbnail = executedFromLog -> {
             FAsset asset = mCachedAssets.get(assetId);
             if (asset != null) {
                 asset.setThumbnail(thumbnail, usingDefaultPhoto);
@@ -696,7 +721,7 @@ public class FDataManager implements IDataManager {
         if (mDirtyCachedAssets) {
             mActionsQueue.add(updateThumbnail);
         } else {
-            updateThumbnail.execute();
+            updateThumbnail.execute(false);
         }
 
         mRemoteRepo.updateAsset(assetId, ASSET_THUMBNAIL, thumbnailDataString, mOnAssetUpdated);
@@ -807,11 +832,11 @@ public class FDataManager implements IDataManager {
 
         @Override
         public void onAssetChanged(FAsset asset) {
-            LoggedAction updateCache = () -> mCachedAssets.put(asset.getId(), asset);
+            LoggedAction updateCache = executedFromLog -> mCachedAssets.put(asset.getId(), asset);
             if (mDirtyCachedAssets) {
                 mActionsQueue.add(updateCache);
             } else {
-                updateCache.execute();
+                updateCache.execute(false);
             }
         }
 
