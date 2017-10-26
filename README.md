@@ -3,6 +3,8 @@
 ## The Project
 This project was created as the culmination of our work for the paper Software Development Practice throughout Semester 1, 2017 at Auckland University of Technology. The aim of the project was for us to be comfortable with collaboration in an Agile development environment using the Scrum framework. 
 
+*This project has been extended as [Yuan's](https://github.com/NightRare) individual work since commit #167 fa845b9.*
+
 ## The Application
 **SortMyStuff** is a personal inventory app made for the Android OS. Our app aims to help people efficiently organise and index their personal belongings. 
 
@@ -35,9 +37,15 @@ This project was created as the culmination of our work for the paper Software D
 
 ![Take photo for an asset](https://i.imgur.com/Nll9XP9.gif)
 
-### Dependencies
+## Cloud Service
 
+Firebase (Realtime Database)
+
+## Dependencies
+
+- [Gson](https://github.com/google/gson)
 - [RxJava](https://github.com/ReactiveX/RxJava/tree/1.x)
+- [RxFirebase](https://github.com/nmoskalenko/RxFirebase)
 - The photo taking feature is dependent on [SquareCamera by boxme](https://github.com/boxme/SquareCamera.git)
 
 ## Declaration of the use of resources
