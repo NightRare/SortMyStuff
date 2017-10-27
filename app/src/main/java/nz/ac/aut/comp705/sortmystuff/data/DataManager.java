@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import nz.ac.aut.comp705.sortmystuff.data.local.IFileHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
@@ -44,7 +45,6 @@ import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.ROOT_ASSET_ID;
 
 public class DataManager implements IDataManager {
 
-
     public DataManager(IDataRepository remoteRepo, IFileHelper fileHelper, LocalResourceLoader resLoader,
                        ISchedulerProvider schedulerProvider) {
         mRemoteRepo = checkNotNull(remoteRepo);
@@ -70,9 +70,9 @@ public class DataManager implements IDataManager {
             return mRemoteRepo.retrieveAsset(ROOT_ASSET_ID)
                     .map(asset -> {
                         if (asset == null) {
-                            return (IAsset) createRootAsset();
+                            return createRootAsset();
                         } else {
-                            return (IAsset) asset;
+                            return asset;
                         }
                     });
         } else {
@@ -85,8 +85,15 @@ public class DataManager implements IDataManager {
 
         if (mDirtyCachedAssets || mCachedAssets == null) {
             return mRemoteRepo.retrieveAllAssets()
-                    .flatMap(Observable::from)
-                    .filter(fAsset -> !fAsset.isRecycled())
+                    .flatMap(assets -> {
+                        // if root asset is not ready yet
+                        if (assets.isEmpty()) {
+                            return getRootAsset();
+                        } else {
+                            return Observable.from(assets);
+                        }
+                    })
+                    .filter(asset -> !asset.isRecycled())
                     .map(fAsset -> (IAsset) fAsset)
                     .toList();
         }
@@ -121,9 +128,14 @@ public class DataManager implements IDataManager {
         }
 
         return loadAndCacheDetails(assetId)
-                .flatMap(Observable::from)
+                .flatMap(details -> {
+                    if (details == null)
+                        throw new NoSuchElementException();
+                    return Observable.from(details);
+                })
                 .map(detail -> (IDetail) detail)
-                .toList();
+                .toList()
+                .onErrorReturn(throwable -> null);
     }
 
     @Override
@@ -150,21 +162,21 @@ public class DataManager implements IDataManager {
                     .flatMap(asset -> {
                         if (asset == null) {
                             // if the root asset has not been initialised/stored yet
-                            if (assetId.equals(ROOT_ASSET_ID)) {
+                            if (assetId.equals(ROOT_ASSET_ID))
                                 return Observable.from(new ArrayList<>());
-                            } else
-                                throw new IllegalArgumentException("Asset not exists, id: " + assetId);
+                            else
+                                throw new NoSuchElementException();
                         }
-
                         return Observable.from(asset.getContentIds());
                     })
                     .flatMap(this::getAsset)
-                    .toList();
+                    .toList()
+                    .onErrorReturn(throwable -> null);
         }
 
         FAsset container = mCachedAssets.get(assetId);
         if (container == null)
-            throw new IllegalArgumentException("Asset not exists, id: " + assetId);
+            return Observable.just(null);
 
         List<IAsset> contents = new ArrayList<>();
         for (String childId : container.getContentIds()) {
@@ -189,10 +201,11 @@ public class DataManager implements IDataManager {
                         }
                         FAsset asset = allNonRecycledAssets.get(assetId);
                         if (asset == null)
-                            throw new IllegalArgumentException("Asset not exists, id: " + assetId);
+                            throw new NoSuchElementException();
 
                         return getParentAssetsList(asset, rootToChildren, allNonRecycledAssets);
-                    });
+                    })
+                    .onErrorReturn(throwable -> null);
         }
 
         FAsset asset = mCachedAssets.get(assetId);
@@ -229,8 +242,14 @@ public class DataManager implements IDataManager {
         mRemoteRepo.addOrUpdateAsset(asset, mOnAssetUpdated);
 
         LoggedAction updateCacheData = executedFromLog -> {
-            mCachedAssets.get(containerId).addContentId(asset.getId());
+            FAsset container = mCachedAssets.get(containerId);
+            if (container == null) return;
+
+            container.addContentId(asset.getId());
             mCachedAssets.put(asset.getId(), asset);
+
+            if (!executedFromLog)
+                mRemoteRepo.addOrUpdateAsset(container, mOnAssetUpdated);
         };
 
         if (mDirtyCachedAssets) {
@@ -238,13 +257,13 @@ public class DataManager implements IDataManager {
             mRemoteRepo.retrieveAsset(containerId)
                     .subscribeOn(mSchedulerProvider.io())
                     .subscribe(container -> {
+                        if (container == null) return;
                         container.addContentId(asset.getId());
                         mRemoteRepo.addOrUpdateAsset(container, mOnAssetUpdated);
                         mActionsQueue.add(updateCacheData);
                     });
         } else {
             updateCacheData.execute(false);
-            mRemoteRepo.addOrUpdateAsset(mCachedAssets.get(containerId), mOnAssetUpdated);
         }
 
         return asset.getId();
@@ -261,11 +280,13 @@ public class DataManager implements IDataManager {
         Preconditions.checkArgument(!newName.replaceAll(" ", "").isEmpty());
         Preconditions.checkArgument(newName.length() < AppConstraints.ASSET_NAME_CAP);
 
+        long modifyTimestamp = System.currentTimeMillis();
         LoggedAction updateAsset = executedFromLog -> {
             FAsset asset = mCachedAssets.get(assetId);
             if (asset == null) return;
 
             asset.setName(newName);
+            asset.setModifyTimestamp(modifyTimestamp);
             if (!executedFromLog)
                 mRemoteRepo.addOrUpdateAsset(asset, mOnAssetUpdated);
         };
@@ -275,13 +296,13 @@ public class DataManager implements IDataManager {
                     .doOnNext(asset -> {
                         if (asset == null) return;
                         asset.setName(newName);
+                        asset.setModifyTimestamp(modifyTimestamp);
                         mRemoteRepo.addOrUpdateAsset(asset, mOnAssetUpdated);
                     })
                     .subscribe(asset -> {
                         if (asset != null)
                             mActionsQueue.add(updateAsset);
                     });
-
         } else {
             updateAsset.execute(false);
         }
@@ -292,12 +313,17 @@ public class DataManager implements IDataManager {
         checkNotNull(assetId);
         checkNotNull(newContainerId);
 
+        if (assetId.equals(ROOT_ASSET_ID))
+            return;
+
         LoggedAction moveAsset = executedFromLog -> {
             FAsset asset = mCachedAssets.get(assetId);
-            FAsset from = mCachedAssets.get(asset.getContainerId());
-            FAsset to = mCachedAssets.get(newContainerId);
+            if (asset == null) return;
 
-            if (asset == null || from == null || to == null) return;
+            FAsset from = mCachedAssets.get(asset.getContainerId());
+
+            FAsset to = mCachedAssets.get(newContainerId);
+            if (to == null) return;
 
             if (isParentOf(asset, to) || !asset.move(from, to)) {
                 Log.e(getClass().getName(), "move asset failed, asset id: " + asset.getId()
@@ -321,7 +347,7 @@ public class DataManager implements IDataManager {
                     .subscribeOn(mSchedulerProvider.io());
 
             Observable.zip(assetObservable, fromObservable, toObservable, (asset, from, to) -> {
-                if (asset == null || from == null || to == null) return null;
+                if (asset == null || from == null || to == null) throw new NoSuchElementException();
 
                 if (isParentOf(asset, to) || !asset.move(from, to)) {
                     Log.e(getClass().getName(), "move asset failed, asset id: " + asset.getId()
@@ -331,7 +357,13 @@ public class DataManager implements IDataManager {
 
                 moveAssetUpdateRemoteRepo(asset, from, to);
                 return null;
-            }).subscribe(o -> mActionsQueue.add(moveAsset));
+            }).subscribe(
+                    //onNext
+                    o -> mActionsQueue.add(moveAsset),
+                    //onError, do nothing
+                    throwable -> {
+                    }
+            );
 
         } else {
             moveAsset.execute(false);
@@ -347,15 +379,22 @@ public class DataManager implements IDataManager {
         if (mDirtyCachedAssets) {
             mRemoteRepo.retrieveAsset(assetId)
                     .subscribeOn(mSchedulerProvider.io())
-                    .flatMap(this::recycleAssetGetAllChildrenAssets)
+                    .flatMap(
+                            asset -> {
+                                if (asset == null) throw new NoSuchElementException();
+                                return recycleAssetGetAllChildrenAssets(asset);
+                            }
+                    )
                     .subscribe(
                             //onNext
                             this::recycleAsset,
-                            //onError
-                            mOnAssetUpdated::onFailure
+                            //onError, do nothing
+                            throwable -> {
+                            }
                     );
         } else {
             FAsset asset = mCachedAssets.get(assetId);
+            if (asset == null) return;
 
             if (!asset.getContentIds().isEmpty()) {
                 for (String id : asset.getContentIds()) {
@@ -385,7 +424,7 @@ public class DataManager implements IDataManager {
 
         if (mCachedDetails.containsKey(assetId)) {
             for (FDetail detail : mCachedDetails.get(assetId)) {
-                if (detail.getId().equals(detailId)) {
+                if (detail.getId().equals(detailId) && detail.getAssetId().equals(assetId)) {
                     updateDetailAndUpdateInRemote(detail, newLabel, newField, false, modifyTimestamp);
                     updateAssetModifyTimestamp(detail.getAssetId(), modifyTimestamp);
                     break;
@@ -395,6 +434,8 @@ public class DataManager implements IDataManager {
             mRemoteRepo.retrieveDetail(detailId)
                     .subscribeOn(mSchedulerProvider.io())
                     .doOnNext(detail -> {
+                        if (detail == null || !detail.getAssetId().equals(assetId))
+                            return;
                         updateDetailAndUpdateInRemote(detail, newLabel, newField, false, modifyTimestamp);
                         updateAssetModifyTimestamp(detail.getAssetId(), modifyTimestamp);
                     })
@@ -474,8 +515,10 @@ public class DataManager implements IDataManager {
 
         return mRemoteRepo.retrieveDetails(assetId)
                 .doOnNext(details -> {
-                    mCachedDetails.put(assetId, details);
-                    mCachedDetailsKeyList.add(assetId);
+                    if (details != null) {
+                        mCachedDetails.put(assetId, details);
+                        mCachedDetailsKeyList.add(assetId);
+                    }
                 });
     }
 
@@ -620,7 +663,7 @@ public class DataManager implements IDataManager {
 
         if (mCachedDetails.containsKey(assetId)) {
             for (FDetail detail : mCachedDetails.get(assetId)) {
-                if (detail.getId().equals(detailId)) {
+                if (detail.getId().equals(detailId) && detail.getAssetId().equals(assetId)) {
                     if (detail.getType().equals(DetailType.Text) || detail.getType().equals(DetailType.Date)) {
                         updateDetailAndUpdateInRemote(detail, newLabel, mResLoader.getDefaultText(),
                                 true, modifyTimestamp);
@@ -636,6 +679,8 @@ public class DataManager implements IDataManager {
             mRemoteRepo.retrieveDetail(detailId)
                     .subscribeOn(mSchedulerProvider.io())
                     .doOnNext(detail -> {
+                        if (detail == null || !detail.getAssetId().equals(assetId))
+                            return;
                         if (detail.getType().equals(DetailType.Text) || detail.getType().equals(DetailType.Date)) {
                             updateDetailAndUpdateInRemote(detail, newLabel, mResLoader.getDefaultText(),
                                     true, modifyTimestamp);
@@ -676,11 +721,12 @@ public class DataManager implements IDataManager {
         }
     }
 
-    private class OnAssetsDataChangeListeners implements OnAssetsDataChangeCallback {
+    private class OnAssetsDataChangeListeners implements IDataRepository.OnAssetsDataChangeCallback {
 
         @Override
         public void onAssetAdded(FAsset asset) {
-            putAssetIntoCacheObjects(asset);
+            if (!mCachedAssets.containsKey(asset.getId()))
+                putAssetIntoCacheObjects(asset);
         }
 
         @Override
@@ -720,14 +766,14 @@ public class DataManager implements IDataManager {
         }
         if (newField != null) {
             checkArgument(type.getFieldClass().equals(newField.getClass()), "Incorrect type of newField.");
-            if(type.equals(DetailType.Text) || type.equals(DetailType.Date)) {
+            if (type.equals(DetailType.Text) || type.equals(DetailType.Date)) {
                 checkArgument(((String) newField).length() <= AppConstraints.TEXTDETAIL_FIELD_CAP,
                         "Please keep the length of the text within " + AppConstraints.TEXTDETAIL_FIELD_CAP + " characters");
             }
         }
     }
 
-    private class OnDetailsDataChangeListeners implements OnDetailsDataChangeCallback {
+    private class OnDetailsDataChangeListeners implements IDataRepository.OnDetailsDataChangeCallback {
 
         @Override
         public void onDetailAdded(FDetail detail) {

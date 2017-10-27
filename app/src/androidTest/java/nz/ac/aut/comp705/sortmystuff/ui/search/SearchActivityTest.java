@@ -10,7 +10,6 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
 
-import org.apache.commons.io.FileUtils;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
@@ -20,12 +19,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.io.File;
-import java.io.IOException;
-
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
+import nz.ac.aut.comp705.sortmystuff.di.IFactory;
 import nz.ac.aut.comp705.sortmystuff.ui.main.SwipeActivity;
 
 import static android.support.test.espresso.Espresso.onData;
@@ -53,8 +50,20 @@ public class SearchActivityTest {
         mContext = InstrumentationRegistry.getTargetContext();
         mApp = (SortMyStuffApp) mContext.getApplicationContext();
         mActivity = swipeActivityTestRule.getActivity();
-        mDataManager = mApp.getFactory().getDataManager();
+        mFactory = mApp.getFactory();
+        if (!mFactory.getUserId().equals("androidTest-user")) {
+            mFactory.setUserId("androidTest-user");
+            mActivity.finish();
+            mActivity.startActivity(mActivity.getIntent());
+        }
+        mDataManager = mFactory.getDataManager();
+
         cleanAssetsData();
+
+        if (firstRun) {
+            SystemClock.sleep(2000);
+            firstRun = false;
+        }
 
         addAsset(ONE_RESULT_SEARCH_ITEM);
         addAsset(TWO_RESULT_SEARCH_ITEM_1);
@@ -77,14 +86,14 @@ public class SearchActivityTest {
     //region TESTS
 
     @Test
-    public void loadSearch_checkComponents(){
+    public void loadSearch_checkComponents() {
         //check if Search UI components (toolbar, and search bar, search button) are there
         onView(withId(R.id.search_toolbar)).check(matches(isDisplayed()));
         onView(withId(R.id.search_btn)).check(matches(isDisplayed()));
     }
 
     @Test
-    public void search_oneResult(){
+    public void search_oneResult() {
         search(ONE_RESULT_SEARCH_ITEM);
         //Orange should display in search results
         onData(anything()).inAdapterView(withId(R.id.result_list))
@@ -93,33 +102,26 @@ public class SearchActivityTest {
     }
 
     @Test
-    public void search_multipleResults(){
+    public void search_multipleResults() {
         search(TWO_RESULT_SEARCH_PREFIX);
         //there should be two items in result list: Apple and Apricot
 
         onView(withChild(withText(TWO_RESULT_SEARCH_ITEM_1))).check(matches(isDisplayed()));
         onView(withChild(withText(TWO_RESULT_SEARCH_ITEM_2))).check(matches(isDisplayed()));
-
-//        onData(anything()).inAdapterView(withId(R.id.result_list))
-//                .atPosition(0).onChildView(withId(R.id.search_result_title))
-//                .check(matches());
-//        onData(anything()).inAdapterView(withId(R.id.result_list))
-//                .atPosition(1).onChildView(withId(R.id.search_result_title))
-//                .check(matches(withText(TWO_RESULT_SEARCH_ITEM_2)));
     }
 
     @Test
-    public void search_noResult(){
+    public void search_noResult() {
         search(NO_RESULT_SEARCH_KEYWORD);
         //No results shown, result list should be empty
-        onView (withId (R.id.result_list)).check(matches(withListSize(0)));
+        onView(withId(R.id.result_list)).check(matches(withListSize(0)));
     }
 
     @Test
-    public void search_noKeyword(){
+    public void search_noKeyword() {
         search("");
         //Result list should be empty
-        onView (withId (R.id.result_list)).check(matches(withListSize(0)));
+        onView(withId(R.id.result_list)).check(matches(withListSize(0)));
     }
 
     //endregion
@@ -127,16 +129,10 @@ public class SearchActivityTest {
     //region PRIVATE STUFF
 
     private void cleanAssetsData() {
-        File userDir = new File(
-                mApp.getFilesDir().getPath() + File.separator + "default-user");
 
-        try {
-            FileUtils.cleanDirectory(userDir);
-            mDataManager.refreshFromLocal();
-            mDataManager.getRoot();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        mFactory.getDatabaseReference().removeValue();
+        mDataManager.reCacheFromRemoteDataSource();
+        mDataManager.getRootAsset().subscribe();
     }
 
     private void addAsset(String assetName) {
@@ -146,20 +142,22 @@ public class SearchActivityTest {
         onView(withText(R.string.add_asset_confirm_button)).perform(click());
     }
 
-    private void search(String keyword){
+    private void search(String keyword) {
         onView(isAssignableFrom(EditText.class)).perform(typeText(keyword));
         // wait for the animation
         SystemClock.sleep(500);
     }
 
-    private static Matcher<View> withListSize (final int size) {
+    private static Matcher<View> withListSize(final int size) {
         return new TypeSafeMatcher<View>() {
-            @Override public boolean matchesSafely (final View view) {
-                return ((ListView) view).getCount () == size;
+            @Override
+            public boolean matchesSafely(final View view) {
+                return ((ListView) view).getCount() == size;
             }
 
-            @Override public void describeTo (final Description description) {
-                description.appendText ("ListView should have " + size + " items");
+            @Override
+            public void describeTo(final Description description) {
+                description.appendText("ListView should have " + size + " items");
             }
         };
     }
@@ -168,6 +166,9 @@ public class SearchActivityTest {
     private SortMyStuffApp mApp;
     private Activity mActivity;
     private IDataManager mDataManager;
+    private IFactory mFactory;
+
+    private boolean firstRun = true;
 
     private static final String ONE_RESULT_SEARCH_ITEM = "Orange";
     private static final String TWO_RESULT_SEARCH_PREFIX = "Ap";

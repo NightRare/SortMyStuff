@@ -6,6 +6,7 @@ import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +43,24 @@ public final class FAsset implements IAsset {
     public static final String ASSET_DETAILIDS = "detailIds";
     public static final String ASSET_THUMBNAIL = "thumbnail";
 
+    @Exclude
+    private static final Map<String, Class> memberClasses;
+    static {
+        Map<String, Class> aMap = new HashMap<>();
+        aMap.put(ASSET_ID, String.class);
+        aMap.put(ASSET_NAME, String.class);
+        aMap.put(ASSET_CONTAINERID, String.class);
+        aMap.put(ASSET_RECYCLED, Boolean.class);
+        aMap.put(ASSET_CONTENTIDS, List.class);
+        aMap.put(ASSET_CATEGORYTYPE, CategoryType.class);
+        aMap.put(ASSET_CREATETIMESTAMP, Long.class);
+        aMap.put(ASSET_MODIFYTIMESTAMP, Long.class);
+        aMap.put(ASSET_DETAILIDS, List.class);
+        // Bitmap is transferred into a String to store in the Database
+        aMap.put(ASSET_THUMBNAIL, String.class);
+        memberClasses = Collections.unmodifiableMap(aMap);
+    }
+
     //endregion
 
     //region DATA FIELDS
@@ -59,16 +78,16 @@ public final class FAsset implements IAsset {
     /**
      * Value of System.currentTimeMillis() when the asset is created.
      */
-    private long createTimestamp;
+    private Long createTimestamp;
 
     /**
      * Value of System.currentTimeMillis() when the asset is modified
      * changing the container and adding contents does not count as modifications
      * to the Asset.
      */
-    private long modifyTimestamp;
+    private Long modifyTimestamp;
 
-    private boolean recycled;
+    private Boolean recycled;
 
     private List<String> detailIds;
 
@@ -136,7 +155,7 @@ public final class FAsset implements IAsset {
 
     //endregion
 
-    //region TRANSFORMERS
+    //region TRANSFORMERS AND UTILS
 
     @Exclude
     public static FAsset fromMap(Map<String, Object> members) {
@@ -196,6 +215,10 @@ public final class FAsset implements IAsset {
         recycled = source.isRecycled();
         detailIds = source.getDetailIds();
         thumbnail = source.getThumbnail();
+    }
+
+    public static Class getMemberClassForDatabase(String key) {
+        return memberClasses.get(key);
     }
 
     //endregion
@@ -273,7 +296,7 @@ public final class FAsset implements IAsset {
      * @return true if is recycled
      */
     @Override
-    public boolean isRecycled() {
+    public Boolean isRecycled() {
         return recycled;
     }
 
@@ -284,7 +307,7 @@ public final class FAsset implements IAsset {
      */
     @Override
     @Exclude
-    public boolean isRoot() {
+    public Boolean isRoot() {
         return id.equals(ROOT_ASSET_ID);
     }
 
@@ -321,7 +344,6 @@ public final class FAsset implements IAsset {
 
         if (!isRoot()) {
             this.name = name;
-            updateTimeStamp();
         }
     }
 
@@ -461,16 +483,6 @@ public final class FAsset implements IAsset {
         if (name.length() > AppConstraints.ASSET_NAME_CAP)
             throw new IllegalArgumentException("The length of the name should be shorter than "
                     + AppConstraints.ASSET_NAME_CAP);
-    }
-
-
-    /**
-     * Updates the {@link #modifyTimestamp } to {@link System#currentTimeMillis()}.
-     */
-    @Exclude
-    private void updateTimeStamp() {
-        if (isRoot()) return;
-        modifyTimestamp = System.currentTimeMillis();
     }
 
     @Exclude

@@ -160,7 +160,7 @@ public final class Asset implements IAsset{
      * @return true if is recycled
      */
     @Override
-    public boolean isRecycled() {
+    public Boolean isRecycled() {
         return isRecycled;
     }
 
@@ -170,7 +170,7 @@ public final class Asset implements IAsset{
      * @return true if the asset is a root asset
      */
     @Override
-    public boolean isRoot() {
+    public Boolean isRoot() {
         return isRoot;
     }
 

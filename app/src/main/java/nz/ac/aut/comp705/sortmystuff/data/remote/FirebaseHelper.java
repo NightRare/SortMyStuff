@@ -9,11 +9,10 @@ import com.kelvinapps.rxfirebase.RxFirebaseChildEvent;
 import com.kelvinapps.rxfirebase.RxFirebaseDatabase;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
-import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.IDataRepository;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
@@ -48,6 +47,7 @@ public class FirebaseHelper implements IDataRepository {
 
     @Override
     public Observable<FAsset> retrieveAsset(String assetId) {
+        checkNotNull(assetId, "The assetId cannot be null.");
         return RxFirebaseDatabase
                 .observeSingleValueEvent(mDatabase.child(DB_ASSETS).child(checkNotNull(assetId)))
                 .map(dataSnapshot -> dataToObject(dataSnapshot, FAsset.class));
@@ -62,14 +62,21 @@ public class FirebaseHelper implements IDataRepository {
 
     @Override
     public Observable<List<FDetail>> retrieveDetails(String assetId) {
+        checkNotNull(assetId, "The assetId cannot be null.");
         return retrieveAsset(assetId)
+                .doOnNext(asset -> {
+                    if (asset == null)
+                        throw new NoSuchElementException();
+                })
                 .flatMap(asset -> Observable.from(asset.getDetailIds()))
                 .flatMap(this::retrieveDetail)
-                .toSortedList();
+                .toSortedList()
+                .onErrorReturn(throwable -> null);
     }
 
     @Override
     public Observable<FDetail> retrieveDetail(String detailId) {
+        checkNotNull(detailId, "The detailId cannot be null.");
         return RxFirebaseDatabase
                 .observeSingleValueEvent(mDatabase.child(DB_DETAILS).child(detailId))
                 .map(dataSnapshot -> dataToObject(dataSnapshot, FDetail.class));
@@ -77,7 +84,8 @@ public class FirebaseHelper implements IDataRepository {
 
     @Override
     public Observable<List<FCategory>> retrieveCategories() {
-        return null;
+        //TODO: to be implemented
+        return Observable.just(new ArrayList<>());
     }
 
     @Override
@@ -94,15 +102,35 @@ public class FirebaseHelper implements IDataRepository {
     public void addDetail(FDetail detail, OnUpdatedCallback onUpdatedCallback) {
         OnUpdatedCallback callback = onUpdatedCallback == null ? mDoNothingCallback : onUpdatedCallback;
 
-        mDatabase.child(DB_DETAILS).child(detail.getId()).setValue(detail.toMap())
-                .addOnSuccessListener(callback::onSuccess)
-                .addOnFailureListener(callback::onFailure)
-                .addOnCompleteListener(callback::onComplete);
+        retrieveDetail(checkNotNull(detail).getId())
+                .subscribeOn(mSchedulerProvider.io())
+                .doOnNext(detailFromFirebase -> {
+                    // should not update an existing record
+                    if (detailFromFirebase != null) throw new IllegalStateException();
+                })
+                .subscribe(
+                        //onNext
+                        isEmpty -> mDatabase.child(DB_DETAILS).child(detail.getId()).setValue(detail.toMap())
+                                .addOnSuccessListener(callback::onSuccess)
+                                .addOnFailureListener(callback::onFailure)
+                                .addOnCompleteListener(callback::onComplete),
+                        //onError
+                        throwable -> {
+                            callback.onFailure(throwable);
+                            callback.onComplete(null);
+                        }
+                );
     }
 
     @Override
-    public void updateAsset(String assetId, String key, Object value, OnUpdatedCallback onUpdatedCallback) {
+    public <E> void updateAsset(String assetId, String key, E value, OnUpdatedCallback onUpdatedCallback) {
         OnUpdatedCallback callback = onUpdatedCallback == null ? mDoNothingCallback : onUpdatedCallback;
+
+        if (value != null && !FAsset.getMemberClassForDatabase(key).isAssignableFrom(value.getClass())) {
+            IllegalArgumentException e = new IllegalArgumentException("Incorrect value type.");
+            callback.onFailure(e);
+            throw e;
+        }
 
         mDatabase.child(DB_ASSETS).child(checkNotNull(assetId)).child(checkNotNull(key))
                 .setValue(value)
@@ -140,15 +168,17 @@ public class FirebaseHelper implements IDataRepository {
     }
 
     @Override
-    public void setOnDataChangeCallback(IDataManager.onDataChangeCallback onDataChangeCallback) {
-        checkNotNull(onDataChangeCallback);
-        if (onDataChangeCallback instanceof IDataManager.OnAssetsDataChangeCallback) {
-            mOnAssetsDataChangeCallback = (IDataManager.OnAssetsDataChangeCallback) onDataChangeCallback;
-            registerAssetsDataChangeListener();
+    public void setOnDataChangeCallback(OnDataChangeCallback onDataChangeCallback) {
+        if (onDataChangeCallback == null) {
+            mOnAssetsDataChangeCallback = null;
+            mOnDetailsDataChangeCallback = null;
+        } else if (onDataChangeCallback instanceof OnAssetsDataChangeCallback) {
+            mOnAssetsDataChangeCallback = (OnAssetsDataChangeCallback) onDataChangeCallback;
+            attachAssetsDataChangeListener();
 
-        } else if (onDataChangeCallback instanceof IDataManager.OnDetailsDataChangeCallback) {
-            mOnDetailsDataChangeCallback = (IDataManager.OnDetailsDataChangeCallback) onDataChangeCallback;
-            registerDetailsDataChangeListener();
+        } else if (onDataChangeCallback instanceof OnDetailsDataChangeCallback) {
+            mOnDetailsDataChangeCallback = (OnDetailsDataChangeCallback) onDataChangeCallback;
+            attachDetailsDataChangeListener();
         }
     }
 
@@ -162,10 +192,10 @@ public class FirebaseHelper implements IDataRepository {
      * @param dataSnapshot retrieved from the object node
      * @param type         the class of the objects
      * @param <E>          the type of the objects
-     * @return the object
+     * @return the object or {@code null} if dataSnapshot or its value is {@code null}
      */
     private <E> E dataToObject(DataSnapshot dataSnapshot, Class<E> type) {
-
+        if (dataSnapshot == null) return null;
         Map<String, Object> members = (Map) dataSnapshot.getValue();
         if (members == null) return null;
 
@@ -187,37 +217,6 @@ public class FirebaseHelper implements IDataRepository {
     }
 
     /**
-     * Transforms a dataSnapshot in a map of objects whose type is specified as the given argument.
-     * The keys of the map are the ids while the values are the objects.
-     * The direct children of the given dataSnapshot should be the object nodes whose key is the id
-     * of the object and whose value is the Map containing all the object members.
-     * <p>
-     * The sequence of the map is NOT specified/sorted.
-     *
-     * @param dataSnapshot retrieved from the parent node of list of type-specified objects
-     * @param type         the class of the objects
-     * @param <E>          the type of the objects
-     * @return a map containing objects transformed from dataSnapshot
-     */
-    private <E> Map<String, E> dataToMap(DataSnapshot dataSnapshot, Class<E> type) {
-
-        Map<String, E> objects = new HashMap<String, E>();
-        if (type.equals(FAsset.class)) {
-            for (DataSnapshot objectData : dataSnapshot.getChildren()) {
-                FAsset asset = dataToObject(objectData, FAsset.class);
-                objects.put(asset.getId(), (E) asset);
-            }
-        } else if (type.equals(FDetail.class)) {
-            for (DataSnapshot objectData : dataSnapshot.getChildren()) {
-                FDetail detail = dataToObject(objectData, FDetail.class);
-                objects.put(detail.getId(), (E) detail);
-            }
-        }
-
-        return objects;
-    }
-
-    /**
      * Transforms a dataSnapshot in a list of objects whose type is specified as the given argument.
      * The direct children of the given dataSnapshot should be the object nodes whose key is the id
      * of the object and whose value is the Map containing all the object members.
@@ -230,10 +229,21 @@ public class FirebaseHelper implements IDataRepository {
      * @return a list containing objects transformed from dataSnapshot
      */
     private <E> List<E> dataToList(DataSnapshot dataSnapshot, Class<E> type) {
-        return new ArrayList<E>(dataToMap(dataSnapshot, type).values());
+        List<E> objects = new ArrayList<>();
+        if (type.equals(FAsset.class)) {
+            for (DataSnapshot objectData : dataSnapshot.getChildren()) {
+                objects.add((E) dataToObject(objectData, FAsset.class));
+            }
+        } else if (type.equals(FDetail.class)) {
+            for (DataSnapshot objectData : dataSnapshot.getChildren()) {
+                objects.add((E) dataToObject(objectData, FDetail.class));
+            }
+        }
+
+        return objects;
     }
 
-    private void registerAssetsDataChangeListener() {
+    private void attachAssetsDataChangeListener() {
         if (mOnAssetsDataChangeCallback == null) return;
 
         RxFirebaseDatabase.observeChildEvent(mDatabase.child(DB_ASSETS))
@@ -248,7 +258,7 @@ public class FirebaseHelper implements IDataRepository {
                 );
     }
 
-    private void registerDetailsDataChangeListener() {
+    private void attachDetailsDataChangeListener() {
         if (mOnDetailsDataChangeCallback == null) return;
 
         RxFirebaseDatabase.observeChildEvent(mDatabase.child(DB_DETAILS))
@@ -313,8 +323,8 @@ public class FirebaseHelper implements IDataRepository {
     private StorageReference mStroage;
     private LocalResourceLoader mResLoader;
     private ISchedulerProvider mSchedulerProvider;
-    private IDataManager.OnAssetsDataChangeCallback mOnAssetsDataChangeCallback;
-    private IDataManager.OnDetailsDataChangeCallback mOnDetailsDataChangeCallback;
+    private OnAssetsDataChangeCallback mOnAssetsDataChangeCallback;
+    private OnDetailsDataChangeCallback mOnDetailsDataChangeCallback;
 
     private OnUpdatedCallback mDoNothingCallback = new OnUpdatedCallback() {
         @Override

@@ -25,7 +25,6 @@ import com.google.common.base.Preconditions;
 
 import junit.framework.Assert;
 
-import org.apache.commons.io.FileUtils;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
@@ -35,7 +34,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,9 +42,8 @@ import java.util.List;
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
-import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
-import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
+import nz.ac.aut.comp705.sortmystuff.di.IFactory;
 import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
 import rx.Observable;
 import rx.schedulers.Schedulers;
@@ -85,24 +82,32 @@ import static org.hamcrest.Matchers.not;
 @RunWith(AndroidJUnit4.class)
 public class SwipeActivityTest {
 
-    public SwipeActivityTest() {}
+    public SwipeActivityTest() {
+    }
 
     @Before
     public void setup() {
         mContext = InstrumentationRegistry.getTargetContext();
         mApp = (SortMyStuffApp) mContext.getApplicationContext();
         mActivity = swipeActivityRule.getActivity();
-        mDataManager = mApp.getFactory().getDataManager();
+        mFactory = mApp.getFactory();
+        if (!mFactory.getUserId().equals("androidTest-user")) {
+            mFactory.setUserId("androidTest-user");
+            mActivity.finish();
+            mActivity.startActivity(mActivity.getIntent());
+        }
+        mDataManager = mFactory.getDataManager();
 
         cleanAssetsData();
     }
 
     @After
     public void tearDown() {
-        mContext = null;
-        mApp = null;
-        mActivity = null;
-        mDataManager = null;
+//        mContext = null;
+//        mApp = null;
+//        mFactory = null;
+//        mActivity = null;
+//        mDataManager = null;
     }
 
     @Rule
@@ -113,6 +118,8 @@ public class SwipeActivityTest {
     @Rule
     public IntentsTestRule<SwipeActivity> intentsRule =
             new IntentsTestRule<>(SwipeActivity.class, true, false);
+
+    //region TESTS
 
     @Test
     public void onLaunch_displayRootAssetTitle() {
@@ -145,7 +152,7 @@ public class SwipeActivityTest {
     }
 
     @Test
-    public void addAsset_cancelDialogBox(){
+    public void addAsset_cancelDialogBox() {
         onView(withId(R.id.add_asset_button)).perform(click());
         //type asset name into text area in dialog box
         onView(allOf(withClassName(endsWith("EditText")), withText(is("")))).perform(replaceText(ASSET1_NAME));
@@ -161,7 +168,7 @@ public class SwipeActivityTest {
         onView(withId(R.id.index_list)).check(matches(isDisplayed()));
 
         String longAssetName = "";
-        for(int i = 0; i <= AppConstraints.ASSET_NAME_CAP; i++) {
+        for (int i = 0; i <= AppConstraints.ASSET_NAME_CAP; i++) {
             longAssetName += "a";
         }
         addAsset(longAssetName);
@@ -219,7 +226,7 @@ public class SwipeActivityTest {
     }
 
     @Test
-    public void onClickAssetFromList_displayAssetNameOnToolbar(){
+    public void onClickAssetFromList_displayAssetNameOnToolbar() {
         addAsset(ASSET1_NAME);
         clickAsset(0);
         onView(withId(R.id.main_toolbar)).check(matches(isDisplayed()));
@@ -228,7 +235,7 @@ public class SwipeActivityTest {
     }
 
     @Test
-    public void onClickAssetFromList_addChildAsset(){
+    public void onClickAssetFromList_addChildAsset() {
         addAsset(ASSET1_NAME);
         clickAsset(0);
         addAsset(ASSET2_NAME);
@@ -264,7 +271,7 @@ public class SwipeActivityTest {
                 ASSET_NAME + 0, ASSET_NAME + 1, ASSET_NAME + 2, ASSET_NAME + 3, ASSET_NAME + 4
         ));
 
-        for(int i = 0; i < names.size(); i++) {
+        for (int i = 0; i < names.size(); i++) {
             addAsset(names.get(i));
             clickAsset(0);
         }
@@ -339,7 +346,7 @@ public class SwipeActivityTest {
                 ASSET_NAME + 0, ASSET_NAME + 1, ASSET_NAME + 2, ASSET_NAME + 3, ASSET_NAME + 4
         ));
 
-        for(int i = 0; i < names.size(); i++) {
+        for (int i = 0; i < names.size(); i++) {
             addAsset(names.get(i));
             clickAsset(0);
         }
@@ -707,25 +714,25 @@ public class SwipeActivityTest {
     }
 
     @Test
-    public void editTextDetail_inputNewText(){
+    public void editTextDetail_inputNewText() {
         addAsset(ASSET1_NAME);
         clickAsset(0);
         swipeToDetailsPage();
 
-        editTextDetail("","Test text");
+        editTextDetail("", "Test text");
         onData(anything()).inAdapterView(withId(R.id.details_list))
                 .atPosition(1).onChildView(withId(R.id.detail_field))
                 .check(matches(withText("Test text")));
     }
 
     @Test
-    public void editTextDetail_changeExistingText(){
+    public void editTextDetail_changeExistingText() {
         addAsset(ASSET1_NAME);
         clickAsset(0);
         swipeToDetailsPage();
 
-        editTextDetail("","Test text");
-        editTextDetail("Test text","Text test");
+        editTextDetail("", "Test text");
+        editTextDetail("Test text", "Text test");
         onData(anything()).inAdapterView(withId(R.id.details_list))
                 .atPosition(1).onChildView(withId(R.id.detail_field))
                 .check(matches(withText("Text test")));
@@ -737,8 +744,8 @@ public class SwipeActivityTest {
         clickAsset(0);
         swipeToDetailsPage();
 
-        editTextDetail("","Test text");
-        editTextDetail("Test text","");
+        editTextDetail("", "Test text");
+        editTextDetail("Test text", "");
         onData(anything()).inAdapterView(withId(R.id.details_list))
                 .atPosition(1).onChildView(withId(R.id.detail_field))
                 .check(matches(withText("")));
@@ -751,11 +758,11 @@ public class SwipeActivityTest {
         swipeToDetailsPage();
 
         String longField = "";
-        for(int i = 0; i <= AppConstraints.TEXTDETAIL_FIELD_CAP; i++) {
+        for (int i = 0; i <= AppConstraints.TEXTDETAIL_FIELD_CAP; i++) {
             longField += "l";
         }
 
-        editTextDetail("",longField);
+        editTextDetail("", longField);
         // the edit action should be canceled due to the overlong text
         onData(anything()).inAdapterView(withId(R.id.details_list))
                 .atPosition(1).onChildView(withId(R.id.detail_field))
@@ -784,28 +791,34 @@ public class SwipeActivityTest {
         final Bitmap newImage = MediaStore.Images.Media.getBitmap(
                 InstrumentationRegistry.getTargetContext().getContentResolver(), imageUri);
 
-        // Stub out the Camera.
+        Bitmap defaultThumbnail = mFactory.getLocalResourceLoader().getDefaultThumbnail();
+        Bitmap defaultPhoto = mFactory.getLocalResourceLoader().getDefaultPhoto();
+
+        // Stub out the Camera
         intending(hasComponent(CameraActivity.class.getName())).respondWith(result);
 
         clickPhoto(false);
 
-        // check if the CameraActivity is inteded
+        // check if the CameraActivity is intended
         intended(hasComponent(CameraActivity.class.getName()));
 
         mDataManager.getAssets()
+                .subscribeOn(Schedulers.immediate())
                 .flatMap(Observable::from)
                 .filter(asset -> asset.getName().equals(ASSET_LIVING_ROOM))
                 .first()
-                .observeOn(Schedulers.immediate())
-                .subscribeOn(Schedulers.immediate())
-                .subscribe(asset -> {
-                    Asset a = (Asset) asset;
-                    Bitmap thumbnail = a.getThumbnail();
-                    a.setThumbnail(newImage);
-                    // check whether the thumbnail of the new image is the same as the
-                    // original thumbnail updated by the app
-                    Assert.assertTrue(thumbnail.sameAs(a.getThumbnail()));
-                });
+                .doOnNext(asset -> {
+                    // check whether the thumbnail of the new image is different from the default one
+                    Assert.assertFalse(defaultThumbnail.sameAs(asset.getThumbnail()));
+                })
+                .flatMap(asset -> mDataManager.getDetails(asset.getId()))
+                .flatMap(Observable::from)
+                .filter(detail -> detail.getLabel().equals(CategoryType.BasicDetail.PHOTO))
+                .doOnNext(detail -> {
+                    // check whether the "Photo" detail is updated
+                    Assert.assertFalse(defaultPhoto.sameAs((Bitmap) detail.getField()));
+                })
+                .subscribe();
     }
 
     @Test
@@ -820,21 +833,19 @@ public class SwipeActivityTest {
                 resources.getResourcePackageName(R.drawable.androidtest_image_1) + '/' +
                 resources.getResourceTypeName(R.drawable.androidtest_image_1) + '/' +
                 resources.getResourceEntryName(R.drawable.androidtest_image_1));
-        final Bitmap customisedImage = MediaStore.Images.Media.getBitmap(
+        Bitmap customisedImage = MediaStore.Images.Media.getBitmap(
                 InstrumentationRegistry.getTargetContext().getContentResolver(), imageUri);
 
-        // get the default image
-        Uri defaultImageUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
-                resources.getResourcePackageName(R.drawable.default_square) + '/' +
-                resources.getResourceTypeName(R.drawable.default_square) + '/' +
-                resources.getResourceEntryName(R.drawable.default_square));
-        final Bitmap defaultImage = MediaStore.Images.Media.getBitmap(
-                InstrumentationRegistry.getTargetContext().getContentResolver(), defaultImageUri);
+        Bitmap defaultPhoto = mFactory.getLocalResourceLoader().getDefaultPhoto();
+        Bitmap defaultThumbnail = mFactory.getLocalResourceLoader().getDefaultThumbnail();
 
         addAsset(ASSET_LIVING_ROOM);
+        clickAsset(0);
+        swipeToDetailsPage();
 
         // change the photo of the newly added asset to the customisedImage
         mDataManager.getAssets()
+                .subscribeOn(Schedulers.immediate())
                 .flatMap(Observable::from)
                 .filter(asset -> asset.getName().equals(ASSET_LIVING_ROOM))
                 .first()
@@ -843,53 +854,40 @@ public class SwipeActivityTest {
                 .flatMap(Observable::from)
                 .filter(detail -> detail.getLabel().equals(CategoryType.BasicDetail.PHOTO))
                 .first()
-                .doOnNext(detail -> mDataManager
-                        .updateImageDetail((ImageDetail) detail, detail.getLabel(), customisedImage))
-                .observeOn(Schedulers.immediate())
-                .subscribeOn(Schedulers.immediate())
+                .doOnNext(detail -> mDataManager.updateDetail(
+                        detail.getAssetId(), detail.getId(), detail.getType(), null, customisedImage))
+                .doOnNext(detail -> {
+                    // make sure the photo is changed
+                    Assert.assertFalse(defaultPhoto.sameAs((Bitmap) detail.getField()));
+
+                    clickPhoto(true);
+                    onView(withText(R.string.photo_remove_confirm_button)).perform(click());
+                })
                 .subscribe(
                         //onNext
-                        detail -> continueToRemovePhotoInApp(defaultImage)
+                        detail -> mDataManager.getAssets()
+                                .subscribeOn(Schedulers.immediate())
+                                .flatMap(Observable::from)
+                                .filter(asset -> asset.getName().equals(ASSET_LIVING_ROOM))
+                                .first()
+                                .doOnNext(asset -> {
+                                    Assert.assertTrue(defaultThumbnail.sameAs(asset.getThumbnail()));
+                                    Assert.assertTrue(defaultPhoto.sameAs((Bitmap) detail.getField()));
+                                })
+                                .subscribe()
                 );
 
     }
 
+    //endregion
+
     //region PRIVATE STUFF
 
-    private void continueToRemovePhotoInApp(Bitmap defaultImage) {
-
-        clickAsset(0);
-        swipeToDetailsPage();
-        clickPhoto(true);
-        onView(withText(R.string.photo_remove_confirm_button)).perform(click());
-
-        mDataManager.getAssets()
-                .flatMap(Observable::from)
-                .filter(asset -> asset.getName().equals(ASSET_LIVING_ROOM))
-                .first()
-                .observeOn(Schedulers.immediate())
-                .subscribeOn(Schedulers.immediate())
-                .subscribe(asset -> {
-                    Asset a = (Asset) asset;
-                    Bitmap thumbnail = a.getThumbnail();
-                    a.setThumbnail(defaultImage);
-                    // check whether the thumbnail of the new image is the same as the
-                    // original thumbnail updated by the app
-                    Assert.assertTrue(thumbnail.sameAs(a.getThumbnail()));
-                });
-    }
-
     private void cleanAssetsData() {
-        File userDir = new File(
-                mApp.getFilesDir().getPath() + File.separator + "default-user");
 
-        try {
-            FileUtils.cleanDirectory(userDir);
-            mDataManager.refreshFromLocal();
-            mDataManager.getRoot();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        mFactory.getDatabaseReference().removeValue();
+        mDataManager.reCacheFromRemoteDataSource();
+        mDataManager.getRootAsset().subscribe();
     }
 
     private void addAsset(String assetName) {
@@ -965,7 +963,7 @@ public class SwipeActivityTest {
 
     // change this method if default is not "Miscellaneous"
     private void checkDetailsListOfMiscellaneous() {
-        if(!DEFAULT_CATEGORY.equals(CategoryType.Miscellaneous))
+        if (!DEFAULT_CATEGORY.equals(CategoryType.Miscellaneous))
             throw new IllegalStateException("Please change the checklist of the default category");
 
         onData(anything()).inAdapterView(withId(R.id.details_list))
@@ -975,7 +973,7 @@ public class SwipeActivityTest {
 
     // change this method if the specified category is not "Food"
     private void checkDetailsListOfFood() {
-        if(!SPECIFIED_CATEGORY.equals(CategoryType.Food))
+        if (!SPECIFIED_CATEGORY.equals(CategoryType.Food))
             throw new IllegalStateException("Please change the checklist of the specified category");
 
         // check if all the details of "Food" are there
@@ -995,7 +993,7 @@ public class SwipeActivityTest {
                 .atPosition(0).perform(longClick ? longClick() : click());
     }
 
-    private void editTextDetail(String fromName, String newDetail){
+    private void editTextDetail(String fromName, String newDetail) {
         onData(anything()).inAdapterView(withId(R.id.details_list))
                 .atPosition(1).perform(click());
         onView(allOf(withClassName(endsWith("EditText")), withText(is(fromName))))
@@ -1029,6 +1027,7 @@ public class SwipeActivityTest {
     private SortMyStuffApp mApp;
     private Activity mActivity;
     private IDataManager mDataManager;
+    private IFactory mFactory;
 
     //endregion
 

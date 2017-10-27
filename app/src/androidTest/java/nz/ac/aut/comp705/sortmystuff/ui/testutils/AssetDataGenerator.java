@@ -8,21 +8,23 @@ import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import rx.Observable;
 import rx.Subscription;
 
+import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.ROOT_ASSET_ID;
+
 public class AssetDataGenerator {
 
     public AssetDataGenerator(IDataManager dataManager) {
         mDataManager = dataManager;
-        mCurrentContainerId = mDataManager.getRoot().getId();
+        mCurrentContainerId = ROOT_ASSET_ID;
         mData = new LinkedHashMap<>();
     }
 
     public AssetDataGenerator toRoot() {
-        mCurrentContainerId = mDataManager.getRoot().getId();
+        mCurrentContainerId = ROOT_ASSET_ID;
         return this;
     }
 
     public AssetDataGenerator toParent() {
-        if(mCurrentContainerId.equals(mDataManager.getRoot().getId())) return this;
+        if(mCurrentContainerId.equals(ROOT_ASSET_ID)) return this;
         Subscription subscription = mDataManager.getParentAssets(mCurrentContainerId, false)
                 .subscribe(assets -> mCurrentContainerId = assets.get(1).getId());
         return waitFor(subscription::isUnsubscribed, 2000, () -> this);

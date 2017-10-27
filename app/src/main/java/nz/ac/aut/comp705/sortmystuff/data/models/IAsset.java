@@ -14,9 +14,9 @@ public interface IAsset {
 
     List<String> getContentIds();
 
-    boolean isRecycled();
+    Boolean isRecycled();
 
-    boolean isRoot();
+    Boolean isRoot();
 
     Long getCreateTimestamp();
 

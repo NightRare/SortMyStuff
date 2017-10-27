@@ -10,9 +10,9 @@ public class AppConstraints {
 
     public final static String ROOT_ASSET_ID = "RootAssetId";
 
-    public final static int ASSET_THUMBNAIL_WIDTH = 128;
+    public final static int ASSET_THUMBNAIL_WIDTH = 150;
 
-    public final static int ASSET_THUMBNAIL_LENGTH = 128;
+    public final static int ASSET_THUMBNAIL_LENGTH = 150;
 
     //********************************************
     // DETAIL
@@ -24,9 +24,9 @@ public class AppConstraints {
 
     public final static int TEXTDETAIL_FIELD_CAP = 400;
 
-    public final static int DETAIL_IMAGE_WIDTH = 1024;
+    public final static int DETAIL_IMAGE_WIDTH = 1200;
 
-    public final static int DETAIL_IMAGE_LENGTH = 1024;
+    public final static int DETAIL_IMAGE_LENGTH = 1200;
 
     //********************************************
     // IDataManager

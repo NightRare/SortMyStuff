@@ -5,7 +5,6 @@ import java.util.List;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.FAsset;
-import nz.ac.aut.comp705.sortmystuff.data.models.FDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
 import nz.ac.aut.comp705.sortmystuff.utils.exceptions.ReadLocalStorageFailedException;
@@ -49,6 +48,8 @@ public interface IDataManager {
 
     /**
      * Get the list of details of the asset.
+     * <p>
+     * Will always return an Observable of an empty list if it's root asset id.
      *
      * @param assetId the id of the owner asset
      * @return the Observable which emits one list of Details; or which emits {@code null} if the
@@ -69,6 +70,8 @@ public interface IDataManager {
 
     /**
      * Get the content assets of the given asset.
+     * <p>
+     * The list is ordered according to the sequence of {@link FAsset#getContentIds()}.
      *
      * @param containerId the id of the container asset
      * @return the Observable emitting one list of Assets; or which emits {@code null} if the
@@ -103,18 +106,23 @@ public interface IDataManager {
      * Create an asset as a content of the given container.
      * The default details of the asset are generated according to "Miscellaneous" category.
      *
+     * It will only create the asset only if the containerId exists and the container is not recycled,
+     * otherwise nothing will be performed.
+     *
      * @param name        the name
      * @param containerId the id of the container asset
      * @return the id of the created asset; {@code null} if failed
      * @throws NullPointerException     if any argument is {@code null};
-     * @throws IllegalArgumentException if name is empty or length exceeds app constraints; or
-     *                                  containerId cannot be found
+     * @throws IllegalArgumentException if name is empty or length exceeds app constraints
      */
     String createAsset(String name, String containerId);
 
     /**
      * Create an asset as a content of the given container.
      * The default details of the asset are generated according to the given category.
+     *
+     * It will only create the asset only if the containerId exists and the container is not recycled,
+     * otherwise nothing will be performed.
      *
      * @param name         the name
      * @param containerId  the id of the container asset
@@ -138,13 +146,14 @@ public interface IDataManager {
      * @param newName the new name
      * @return true if successful update
      * @throws NullPointerException     if any argument is {@code null}
-     * @throws IllegalArgumentException if newName is empty or length exceeds app constraints;
+     * @throws IllegalArgumentException if newName is empty or length exceeds app constraints
      */
     void updateAssetName(String assetId, String newName);
 
     /**
      * Move the asset with given id to another container.
-     * It does nothing if assetId equals to the id of the root asset.
+     * It does nothing if assetId equals to the id of the root asset, or assetId or newContainerId
+     * does not exist.
      *
      * @param assetId        the asset id
      * @param newContainerId the id of the new container
@@ -154,7 +163,7 @@ public interface IDataManager {
 
     /**
      * Recycle the asset with given id and all its children assets.
-     * It does nothing if assetId equals to the id of the root asset.
+     * It does nothing if assetId equals to the id of the root asset, or assetId does not exist.
      *
      * @param assetId the id of the asset to be recycled
      * @throws NullPointerException if any argument is {@code null}
@@ -203,36 +212,6 @@ public interface IDataManager {
     TODO methods to be added in the future
     void clearRecycledAsset();
      */
-
-    //endregion
-
-    //region CALLBACK INTERFACES
-
-    interface onDataChangeCallback {
-
-    }
-
-    interface OnAssetsDataChangeCallback extends onDataChangeCallback {
-
-        void onAssetAdded(FAsset asset);
-
-        void onAssetChanged(FAsset asset);
-
-        void onAssetRemoved(FAsset asset);
-
-        void onAssetMoved(FAsset asset);
-    }
-
-    interface OnDetailsDataChangeCallback extends onDataChangeCallback {
-
-        void onDetailAdded(FDetail detail);
-
-        void onDetailChanged(FDetail detail);
-
-        void onDetailRemoved(FDetail detail);
-
-        void onDetailMoved(FDetail detail);
-    }
 
     //endregion
 }

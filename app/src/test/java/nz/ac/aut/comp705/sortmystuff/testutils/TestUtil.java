@@ -36,11 +36,11 @@ public class TestUtil {
             return false;
         }
 
-        if (createTS != null && !asset.getCreateTimestamp().equals(createTS)) {
+        if (createTS != null && asset.getCreateTimestamp() != createTS) {
             return false;
         }
 
-        if (modifyTS != null && !asset.getModifyTimestamp().equals(modifyTS)) {
+        if (modifyTS != null && asset.getModifyTimestamp() != modifyTS) {
             return false;
         }
 
