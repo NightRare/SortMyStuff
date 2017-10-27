@@ -145,8 +145,8 @@ public class SwipeActivityTest {
     public void addAsset_inputNameAndConfirm() {
         addAsset(ASSET1_NAME);
 
-        onView(withId(R.id.index_list)).check(matches(isDisplayed()));
-        onData(anything()).inAdapterView(withId(R.id.index_list))
+        onView(withId(R.id.assets_list)).check(matches(isDisplayed()));
+        onData(anything()).inAdapterView(withId(R.id.assets_list))
                 .atPosition(0).onChildView(withId(R.id.asset_name))
                 .check(matches(withText(ASSET1_NAME)));
     }
@@ -159,20 +159,20 @@ public class SwipeActivityTest {
         //click on cancel button in dialog box
         onView(withText(R.string.cancel_button)).perform(click());
         //asset should not be added
-        Assert.assertFalse(onData(anything()).inAdapterView(withId(R.id.index_list)).atPosition(0).equals(ASSET1_NAME));
+        Assert.assertFalse(onData(anything()).inAdapterView(withId(R.id.assets_list)).atPosition(0).equals(ASSET1_NAME));
     }
 
     @Test
     public void addAsset_addAssetsWithIllegalNames() {
         addAsset("");
-        onView(withId(R.id.index_list)).check(matches(isDisplayed()));
+        onView(withId(R.id.assets_list)).check(matches(isDisplayed()));
 
         String longAssetName = "";
         for (int i = 0; i <= AppConstraints.ASSET_NAME_CAP; i++) {
             longAssetName += "a";
         }
         addAsset(longAssetName);
-        onView(withId(R.id.index_list)).check(matches(isDisplayed()));
+        onView(withId(R.id.assets_list)).check(matches(isDisplayed()));
         onView(withChild(withText(longAssetName))).check(doesNotExist());
     }
 
@@ -239,9 +239,9 @@ public class SwipeActivityTest {
         addAsset(ASSET1_NAME);
         clickAsset(0);
         addAsset(ASSET2_NAME);
-        onView(withId(R.id.index_list)).check(matches(isDisplayed()));
+        onView(withId(R.id.assets_list)).check(matches(isDisplayed()));
         //check that assets can added into child assets
-        onData(anything()).inAdapterView(withId(R.id.index_list))
+        onData(anything()).inAdapterView(withId(R.id.assets_list))
                 .atPosition(0).onChildView(withId(R.id.asset_name))
                 .check(matches(withText(ASSET2_NAME)));
     }
@@ -381,7 +381,7 @@ public class SwipeActivityTest {
 
         //now all the checkbox should display
         for (int i = 0; i < 3; i++) {
-            onData(anything()).inAdapterView(withId(R.id.index_list))
+            onData(anything()).inAdapterView(withId(R.id.assets_list))
                     .atPosition(i).onChildView(withId(R.id.asset_checkbox))
                     .check(matches(isDisplayed()));
         }
@@ -396,12 +396,12 @@ public class SwipeActivityTest {
         addAsset(ASSET3_NAME);
 
         //enter the selection mode
-        onData(anything()).inAdapterView((withId(R.id.index_list)))
+        onData(anything()).inAdapterView((withId(R.id.assets_list)))
                 .atPosition(0).perform(longClick());
 
         //now all the checkbox should display
         for (int i = 0; i < 3; i++) {
-            onData(anything()).inAdapterView(withId(R.id.index_list))
+            onData(anything()).inAdapterView(withId(R.id.assets_list))
                     .atPosition(i).onChildView(withId(R.id.asset_checkbox))
                     .check(matches(isDisplayed()));
         }
@@ -450,14 +450,14 @@ public class SwipeActivityTest {
         addAsset(ASSET3_NAME);
 
         //enter the selection mode
-        onData(anything()).inAdapterView((withId(R.id.index_list)))
+        onData(anything()).inAdapterView((withId(R.id.assets_list)))
                 .atPosition(0).perform(longClick());
 
         //tick the first asset's checkbox
-        onData(anything()).inAdapterView(withId(R.id.index_list))
+        onData(anything()).inAdapterView(withId(R.id.assets_list))
                 .atPosition(0).perform(click());
         //now the first asset should be ticked
-        onData(anything()).inAdapterView(withId(R.id.index_list))
+        onData(anything()).inAdapterView(withId(R.id.assets_list))
                 .atPosition(0).onChildView(withId(R.id.asset_checkbox))
                 .check(matches(isChecked()));
     }
@@ -470,13 +470,13 @@ public class SwipeActivityTest {
         addAsset(ASSET3_NAME);
 
         //enter the selection mode
-        onData(anything()).inAdapterView((withId(R.id.index_list)))
+        onData(anything()).inAdapterView((withId(R.id.assets_list)))
                 .atPosition(0).perform(longClick());
         //click the item twice to tick and then untick the checkbox
-        onData(anything()).inAdapterView(withId(R.id.index_list))
+        onData(anything()).inAdapterView(withId(R.id.assets_list))
                 .atPosition(0).perform(click(), click());
         //now the checkbox should not be checked
-        onData(anything()).inAdapterView(withId(R.id.index_list))
+        onData(anything()).inAdapterView(withId(R.id.assets_list))
                 .atPosition(0).onChildView(withId(R.id.asset_checkbox))
                 .check(matches(isNotChecked()));
     }
@@ -490,7 +490,7 @@ public class SwipeActivityTest {
         addAsset(ASSET3_NAME);
 
         //enter the selection mode
-        onData(anything()).inAdapterView((withId(R.id.index_list)))
+        onData(anything()).inAdapterView((withId(R.id.assets_list)))
                 .atPosition(0).perform(longClick());
 
         //quit the selection mode by clicking the CANCEL button
@@ -500,7 +500,7 @@ public class SwipeActivityTest {
         //now the CANCEL button and all the checkbox should disappear
         onView(withId(R.id.selection_cancel_button)).check(matches(not(isDisplayed())));
         for (int i = 0; i < 3; i++) {
-            onData(anything()).inAdapterView(withId(R.id.index_list))
+            onData(anything()).inAdapterView(withId(R.id.assets_list))
                     .atPosition(i).onChildView(withId(R.id.asset_checkbox))
                     .check(matches(not(isDisplayed())));
         }
@@ -531,7 +531,7 @@ public class SwipeActivityTest {
         onView(withText(R.string.selection_mode)).perform(click());
 
         // select item and click move button
-        onData(anything()).inAdapterView((withId(R.id.index_list)))
+        onData(anything()).inAdapterView((withId(R.id.assets_list)))
                 .atPosition(0).perform(click());
         onView(withId(R.id.selection_move_button)).perform(click());
 
@@ -553,7 +553,7 @@ public class SwipeActivityTest {
         prepareAssetsToMove();
 
         //enter selection mode by long-click an item
-        onData(anything()).inAdapterView((withId(R.id.index_list)))
+        onData(anything()).inAdapterView((withId(R.id.assets_list)))
                 .atPosition(0).perform(longClick());
 
         //select nothing and click MOVE button
@@ -582,23 +582,23 @@ public class SwipeActivityTest {
         prepareAssetsToMove();
 
         //enter selection mode by long-click an item
-        onData(anything()).inAdapterView((withId(R.id.index_list)))
+        onData(anything()).inAdapterView((withId(R.id.assets_list)))
                 .atPosition(0).perform(longClick());
 
         //select two tables and click MOVE button
-        onData(anything()).inAdapterView((withId(R.id.index_list)))
+        onData(anything()).inAdapterView((withId(R.id.assets_list)))
                 .atPosition(0).perform(click());
-        onData(anything()).inAdapterView((withId(R.id.index_list)))
+        onData(anything()).inAdapterView((withId(R.id.assets_list)))
                 .atPosition(1).perform(click());
         onView(withId(R.id.selection_move_button)).perform(click());
 
         //the selected two items should not be interactive
         // (to prevent from moving assets to themselves or their children)
         Assert.assertEquals(ASSET_DINING_ROOM, getToolbarTitle());
-        onData(anything()).inAdapterView((withId(R.id.index_list)))
+        onData(anything()).inAdapterView((withId(R.id.assets_list)))
                 .atPosition(0).perform(click());
         Assert.assertEquals(ASSET_DINING_ROOM, getToolbarTitle());
-        onData(anything()).inAdapterView((withId(R.id.index_list)))
+        onData(anything()).inAdapterView((withId(R.id.assets_list)))
                 .atPosition(1).perform(click());
         Assert.assertEquals(ASSET_DINING_ROOM, getToolbarTitle());
 
@@ -672,13 +672,13 @@ public class SwipeActivityTest {
         addAsset(ASSET3_NAME);
 
         // enter selection mode
-        onData(anything()).inAdapterView((withId(R.id.index_list)))
+        onData(anything()).inAdapterView((withId(R.id.assets_list)))
                 .atPosition(0).perform(longClick());
 
         // delete asset1 and asset2
-        onData(anything()).inAdapterView((withId(R.id.index_list)))
+        onData(anything()).inAdapterView((withId(R.id.assets_list)))
                 .atPosition(0).perform(click());
-        onData(anything()).inAdapterView((withId(R.id.index_list)))
+        onData(anything()).inAdapterView((withId(R.id.assets_list)))
                 .atPosition(1).perform(click());
 
         onView(withId(R.id.selection_delete_button)).perform(click());
@@ -696,13 +696,13 @@ public class SwipeActivityTest {
         addAsset(ASSET2_NAME);
 
         // enter selection mode
-        onData(anything()).inAdapterView((withId(R.id.index_list)))
+        onData(anything()).inAdapterView((withId(R.id.assets_list)))
                 .atPosition(0).perform(longClick());
 
         // delete asset1 and asset2
-        onData(anything()).inAdapterView((withId(R.id.index_list)))
+        onData(anything()).inAdapterView((withId(R.id.assets_list)))
                 .atPosition(0).perform(click());
-        onData(anything()).inAdapterView((withId(R.id.index_list)))
+        onData(anything()).inAdapterView((withId(R.id.assets_list)))
                 .atPosition(1).perform(click());
 
         onView(withId(R.id.selection_delete_button)).perform(click());
@@ -911,7 +911,7 @@ public class SwipeActivityTest {
     }
 
     private void clickAsset(int num) {
-        onData(anything()).inAdapterView(withId(R.id.index_list))
+        onData(anything()).inAdapterView(withId(R.id.assets_list))
                 .atPosition(num).perform(click());
     }
 

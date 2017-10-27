@@ -5,6 +5,7 @@
     android:layout_height="match_parent"
     tools:context="nz.ac.aut.comp705.sortmystuff.ui.contents.ContentsFragment">
 
+
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/add_asset_button"
         android:layout_width="wrap_content"
@@ -20,9 +21,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|start"
         android:layout_margin="@dimen/fab_margin"
+        android:visibility="gone"
         app:backgroundTint="@android:color/darker_gray"
-        app:srcCompat="@drawable/ic_cancel_move"
-        android:visibility="gone"/>
+        app:srcCompat="@drawable/ic_cancel_move" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/confirm_move_button"
@@ -30,9 +31,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
+        android:visibility="gone"
         app:backgroundTint="@color/colorAccent"
-        app:srcCompat="@drawable/ic_confirm_move"
-        android:visibility="gone"/>
+        app:srcCompat="@drawable/ic_confirm_move" />
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -68,7 +69,14 @@
             </android.support.v7.widget.RecyclerView>
         </RelativeLayout>
 
-        <include layout="@layout/contents_list" />
+        <nz.ac.aut.comp705.sortmystuff.ui.contents.ScrollChildSwipeRefreshLayout
+            android:id="@+id/contents_refresh_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/pathbar_layout">
+
+            <include layout="@layout/contents_list" />
+        </nz.ac.aut.comp705.sortmystuff.ui.contents.ScrollChildSwipeRefreshLayout>
 
     </RelativeLayout>
 

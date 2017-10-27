@@ -14,6 +14,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,6 +35,7 @@ import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
+import nz.ac.aut.comp705.sortmystuff.ui.contents.ScrollChildSwipeRefreshLayout;
 import nz.ac.aut.comp705.sortmystuff.ui.main.SwipeActivity;
 import nz.ac.aut.comp705.sortmystuff.utils.AppCode;
 import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
@@ -42,13 +44,15 @@ import static android.app.Activity.RESULT_OK;
 import static android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class DetailsFragment extends Fragment implements IDetailsView{
+public class DetailsFragment extends Fragment implements IDetailsView {
 
     public DetailsFragment() {
         // Required empty public constructor
     }
 
-    public static DetailsFragment newInstance() { return new DetailsFragment(); }
+    public static DetailsFragment newInstance() {
+        return new DetailsFragment();
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -86,6 +90,8 @@ public class DetailsFragment extends Fragment implements IDetailsView{
         mDetails.setAdapter(mDetailsAdapter);
         mDetails.setOnItemClickListener((parent, view, position, id) ->
                 mViewListeners.onItemClick(view, (IDetail) parent.getItemAtPosition(position)));
+
+        initProgressIndicator();
 
         return mRootView;
     }
@@ -186,7 +192,10 @@ public class DetailsFragment extends Fragment implements IDetailsView{
 
     @Override
     public void setLoadingIndicator(boolean active) {
-        //TODO: to be implemented
+        if(mRootView == null) return;
+
+        SwipeRefreshLayout srl = (SwipeRefreshLayout) mRootView.findViewById(R.id.details_refresh_layout);
+        srl.post(() -> srl.setRefreshing(active));
     }
 
     @Override
@@ -200,7 +209,8 @@ public class DetailsFragment extends Fragment implements IDetailsView{
         new AlertDialog.Builder(mActivity)
                 .setMessage(message)
                 .setPositiveButton(R.string.permission_allow_button, (dialog, which) -> requestForPermission(permission))
-                .setNegativeButton(R.string.cancel_button, (dialog, which) -> { })
+                .setNegativeButton(R.string.cancel_button, (dialog, which) -> {
+                })
                 .create()
 
                 .show();
@@ -211,18 +221,19 @@ public class DetailsFragment extends Fragment implements IDetailsView{
     }
 
     private void launchCamera() {
-        if(mPhotoToBeReplaced == null) return;
+        if (mPhotoToBeReplaced == null) return;
         Intent intent = new Intent(getContext(), CameraActivity.class);
         startActivityForResult(intent, AppCode.INTENT_TAKE_PHOTO);
     }
 
     /**
      * Creates an editable text area for the dialog box
+     *
      * @param context
      * @param layout
      * @return editText
      */
-    private EditText createEditText(Context context, LinearLayout layout){
+    private EditText createEditText(Context context, LinearLayout layout) {
         final EditText editText = new EditText(context);
         editText.setSingleLine();
         editText.setInputType(TYPE_TEXT_FLAG_CAP_SENTENCES);
@@ -235,11 +246,29 @@ public class DetailsFragment extends Fragment implements IDetailsView{
         assetCategory.setText(categoryString);
     }
 
+    private void initProgressIndicator() {
+        // Set up progress indicator
+        final ScrollChildSwipeRefreshLayout swipeRefreshLayout =
+                (ScrollChildSwipeRefreshLayout) mRootView.findViewById(R.id.details_refresh_layout);
+        swipeRefreshLayout.setColorSchemeColors(
+                ContextCompat.getColor(getActivity(), R.color.colorPrimary),
+                ContextCompat.getColor(getActivity(), R.color.colorAccent),
+                ContextCompat.getColor(getActivity(), R.color.colorPrimaryDark)
+        );
+
+        View listView = mRootView.findViewById(R.id.details_list);
+
+        // Set the scrolling view in the custom SwipeRefreshLayout.
+        swipeRefreshLayout.setScrollUpChild(listView);
+
+        swipeRefreshLayout.setOnRefreshListener(() -> mPresenter.loadDetails());
+    }
+
     private ViewListeners mViewListeners = new ViewListeners() {
 
         @Override
         public void onItemClick(View view, IDetail item) {
-            if(!item.getType().equals(DetailType.Text))
+            if (!item.getType().equals(DetailType.Text))
                 return;
 
             AlertDialog.Builder dialog = new AlertDialog.Builder(view.getContext());
@@ -249,7 +278,7 @@ public class DetailsFragment extends Fragment implements IDetailsView{
             LinearLayout layout = new LinearLayout(context);
             layout.setOrientation(LinearLayout.VERTICAL);
             //field text configuration
-            final EditText fieldText = createEditText(context,layout);
+            final EditText fieldText = createEditText(context, layout);
             fieldText.setText((String) item.getField());
             //button setup
             dialog.setView(layout);

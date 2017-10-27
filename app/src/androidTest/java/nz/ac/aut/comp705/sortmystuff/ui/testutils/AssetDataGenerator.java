@@ -10,6 +10,10 @@ import rx.Subscription;
 
 import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.ROOT_ASSET_ID;
 
+/**
+ * Some experimental class.
+ */
+
 public class AssetDataGenerator {
 
     public AssetDataGenerator(IDataManager dataManager) {

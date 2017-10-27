@@ -2,11 +2,11 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_below="@+id/pathbar_layout"
+
     android:orientation="vertical">
 
     <ListView
-        android:id="@+id/index_list"
+        android:id="@+id/assets_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/selection_action_buttons"

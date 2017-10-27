@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
@@ -72,8 +73,28 @@ public class ContentsFragment extends Fragment implements IContentsView {
         initMovingModeFabs();
         initAssetsListView();
         initSelectionModeButtons();
+        initProgressIndicator();
+        setSelectionModeButtonsVisibility(false);
 
         return mRootView;
+    }
+
+    private void initProgressIndicator() {
+        // Set up progress indicator
+        final ScrollChildSwipeRefreshLayout swipeRefreshLayout =
+                (ScrollChildSwipeRefreshLayout) mRootView.findViewById(R.id.contents_refresh_layout);
+        swipeRefreshLayout.setColorSchemeColors(
+                ContextCompat.getColor(getActivity(), R.color.colorPrimary),
+                ContextCompat.getColor(getActivity(), R.color.colorAccent),
+                ContextCompat.getColor(getActivity(), R.color.colorPrimaryDark)
+        );
+
+        View listView = mRootView.findViewById(R.id.assets_list);
+
+        // Set the scrolling view in the custom SwipeRefreshLayout.
+        swipeRefreshLayout.setScrollUpChild(listView);
+
+        swipeRefreshLayout.setOnRefreshListener(() -> mPresenter.loadCurrentContents());
     }
 
     @Override
@@ -213,7 +234,10 @@ public class ContentsFragment extends Fragment implements IContentsView {
 
     @Override
     public void setLoadingIndicator(boolean active) {
-        //TODO: to be implemented
+        if(mRootView == null) return;
+
+        SwipeRefreshLayout srl = (SwipeRefreshLayout) mRootView.findViewById(R.id.contents_refresh_layout);
+        srl.post(() -> srl.setRefreshing(active));
     }
 
     //region PRIVATE STUFF
@@ -275,7 +299,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
     }
 
     private void initAssetsListView() {
-        mAssetListView = (ListView) mRootView.findViewById(R.id.index_list);
+        mAssetListView = (ListView) mRootView.findViewById(R.id.assets_list);
         mAssetListView.setOnItemClickListener((parent, view, position, id) ->
                 mViewListeners.onContentAssetClick(parent, view, position, id));
 

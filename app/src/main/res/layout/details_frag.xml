@@ -3,9 +3,9 @@
     android:id="@+id/details_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="nz.ac.aut.comp705.sortmystuff.ui.details.DetailsFragment"
     android:paddingLeft="15sp"
-    android:paddingRight="15sp">
+    android:paddingRight="15sp"
+    tools:context="nz.ac.aut.comp705.sortmystuff.ui.details.DetailsFragment">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -15,37 +15,43 @@
             android:id="@+id/details_page_categories_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:minHeight="35sp"
             android:layout_alignParentStart="true"
             android:layout_marginTop="15dp"
-            android:textColor="@color/dark_grey"
-            android:textSize="20sp"
+            android:minHeight="35dp"
             android:text="@string/details_page_categories_title"
-            android:textStyle="bold"/>
+            android:textColor="@color/dark_grey"
+            android:textSize="20dp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/assetCategory_detail"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_above="@+id/details_list"
-            android:layout_toEndOf="@id/details_page_categories_title"
-            android:layout_marginStart="30dp"
+            android:layout_above="@+id/details_refresh_layout"
             android:layout_marginBottom="8dp"
+            android:layout_marginStart="30dp"
+            android:layout_toEndOf="@id/details_page_categories_title"
             android:background="@drawable/rounded_rectangle"
+            android:padding="6dp"
             android:textColor="@color/white"
-            android:textSize="12sp"
-            android:padding="6dp"/>
+            android:textSize="12sp" />
 
-        <ListView
-            android:id="@+id/details_list"
+        <nz.ac.aut.comp705.sortmystuff.ui.contents.ScrollChildSwipeRefreshLayout
+            android:id="@id/details_refresh_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@id/details_page_categories_title"
-            android:footerDividersEnabled="false"
-            android:headerDividersEnabled="false" />
+            android:layout_below="@id/details_page_categories_title">
+
+            <ListView
+                android:id="@+id/details_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:footerDividersEnabled="false"
+                android:headerDividersEnabled="false" />
+
+        </nz.ac.aut.comp705.sortmystuff.ui.contents.ScrollChildSwipeRefreshLayout>
 
     </RelativeLayout>
-
 
 
 </FrameLayout>
