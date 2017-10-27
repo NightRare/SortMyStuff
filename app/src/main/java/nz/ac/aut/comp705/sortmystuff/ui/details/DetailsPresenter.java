@@ -79,7 +79,7 @@ public class DetailsPresenter implements IDetailsPresenter {
     public void updateTextDetail(final IDetail<String> detail, String newText) {
         boolean edited = false;
         try {
-            mDataManager.updateTextDetail(mCurrentAssetId, detail.getId(), detail.getLabel(), newText);
+            mDataManager.updateDetail(mCurrentAssetId, detail.getId(), detail.getType(), null, newText);
             edited = true;
         } catch (IllegalArgumentException e) {
             mView.showMessage(e.getMessage());
@@ -98,7 +98,7 @@ public class DetailsPresenter implements IDetailsPresenter {
     public void updateAssetPhoto(IDetail<Bitmap> photo, final Bitmap newImage) {
         checkNotNull(newImage, "The new image cannot be null");
 
-        mDataManager.updateImageDetail(photo, photo.getLabel(), newImage);
+        mDataManager.updateDetail(photo.getAssetId(), photo.getId(), photo.getType(), null, newImage);
         loadDetails();
     }
 
@@ -110,7 +110,7 @@ public class DetailsPresenter implements IDetailsPresenter {
     @Override
     public void resetImage(IDetail<Bitmap> imageDetail) {
         checkNotNull(imageDetail, "The image detail cannot be null");
-        mDataManager.resetImageDetail(imageDetail);
+        mDataManager.resetImageDetail(imageDetail.getAssetId(), imageDetail.getId());
         loadDetails();
     }
 

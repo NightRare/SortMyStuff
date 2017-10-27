@@ -38,7 +38,7 @@ public class DemoDebugger {
                         && d.getType().equals(DetailType.Image))
                 .subscribe(
                         //onNext
-                        d -> mDataManager.updateImageDetail(assetId, d.getId(), d.getLabel(), photo)
+                        d -> mDataManager.updateDetail(assetId, d.getId(), d.getType(), null, photo)
                 );
     }
 
@@ -50,7 +50,7 @@ public class DemoDebugger {
                         && (d instanceof TextDetail))
                 .subscribe(
                         //onNext
-                        d -> mDataManager.updateTextDetail(assetId, d.getId(), label, field)
+                        d -> mDataManager.updateDetail(assetId, d.getId(), d.getType(), null, field)
                 );
     }
 }

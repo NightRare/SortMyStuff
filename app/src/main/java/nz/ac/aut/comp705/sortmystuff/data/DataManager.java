@@ -1,8 +1,8 @@
 package nz.ac.aut.comp705.sortmystuff.data;
 
 import android.graphics.Bitmap;
-import android.support.annotation.NonNull;
 
+import com.google.android.gms.tasks.Task;
 import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
@@ -14,28 +14,27 @@ import java.util.Map;
 
 import nz.ac.aut.comp705.sortmystuff.data.local.IFileHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
-import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.Category;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
-import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
+import nz.ac.aut.comp705.sortmystuff.data.models.FAsset;
+import nz.ac.aut.comp705.sortmystuff.data.models.FDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
-import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
-import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
-import nz.ac.aut.comp705.sortmystuff.utils.AppCode;
 import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
+import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
 import nz.ac.aut.comp705.sortmystuff.utils.Log;
-import nz.ac.aut.comp705.sortmystuff.utils.exceptions.ReadLocalStorageFailedException;
-import nz.ac.aut.comp705.sortmystuff.utils.exceptions.UpdateLocalStorageFailedException;
+import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
 import rx.Observable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.ASSET_NOT_EXISTS;
-import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.LOCAL_DATA_CORRUPT;
-import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.NO_ROOT_ASSET;
-import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.OK;
-import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.UNEXPECTED_ERROR;
+import static nz.ac.aut.comp705.sortmystuff.data.models.FAsset.ASSET_CONTAINERID;
+import static nz.ac.aut.comp705.sortmystuff.data.models.FAsset.ASSET_CONTENTIDS;
+import static nz.ac.aut.comp705.sortmystuff.data.models.FAsset.ASSET_MODIFYTIMESTAMP;
+import static nz.ac.aut.comp705.sortmystuff.data.models.FAsset.ASSET_RECYCLED;
+import static nz.ac.aut.comp705.sortmystuff.data.models.FAsset.ASSET_THUMBNAIL;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.ROOT_ASSET_ID;
 
 /**
  * Implementation class of IDataManager
@@ -45,37 +44,69 @@ import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.UNEXPECTED_ERROR;
 
 public class DataManager implements IDataManager {
 
-    public DataManager(IFileHelper fileHelper, LocalResourceLoader resLoader) {
-        this.fileHelper = fileHelper;
-        this.resLoader = resLoader;
-        dirtyCachedAssets = true;
-        dirtyCachedDetails = true;
+
+    public DataManager(IDataRepository remoteRepo, IFileHelper fileHelper, LocalResourceLoader resLoader,
+                       ISchedulerProvider schedulerProvider) {
+        mRemoteRepo = checkNotNull(remoteRepo);
+        mFileHelper = checkNotNull(fileHelper);
+        mResLoader = checkNotNull(resLoader);
+        mSchedulerProvider = checkNotNull(schedulerProvider);
+
+        mDirtyCachedAssets = true;
+        mDirtyCachedDetails = true;
+
+        initCachedDetails();
+        mRemoteRepo.setOnDataChangeCallback(new OnDetailsDataChangeListeners());
+        mRemoteRepo.setOnDataChangeCallback(new OnAssetsDataChangeListeners());
+
+        cacheAssets();
     }
 
-    //region IDataManger METHODS
+    //region RETRIEVE METHODS
+
+    @Override
+    public Observable<IAsset> getRootAsset() {
+        if (mDirtyCachedAssets) {
+            return mRemoteRepo.retrieveAsset(ROOT_ASSET_ID)
+                    .map(asset -> {
+                        if (asset == null) {
+                            return (IAsset) createRootAsset();
+                        } else {
+                            return (IAsset) asset;
+                        }
+                    });
+        } else {
+            return Observable.just(mCachedRootAsset);
+        }
+    }
 
     @Override
     public Observable<List<IAsset>> getAssets() {
-        if (dirtyCachedAssets || cachedAssets == null) {
-            int code = loadCachedAssetsFromLocal();
-            if (code != OK)
-                throw new ReadLocalStorageFailedException("Cannot load assets from storage. Error code: " + code);
+
+        if (mDirtyCachedAssets || mCachedAssets == null) {
+            return mRemoteRepo.retrieveAllAssets()
+                    .flatMap(Observable::from)
+                    .filter(fAsset -> !fAsset.isRecycled())
+                    .map(fAsset -> (IAsset) fAsset)
+                    .toList();
         }
 
-        return Observable.from(cachedAssets.values())
+        return Observable.from(mCachedAssets.values())
                 .map(asset -> (IAsset) asset)
                 .toList();
     }
 
     @Override
     public Observable<List<IAsset>> getRecycledAssets() {
-        if (dirtyCachedAssets || cachedRecycledAssets == null) {
-            int code = loadCachedAssetsFromLocal();
-            if (code != OK)
-                throw new ReadLocalStorageFailedException("Cannot load recycled assets from storage. Error code: " + code);
+        if (mDirtyCachedAssets || mCachedRecycledAssets == null) {
+            return mRemoteRepo.retrieveAllAssets()
+                    .flatMap(Observable::from)
+                    .filter(FAsset::isRecycled)
+                    .map(fAsset -> (IAsset) fAsset)
+                    .toList();
         }
 
-        return Observable.from(cachedRecycledAssets.values())
+        return Observable.from(mCachedRecycledAssets.values())
                 .map(asset -> (IAsset) asset)
                 .toList();
     }
@@ -85,19 +116,12 @@ public class DataManager implements IDataManager {
         checkNotNull(assetId);
 
         // if get the Details of the Root asset, always return empty list
-        if (assetId.equals(getRoot().getId())) {
+        if (assetId.equals(ROOT_ASSET_ID)) {
             return Observable.just(new ArrayList<>());
         }
 
-        int code = loadCachedDetailsFromLocal(assetId);
-        if (code != OK) {
-            throw new ReadLocalStorageFailedException("Cannot load details for asset " + assetId
-                    + " from storage. Error code: " + code);
-        }
-        if (!cachedDetails.containsKey(assetId)) {
-            throw new IllegalStateException("Asset " + assetId + " does not exist. Error code: " + ASSET_NOT_EXISTS);
-        }
-        return Observable.from(cachedDetails.get(assetId))
+        return loadAndCacheDetails(assetId)
+                .flatMap(Observable::from)
                 .map(detail -> (IDetail) detail)
                 .toList();
     }
@@ -106,846 +130,684 @@ public class DataManager implements IDataManager {
     public Observable<IAsset> getAsset(String id) {
         checkNotNull(id);
 
-        if (dirtyCachedAssets || cachedAssets == null) {
-            int code = loadCachedAssetsFromLocal();
-            if (code != OK)
-                throw new ReadLocalStorageFailedException("Cannot load the asset from storage. Error code: " + code);
+        if (id.equals(ROOT_ASSET_ID))
+            return getRootAsset();
+
+        if (mDirtyCachedAssets || mCachedAssets == null) {
+            return mRemoteRepo.retrieveAsset(id)
+                    .map(asset -> (IAsset) asset);
         }
 
-        if (!cachedAssets.containsKey(id)) {
-            throw new IllegalStateException("Asset " + id + " does not exist. Error code: " + ASSET_NOT_EXISTS);
-        }
-
-        return Observable.just(cachedAssets.get(id));
+        return Observable.just(mCachedAssets.get(id));
     }
 
     @Override
-    public Observable<List<IAsset>> getContentAssets(String containerId) {
-        checkNotNull(containerId);
+    public Observable<List<IAsset>> getContentAssets(String assetId) {
+        checkNotNull(assetId);
 
-        if (dirtyCachedAssets || cachedAssets == null) {
-            int code = loadCachedAssetsFromLocal();
-            if (code != OK)
-                throw new ReadLocalStorageFailedException("Cannot load assets from storage. Error code: " + code);
-        }
-        if (!cachedAssets.containsKey(containerId)) {
-            throw new IllegalStateException("Asset " + containerId + " does not exist. Error code: " + ASSET_NOT_EXISTS);
-        }
-        Asset container = cachedAssets.get(containerId);
+        if (mDirtyCachedAssets || mCachedAssets == null) {
+            return mRemoteRepo.retrieveAsset(assetId)
+                    .flatMap(asset -> {
+                        if (asset == null) {
+                            // if the root asset has not been initialised/stored yet
+                            if (assetId.equals(ROOT_ASSET_ID)) {
+                                return Observable.from(new ArrayList<>());
+                            } else
+                                throw new IllegalArgumentException("Asset not exists, id: " + assetId);
+                        }
 
-        if (container.getContents() == null) {
-            throw new IllegalStateException("The data of asset " + containerId + " are damaged. Error code: " + LOCAL_DATA_CORRUPT);
+                        return Observable.from(asset.getContentIds());
+                    })
+                    .flatMap(this::getAsset)
+                    .toList();
         }
-        return Observable.from(container.getContents())
-                .map(asset -> (IAsset) asset)
-                .toList();
+
+        FAsset container = mCachedAssets.get(assetId);
+        if (container == null)
+            throw new IllegalArgumentException("Asset not exists, id: " + assetId);
+
+        List<IAsset> contents = new ArrayList<>();
+        for (String childId : container.getContentIds()) {
+            contents.add(mCachedAssets.get(childId));
+        }
+        return Observable.just(contents);
     }
 
     @Override
     public Observable<List<IAsset>> getParentAssets(String assetId, boolean rootToChildren) {
         checkNotNull(assetId, "The assetId cannot be null.");
 
-        if (dirtyCachedAssets || cachedAssets == null) {
-            int code = loadCachedAssetsFromLocal();
-            if (code != OK)
-                throw new ReadLocalStorageFailedException("Cannot load assets from storage. Error code: " + code);
-        }
-        if (!cachedAssets.containsKey(assetId)) {
-            throw new IllegalStateException("Asset " + assetId + " does not exist. Error code: " + ASSET_NOT_EXISTS);
+        if (mDirtyCachedAssets || mCachedAssets == null) {
+            return mRemoteRepo.retrieveAllAssets()
+                    .flatMap(Observable::from)
+                    .filter(asset -> !asset.isRecycled())
+                    .toMap(FAsset::getId)
+                    .map(allNonRecycledAssets -> {
+                        // if the root asset has not been initialised/stored yet
+                        if (allNonRecycledAssets == null || allNonRecycledAssets.isEmpty()) {
+                            return new ArrayList<IAsset>();
+                        }
+                        FAsset asset = allNonRecycledAssets.get(assetId);
+                        if (asset == null)
+                            throw new IllegalArgumentException("Asset not exists, id: " + assetId);
+
+                        return getParentAssetsList(asset, rootToChildren, allNonRecycledAssets);
+                    });
         }
 
-        Asset asset = cachedAssets.get(assetId);
-        List<Asset> results = new ArrayList<>();
-        //children to root order
-        while (!asset.isRoot()) {
-            results.add(asset);
-            asset = asset.getContainer();
-        }
-        // add the root
-        results.add(asset);
-        if(rootToChildren) Collections.reverse(results);
-        return Observable.from(results)
-                .map(a -> (IAsset) a)
-                .toList();
+        FAsset asset = mCachedAssets.get(assetId);
+        if (asset == null)
+            throw new IllegalArgumentException("Asset not exists, id: " + assetId);
+
+        List<IAsset> results = getParentAssetsList(asset, rootToChildren, mCachedAssets);
+        return Observable.just(results);
     }
 
+    //endregion
 
+    //region CREATE METHODS
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public String createAsset(@NonNull String name, @NonNull String containerId) {
+    public String createAsset(String name, String containerId) {
         return createAsset(name, containerId, CategoryType.Miscellaneous);
     }
 
     @Override
-    public String createAsset(@NonNull String name, @NonNull String containerId, CategoryType categoryType) {
+    public String createAsset(String name, String containerId, CategoryType categoryType) {
         checkNotNull(name);
         checkNotNull(containerId);
         Preconditions.checkArgument(!name.replaceAll(" ", "").isEmpty(), "The name cannot be empty");
         Preconditions.checkArgument(name.length() <= AppConstraints.ASSET_NAME_CAP, "The length of the name should be shorter than "
                 + AppConstraints.ASSET_NAME_CAP + " characters");
 
-        if (!assetExists(containerId)) {
-            Log.e(getClass().getName(),
-                    "container asset not exists, container id: " + containerId);
-            return null;
+        FAsset asset = FAsset.create(name, containerId, categoryType);
+        List<FDetail> details = getCategory(categoryType).generateFDetails(asset.getId());
+        for (FDetail d : details) {
+            asset.addDetailId(d.getId());
+            mRemoteRepo.addDetail(d, mOnDetailUpdated);
+        }
+        mRemoteRepo.addOrUpdateAsset(asset, mOnAssetUpdated);
+
+        LoggedAction updateCacheData = executedFromLog -> {
+            mCachedAssets.get(containerId).addContentId(asset.getId());
+            mCachedAssets.put(asset.getId(), asset);
+        };
+
+        if (mDirtyCachedAssets) {
+            // needs to update the contentIds of the container asset
+            mRemoteRepo.retrieveAsset(containerId)
+                    .subscribeOn(mSchedulerProvider.io())
+                    .subscribe(container -> {
+                        container.addContentId(asset.getId());
+                        mRemoteRepo.addOrUpdateAsset(container, mOnAssetUpdated);
+                        mActionsQueue.add(updateCacheData);
+                    });
+        } else {
+            updateCacheData.execute(false);
+            mRemoteRepo.addOrUpdateAsset(mCachedAssets.get(containerId), mOnAssetUpdated);
         }
 
-        Asset asset = Asset.create(name, cachedAssets.get(containerId), categoryType);
-        List<Detail> details = getCategory(categoryType).generateDetails(asset.getId());
-        if (!fileHelper.serialiseAsset(asset) || !fileHelper.serialiseDetails(details, true)) {
-            throw new UpdateLocalStorageFailedException("Serialising asset failed, asset id: "
-                    + asset.getId());
-        }
-        cachedAssets.put(asset.getId(), asset);
         return asset.getId();
     }
 
-    private void createRootAsset() {
-        Asset root = Asset.createRoot();
-        if (!fileHelper.serialiseAsset(root)) {
-            throw new UpdateLocalStorageFailedException("Serialising Root asset failed");
-        }
-        cachedRootAsset = root;
-        return;
-    }
+    //endregion
 
-    /**
-     * {@inheritDoc}
-     */
-    @Deprecated
-    @Override
-    public String createTextDetail(@NonNull Asset asset, @NonNull String label, @NonNull String field) {
-        checkNotNull(asset);
-
-        return createTextDetail(asset.getId(), label, field);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Deprecated
-    @Override
-    public String createTextDetail(@NonNull final String assetId, @NonNull String label, @NonNull String field) {
-        checkNotNull(assetId);
-        checkNotNull(label);
-        checkNotNull(field);
-        Preconditions.checkArgument(!label.replaceAll(" ", "").isEmpty());
-        Preconditions.checkArgument(label.length() < AppConstraints.DETAIL_LABEL_CAP);
-        Preconditions.checkArgument(field.length() < AppConstraints.TEXTDETAIL_FIELD_CAP);
-
-        // cannot createAsMisc detail for Root asset
-        if (assetId.equals(getRoot().getId()))
-            return null;
-
-        TextDetail td = (TextDetail) addDetail(assetId, DetailType.Text, label, field);
-        return td == null ? null : td.getId();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public IAsset getRoot() {
-        if (dirtyCachedAssets || cachedRootAsset == null) {
-            int code = loadCachedAssetsFromLocal();
-            if (code == AppCode.NO_ROOT_ASSET) {
-                createRootAsset();
-            }
-
-            if (cachedRootAsset == null) {
-                Log.e(Log.UNEXPECTED_ERROR, "Root asset not available. Error code: " + code);
-                return null;
-            }
-        }
-        return cachedRootAsset;
-    }
+    //region  UPDATE METHODS
 
     @Override
-    public Observable<IAsset> getRootAsset() {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void updateAssetName(@NonNull Asset asset, @NonNull String newName) {
-        checkNotNull(asset);
-
-        updateAssetName(asset.getId(), newName);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void updateAssetName(@NonNull String assetId, @NonNull final String newName) {
+    public void updateAssetName(String assetId, final String newName) {
         checkNotNull(assetId);
         checkNotNull(newName);
         Preconditions.checkArgument(!newName.replaceAll(" ", "").isEmpty());
         Preconditions.checkArgument(newName.length() < AppConstraints.ASSET_NAME_CAP);
 
-        if (!assetExists(assetId)) {
-            Log.e(getClass().getName(), "asset not exists, failed to update");
-            return;
+        LoggedAction updateAsset = executedFromLog -> {
+            FAsset asset = mCachedAssets.get(assetId);
+            if (asset == null) return;
+
+            asset.setName(newName);
+            if (!executedFromLog)
+                mRemoteRepo.addOrUpdateAsset(asset, mOnAssetUpdated);
+        };
+
+        if (mDirtyCachedAssets) {
+            mRemoteRepo.retrieveAsset(assetId)
+                    .doOnNext(asset -> {
+                        if (asset == null) return;
+                        asset.setName(newName);
+                        mRemoteRepo.addOrUpdateAsset(asset, mOnAssetUpdated);
+                    })
+                    .subscribe(asset -> {
+                        if (asset != null)
+                            mActionsQueue.add(updateAsset);
+                    });
+
+        } else {
+            updateAsset.execute(false);
         }
-        Asset asset = cachedAssets.get(assetId);
-        asset.setName(newName);
-        if (!fileHelper.serialiseAsset(asset)) {
-            dirtyCachedAssets = true;
-            throw new UpdateLocalStorageFailedException("Write asset failed, id: " + assetId);
-        }
-        return;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void moveAsset(@NonNull Asset asset, @NonNull String newContainerId) {
-        checkNotNull(asset);
-
-        moveAsset(asset.getId(), newContainerId);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void moveAsset(@NonNull String assetId, @NonNull String newContainerId) {
+    public void moveAsset(String assetId, String newContainerId) {
         checkNotNull(assetId);
         checkNotNull(newContainerId);
 
-        if (!assetExists(assetId) || !assetExists(newContainerId)) {
-            Log.e(getClass().getName(), "asset not exists, failed to update, asset id: "
-                    + assetId + " container id: " + newContainerId);
-            return;
-        }
-        Asset asset = cachedAssets.get(assetId);
-        if (!asset.moveTo(cachedAssets.get(newContainerId))) {
-            Log.e(getClass().getName(), "move asset failed, asset id: " + assetId
-                    + " container id: " + newContainerId);
-            return;
-        }
-        if (!fileHelper.serialiseAsset(asset)) {
-            dirtyCachedAssets = true;
-            throw new UpdateLocalStorageFailedException("Write asset failed, id: " + assetId);
-        }
-    }
+        LoggedAction moveAsset = executedFromLog -> {
+            FAsset asset = mCachedAssets.get(assetId);
+            FAsset from = mCachedAssets.get(asset.getContainerId());
+            FAsset to = mCachedAssets.get(newContainerId);
 
+            if (asset == null || from == null || to == null) return;
 
-    /**
-     * {@inheritDoc}
-     *
-     */
-    @Override
-    public void recycleAssetRecursively(@NonNull String assetId) {
-        checkNotNull(assetId);
-
-        if (!assetExists(assetId) || assetId.equals(AppConstraints.ROOT_ASSET_ID)) {
-            Log.e(getClass().getName(), "asset not exists or it is Root Asset, failed to recycle, asset id: " + assetId);
-            return;
-        }
-        Asset asset = cachedAssets.get(assetId);
-
-        if(!asset.getContents().isEmpty()) {
-            for(Asset a : asset.getContents()) {
-                recycleAssetRecursively(a.getId());
+            if (isParentOf(asset, to) || !asset.move(from, to)) {
+                Log.e(getClass().getName(), "move asset failed, asset id: " + asset.getId()
+                        + " container id: " + to.getId());
+                return;
             }
+
+            if (!executedFromLog)
+                moveAssetUpdateRemoteRepo(asset, from, to);
+        };
+
+        if (mDirtyCachedAssets) {
+            Observable<FAsset> assetObservable = mRemoteRepo.retrieveAsset(assetId)
+                    .subscribeOn(mSchedulerProvider.io());
+
+            Observable<FAsset> fromObservable = mRemoteRepo.retrieveAsset(assetId)
+                    .subscribeOn(mSchedulerProvider.io())
+                    .flatMap(asset -> mRemoteRepo.retrieveAsset(asset.getContainerId()));
+
+            Observable<FAsset> toObservable = mRemoteRepo.retrieveAsset(newContainerId)
+                    .subscribeOn(mSchedulerProvider.io());
+
+            Observable.zip(assetObservable, fromObservable, toObservable, (asset, from, to) -> {
+                if (asset == null || from == null || to == null) return null;
+
+                if (isParentOf(asset, to) || !asset.move(from, to)) {
+                    Log.e(getClass().getName(), "move asset failed, asset id: " + asset.getId()
+                            + " container id: " + to.getId());
+                    return null;
+                }
+
+                moveAssetUpdateRemoteRepo(asset, from, to);
+                return null;
+            }).subscribe(o -> mActionsQueue.add(moveAsset));
+
+        } else {
+            moveAsset.execute(false);
         }
-        recycleAsset(asset);
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     */
     @Override
-    public void recycleAssetRecursively(@NonNull Asset asset) {
-        checkNotNull(asset);
-
-        recycleAssetRecursively(asset.getId());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void removeDetail(@NonNull Detail detail) {
-        checkNotNull(detail);
-
-        removeDetail(detail.getAssetId(), detail.getId());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void removeDetail(@NonNull String assetId, @NonNull String detailId) {
+    public void recycleAssetAndItsContents(String assetId) {
         checkNotNull(assetId);
-        checkNotNull(detailId);
 
-        int code = loadCachedDetailsFromLocal(assetId);
-        if (code != OK) {
-            Log.e(getClass().getName(), "Cannot createAsMisc detail, error code: " + code);
-            return;
-        }
+        if (assetId.equals(ROOT_ASSET_ID)) return;
 
-        List<Detail> details = cachedDetails.get(assetId);
-        boolean removed = false;
-        boolean updateImage = false;
-        for (Detail d : details) {
-            if (d.getId().equals(detailId)) {
-                if (d.getType().equals(DetailType.Image))
-                    updateImage = true;
-                details.remove(d);
-                removed = true;
-                break;
+        if (mDirtyCachedAssets) {
+            mRemoteRepo.retrieveAsset(assetId)
+                    .subscribeOn(mSchedulerProvider.io())
+                    .flatMap(this::recycleAssetGetAllChildrenAssets)
+                    .subscribe(
+                            //onNext
+                            this::recycleAsset,
+                            //onError
+                            mOnAssetUpdated::onFailure
+                    );
+        } else {
+            FAsset asset = mCachedAssets.get(assetId);
+
+            if (!asset.getContentIds().isEmpty()) {
+                for (String id : asset.getContentIds()) {
+                    recycleAssetAndItsContents(id);
+                }
             }
+            recycleAsset(asset);
         }
-
-        // if nothing removed, do nothing
-        if (!removed)
-            return;
-
-        cachedAssets.get(assetId).updateTimeStamp();
-        if (!fileHelper.serialiseDetails(details, updateImage) ||
-                !fileHelper.serialiseAsset(cachedAssets.get(assetId))) {
-            dirtyCachedAssets = true;
-            dirtyCachedDetails = true;
-            throw new UpdateLocalStorageFailedException(
-                    "Serialising TextDetail failed, Detail id: " + detailId + "; Asset id: " + assetId);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void updateTextDetail(@NonNull TextDetail detail,
-                                 @NonNull String label, @NonNull String field) {
-        checkNotNull(detail);
-
-        updateTextDetail(detail.getAssetId(), detail.getId(), label, field);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void updateTextDetail(@NonNull String assetId, @NonNull String detailId,
-                                 @NonNull String label, @NonNull String field) {
-        checkNotNull(assetId);
-        checkNotNull(detailId);
-        checkNotNull(label);
-        checkNotNull(field);
-        Preconditions.checkArgument(!label.replaceAll(" ", "").isEmpty());
-        Preconditions.checkArgument(label.length() <= AppConstraints.DETAIL_LABEL_CAP,
-                "Please keep the length of the text within " + AppConstraints.DETAIL_LABEL_CAP + " characters");
-        Preconditions.checkArgument(field.length() <= AppConstraints.TEXTDETAIL_FIELD_CAP,
-                "Please keep the length of the text within " + AppConstraints.TEXTDETAIL_FIELD_CAP + " characters");
-
-        modifyDetail(assetId, detailId, label, field);
-    }
-
-    @Override
-    public void resetImageDetail(@NonNull IDetail<Bitmap> detail) {
-        resetImageDetail((ImageDetail) detail);
     }
 
     @Override
     public void resetImageDetail(String assetId, String detailId) {
+        checkNotNull(assetId);
+        checkNotNull(detailId);
 
+        updateDetailWithDefaultFieldValue(assetId, detailId, null);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void updateImageDetail(@NonNull ImageDetail detail, @NonNull String label, @NonNull Bitmap field) {
-        checkNotNull(detail);
-        checkNotNull(label);
-        checkNotNull(field);
-        Preconditions.checkArgument(!label.replaceAll(" ", "").isEmpty());
-        Preconditions.checkArgument(label.length() < AppConstraints.DETAIL_LABEL_CAP);
+    public <T> void updateDetail(String assetId, String detailId, DetailType type, String newLabel, T newField) {
+        checkUpdateDetailArguments(assetId, detailId, type, newLabel, newField);
+        if (newLabel == null && newField == null) return;
 
-        modifyDetail(detail.getAssetId(), detail.getId(), label, field);
+        if (mDirtyCachedDetails) {
+            initCachedDetails();
+        }
+        long modifyTimestamp = System.currentTimeMillis();
+
+        if (mCachedDetails.containsKey(assetId)) {
+            for (FDetail detail : mCachedDetails.get(assetId)) {
+                if (detail.getId().equals(detailId)) {
+                    updateDetailAndUpdateInRemote(detail, newLabel, newField, false, modifyTimestamp);
+                    updateAssetModifyTimestamp(detail.getAssetId(), modifyTimestamp);
+                    break;
+                }
+            }
+        } else {
+            mRemoteRepo.retrieveDetail(detailId)
+                    .subscribeOn(mSchedulerProvider.io())
+                    .doOnNext(detail -> {
+                        updateDetailAndUpdateInRemote(detail, newLabel, newField, false, modifyTimestamp);
+                        updateAssetModifyTimestamp(detail.getAssetId(), modifyTimestamp);
+                    })
+                    .subscribe();
+        }
     }
 
-    @Override
-    public void updateImageDetail(@NonNull IDetail<Bitmap> detail, @NonNull String label, @NonNull Bitmap field) {
-        updateImageDetail((ImageDetail) detail, label, field);
-    }
 
-    @Override
-    public void updateImageDetail(String assetId, String detailId, String label, Bitmap field) {
+    //endregion
 
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void refreshFromLocal() {
-        dirtyCachedAssets = true;
-        dirtyCachedDetails = true;
-    }
+    //region OTHER METHODS
 
     @Override
     public void reCacheFromRemoteDataSource() {
-
+        cacheAssets();
+        mDirtyCachedDetails = true;
+        initCachedDetails();
     }
 
     //endregion
 
-    //region DEPRECATED METHODS
+    interface LoggedAction {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getAllAssetsAsync(@NonNull LoadAssetsCallback callback) {
-        checkNotNull(callback);
-
-        if (dirtyCachedAssets || cachedAssets == null) {
-            int code = loadCachedAssetsFromLocal();
-            if (code != OK) {
-                callback.dataNotAvailable(code);
-                return;
-            }
-        }
-
-        List<Asset> list = new LinkedList<>(cachedAssets.values());
-        callback.onAssetsLoaded(list);
+        void execute(boolean executedFromLog);
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getRecycledAssetsAsync(@NonNull LoadAssetsCallback callback) {
-        checkNotNull(callback);
-
-        if (dirtyCachedAssets || cachedRecycledAssets == null) {
-            int code = loadCachedAssetsFromLocal();
-            if (code != OK) {
-                callback.dataNotAvailable(code);
-                return;
-            }
-        }
-
-        List<Asset> list = new LinkedList<>(cachedRecycledAssets.values());
-        callback.onAssetsLoaded(list);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getContentAssetsAsync(@NonNull Asset container, @NonNull LoadAssetsCallback callback) {
-        checkNotNull(container);
-
-        getContentAssetsAsync(container.getId(), callback);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getContentAssetsAsync(@NonNull String containerId, @NonNull LoadAssetsCallback callback) {
-        checkNotNull(containerId);
-        checkNotNull(callback);
-
-        if (dirtyCachedAssets || cachedAssets == null) {
-            int code = loadCachedAssetsFromLocal();
-            if (code != OK) {
-                callback.dataNotAvailable(code);
-                return;
-            }
-        }
-
-        if (!cachedAssets.containsKey(containerId)) {
-            callback.dataNotAvailable(ASSET_NOT_EXISTS);
-            return;
-        }
-        Asset container = cachedAssets.get(containerId);
-
-        if (container.getContents() == null) {
-            callback.dataNotAvailable(LOCAL_DATA_CORRUPT);
-            return;
-        }
-        callback.onAssetsLoaded(container.getContents());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getParentAssetsAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback) {
-        checkNotNull(asset);
-
-        getParentAssetsAsync(asset.getId(), callback);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getParentAssetsAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback) {
-        checkNotNull(assetId);
-        checkNotNull(callback);
-
-        if (dirtyCachedAssets || cachedAssets == null) {
-            int code = loadCachedAssetsFromLocal();
-            if (code != OK) {
-                callback.dataNotAvailable(code);
-                return;
-            }
-        }
-        if (!cachedAssets.containsKey(assetId)) {
-            callback.dataNotAvailable(ASSET_NOT_EXISTS);
-            return;
-        }
-
-        Asset asset = cachedAssets.get(assetId);
-        List<Asset> parents = new LinkedList<>();
-        while (!asset.isRoot()) {
-            parents.add(asset.getContainer());
-            asset = asset.getContainer();
-        }
-        callback.onAssetsLoaded(parents);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getParentAssetsDescAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback) {
-        checkNotNull(asset);
-
-        getParentAssetsDescAsync(asset.getId(), callback);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getParentAssetsDescAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback) {
-        checkNotNull(assetId);
-
-        if (dirtyCachedAssets || cachedAssets == null) {
-            int code = loadCachedAssetsFromLocal();
-            if (code != OK) {
-                callback.dataNotAvailable(code);
-                return;
-            }
-        }
-        if (!cachedAssets.containsKey(assetId)) {
-            callback.dataNotAvailable(ASSET_NOT_EXISTS);
-            return;
-        }
-
-        Asset asset = cachedAssets.get(assetId);
-        List<Asset> parents = new LinkedList<>();
-        while (!asset.isRoot()) {
-            parents.add(0, asset);
-            asset = asset.getContainer();
-        }
-        // add the root
-        parents.add(0, asset);
-        callback.onAssetsLoaded(parents);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getAssetAsync(@NonNull String assetId, @NonNull GetAssetCallback callback) {
-        checkNotNull(assetId);
-        checkNotNull(callback);
-
-        if (dirtyCachedAssets || cachedAssets == null) {
-            int code = loadCachedAssetsFromLocal();
-            if (code != OK) {
-                callback.dataNotAvailable(code);
-                return;
-            }
-        }
-
-        if (!cachedAssets.containsKey(assetId)) {
-            callback.dataNotAvailable(ASSET_NOT_EXISTS);
-            return;
-        }
-        callback.onAssetLoaded(cachedAssets.get(assetId));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getDetailsAsync(@NonNull Asset asset, @NonNull LoadDetailsCallback callback) {
-        checkNotNull(asset);
-
-        getDetailsAsync(asset.getId(), callback);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void getDetailsAsync(@NonNull String assetId, @NonNull LoadDetailsCallback callback) {
-        checkNotNull(assetId);
-        checkNotNull(callback);
-
-        // if get the Details of the Root asset, always return empty list
-        if (assetId.equals(getRoot().getId())) {
-            callback.onDetailsLoaded(new LinkedList<Detail>());
-            return;
-        }
-
-        int code = loadCachedDetailsFromLocal(assetId);
-        if (code != OK) {
-            callback.dataNotAvailable(code);
-            return;
-        }
-        if (!cachedDetails.containsKey(assetId)) {
-            callback.dataNotAvailable(UNEXPECTED_ERROR);
-            return;
-        }
-        callback.onDetailsLoaded(cachedDetails.get(assetId));
-    }
-
-    //endregion
 
     //region PRIVATE STUFF
 
-    private IFileHelper fileHelper;
-    private LocalResourceLoader resLoader;
-    private Map<CategoryType, Category> categories;
+    private void cacheAssets() {
+        mDirtyCachedAssets = true;
+        mActionsQueue = new ArrayList<>();
+        mCachedAssets = new HashMap<>();
+        mCachedRecycledAssets = new HashMap<>();
 
-    private Asset cachedRootAsset;
-    private Map<String, Asset> cachedAssets;
-    private Map<String, List<Detail>> cachedDetails;
-    private Map<String, Asset> cachedRecycledAssets;
+        getRootAsset()
+                .subscribeOn(mSchedulerProvider.computation())
+                .flatMap(asset -> mRemoteRepo.retrieveAllAssets())
+                .flatMap(Observable::from)
+                .doOnNext(this::putAssetIntoCacheObjects)
+                .doOnCompleted(() -> {
+                    // apply logged changes to the cache as the caching has ended
+                    while (!mActionsQueue.isEmpty()) {
+                        mActionsQueue.remove(0).execute(true);
+                    }
+                    mDirtyCachedAssets = false;
+                })
+                .subscribe();
+    }
 
-    private boolean dirtyCachedAssets;
-    private boolean dirtyCachedDetails;
+    private void putAssetIntoCacheObjects(FAsset asset) {
+        if (asset.isRecycled()) {
+            mCachedRecycledAssets.put(asset.getId(), asset);
+        } else {
+            if (asset.isRoot()) mCachedRootAsset = asset;
+            mCachedAssets.put(asset.getId(), asset);
+        }
+    }
+
+    private void initCachedDetails() {
+        mCachedDetails = new HashMap<>();
+        mCachedDetailsKeyList = new LinkedList<>();
+        mDirtyCachedDetails = false;
+    }
+
+    private Observable<List<FDetail>> loadAndCacheDetails(String assetId) {
+        if (mDirtyCachedDetails || mCachedDetails == null) {
+            initCachedDetails();
+        } else if (mCachedDetails.containsKey(assetId)) {
+            return Observable.just(mCachedDetails.get(assetId));
+        }
+
+        // Releases one cache from the cachedDetails map if the size of the cache is bigger than the limit.
+        // The cache algorithm now is LRU (Latest Recently Used).
+        if (mCachedDetails.size() >= AppConstraints.CACHED_DETAILS_LIST_NUM) {
+            mCachedDetails.remove(mCachedDetailsKeyList.get(0));
+        }
+
+        return mRemoteRepo.retrieveDetails(assetId)
+                .doOnNext(details -> {
+                    mCachedDetails.put(assetId, details);
+                    mCachedDetailsKeyList.add(assetId);
+                });
+    }
 
     private Category getCategory(CategoryType categoryType) {
-        if(categories == null) {
-            categories = new HashMap<>();
-            for(Category c : fileHelper.deserialiseCategories()) {
-                categories.put(Enum.valueOf(CategoryType.class, c.getName()),
+        if (mCategories == null) {
+            mCategories = new HashMap<>();
+            for (Category c : mFileHelper.deserialiseCategories()) {
+                mCategories.put(Enum.valueOf(CategoryType.class, c.getName()),
                         c);
             }
         }
 
-        return categories.get(categoryType);
+        return mCategories.get(categoryType);
     }
 
-    private synchronized int loadCachedAssetsFromLocal() {
-        if (!fileHelper.rootExists())
-            return NO_ROOT_ASSET;
-
-        cachedAssets = new HashMap<>();
-        cachedRecycledAssets = new HashMap<>();
-        List<Asset> allAssets = fileHelper.deserialiseAllAssets();
-
-        // assign each asset to corresponding cache
-        for (Asset asset : allAssets) {
-            if (asset.isRecycled()) {
-                cachedRecycledAssets.put(asset.getId(), asset);
-                continue;
-            }
-
-            cachedAssets.put(asset.getId(), asset);
-            if (asset.isRoot()) {
-                cachedRootAsset = asset;
-            } else {
-                asset.setThumbnail(loadPhoto(asset.getId()));
-            }
-
-        }
-
-        // form the tree structure in user assets
-        for (Asset asset : cachedAssets.values()) {
-            asset.attachToTree(asset.isRoot() ? null : cachedAssets.get(asset.getContainerId()));
-        }
-
-        dirtyCachedAssets = false;
-        return OK;
+    private FAsset createRootAsset() {
+        FAsset root = FAsset.createRoot();
+        mRemoteRepo.addOrUpdateAsset(root, null);
+        return root;
     }
 
-    private synchronized int loadCachedDetailsFromLocal(String assetId) {
-        if (!fileHelper.rootExists())
-            return NO_ROOT_ASSET;
-        if (!assetExists(assetId))
-            return ASSET_NOT_EXISTS;
-
-        if (dirtyCachedDetails || cachedDetails == null) {
-            cachedDetails = new HashMap<>();
+    private void updateAssetModifyTimestamp(String assetId, long modifyTimestamp) {
+        LoggedAction updateModifyTimestamp = executedFromLog ->
+                mCachedAssets.get(assetId).setModifyTimestamp(modifyTimestamp);
+        if (mDirtyCachedAssets) {
+            mActionsQueue.add(updateModifyTimestamp);
+        } else {
+            updateModifyTimestamp.execute(false);
         }
-        else if (cachedDetails.containsKey(assetId)) {
-            return OK;
-        }
-        releaseOneCachedDetails();
-        List<Detail> details = fileHelper.deserialiseDetails(assetId);
-        if (details == null) {
-            return LOCAL_DATA_CORRUPT;
-        }
-        cachedDetails.put(assetId, details);
-
-        dirtyCachedDetails = false;
-        return OK;
+        mRemoteRepo.updateAsset(assetId, ASSET_MODIFYTIMESTAMP, modifyTimestamp, mOnAssetUpdated);
     }
 
-    private synchronized Bitmap loadPhoto(String assetId) {
-        Bitmap photo = null;
-        List<Detail> detailList = fileHelper.deserialiseDetails(assetId);
-        for (Detail detail : detailList) {
-            if (detail.getType().equals(DetailType.Image)
-                    && detail.getLabel().equals(CategoryType.BasicDetail.PHOTO))
-                photo = (Bitmap) detail.getField();
+    /**
+     * Checks if a1 is the parent of a2.
+     *
+     * @param a1 the asset to be checked
+     * @return true if this asset is the parent of the given asset
+     */
+    private boolean isParentOf(FAsset a1, FAsset a2) {
+        if (a1.getId().equals(a2.getId())) return false;
+        if (a1.isRoot()) return true;
+        if (a2.isRoot()) return false;
+
+        if (a2.getContainerId().equals(a1.getId()))
+            return true;
+        else {
+            return isParentOf(a1, mCachedAssets.get(a2.getContainerId()));
         }
-        if (photo == null) {
-            photo = resLoader.getDefaultPhoto();
-        }
-        return photo;
     }
 
-
-    private boolean assetExists(String assetId) {
-        if (cachedAssets == null || dirtyCachedAssets) {
-            loadCachedAssetsFromLocal();
+    private List<IAsset> getParentAssetsList(FAsset asset, boolean rootToChildren,
+                                             Map<String, FAsset> allNonRecycledAssets) {
+        List<IAsset> results = new ArrayList<>();
+        //children to root order
+        while (!asset.isRoot()) {
+            results.add(asset);
+            asset = allNonRecycledAssets.get(asset.getContainerId());
         }
-
-        return cachedAssets.containsKey(assetId);
+        // add the root
+        results.add(asset);
+        if (rootToChildren) Collections.reverse(results);
+        return results;
     }
 
+    private void moveAssetUpdateRemoteRepo(FAsset asset, FAsset from, FAsset to) {
+        mRemoteRepo.updateAsset(asset.getId(), ASSET_CONTAINERID, asset.getContainerId(), mOnAssetUpdated);
+        mRemoteRepo.updateAsset(from.getId(), ASSET_CONTENTIDS, from.getContentIds(), mOnAssetUpdated);
+        mRemoteRepo.updateAsset(to.getId(), ASSET_CONTENTIDS, to.getContentIds(), mOnAssetUpdated);
+    }
 
-    private void recycleAsset(@NonNull Asset asset) {
+    private void recycleAsset(FAsset asset) {
         checkNotNull(asset);
 
-        asset.recycle();
-        cachedRecycledAssets.put(asset.getId(), cachedAssets.remove(asset.getId()));
-        if (!fileHelper.serialiseAsset(asset)) {
-            dirtyCachedAssets = true;
-            throw new UpdateLocalStorageFailedException("Write asset failed, id: " + asset.getId());
+        LoggedAction recycleAction = executedFromLog -> {
+            // the containerId of the recycled asset is not removed on purpose
+            // in case it needs to be restored in the future
+            FAsset container = mCachedAssets.get(asset.getContainerId());
+            container.removeContentId(asset.getId());
+            mCachedAssets.get(asset.getId()).setRecycled(true);
+            mCachedRecycledAssets.put(asset.getId(), mCachedAssets.remove(asset.getId()));
+
+            if (!executedFromLog)
+                mRemoteRepo.updateAsset(container.getId(), ASSET_CONTENTIDS,
+                        container.getContentIds(), mOnAssetUpdated);
+        };
+
+        if (mDirtyCachedAssets) {
+            mRemoteRepo.retrieveAsset(asset.getContainerId())
+                    .doOnNext(container -> {
+                        container.removeContentId(asset.getId());
+                        mRemoteRepo.updateAsset(container.getId(),
+                                ASSET_CONTENTIDS, container.getContentIds(), mOnAssetUpdated);
+                    })
+                    .subscribe(container -> mActionsQueue.add(recycleAction));
+        } else {
+            recycleAction.execute(false);
         }
+
+        mRemoteRepo.updateAsset(asset.getId(), ASSET_RECYCLED, true, mOnAssetUpdated);
     }
 
-    private boolean releaseOneCachedDetails() {
-        if (cachedDetails.size() > AppConstraints.CACHED_DETAILS_LIST_NUM) {
-            String key = null;
-            for (String k : cachedDetails.keySet()) {
-                key = k;
-                break;
+    private Observable<FAsset> recycleAssetGetAllChildrenAssets(FAsset asset) {
+        if (asset.getContentIds().isEmpty())
+            return Observable.just(asset);
+
+        return Observable.merge(
+                Observable.just(asset),
+                Observable.from(asset.getContentIds())
+                        .flatMap(id -> mRemoteRepo.retrieveAsset(id))
+                        .flatMap(this::recycleAssetGetAllChildrenAssets));
+    }
+
+    private void updateAssetThumbnailAndUpdateInRemote(String assetId, Bitmap originalPhoto, boolean usingDefaultPhoto) {
+        Bitmap thumbnail = usingDefaultPhoto ?
+                mResLoader.getDefaultThumbnail() : BitmapHelper.toThumbnail(originalPhoto);
+        String thumbnailDataString = usingDefaultPhoto ? null : BitmapHelper.toString(thumbnail);
+
+        LoggedAction updateThumbnail = executedFromLog -> {
+            FAsset asset = mCachedAssets.get(assetId);
+            if (asset != null) {
+                asset.setThumbnail(thumbnail, usingDefaultPhoto);
             }
-            cachedDetails.remove(key);
-            return true;
+        };
+
+        if (mDirtyCachedAssets) {
+            mActionsQueue.add(updateThumbnail);
+        } else {
+            updateThumbnail.execute(false);
         }
-        return false;
+
+        mRemoteRepo.updateAsset(assetId, ASSET_THUMBNAIL, thumbnailDataString, mOnAssetUpdated);
     }
 
-    private <T> Detail addDetail(String assetId, DetailType type, String label, T field) {
-        // check type of the field
-        if (!field.getClass().equals(type.getFieldClass()))
-            throw new IllegalArgumentException
-                    ("Inconsistency between detail type and the type of the field.");
+    private void updateDetailWithDefaultFieldValue(String assetId, String detailId, String newLabel) {
+        checkNotNull(assetId, "The assetId cannot be null.");
+        checkNotNull(detailId, "The detailId cannot be null.");
 
-        int code = loadCachedDetailsFromLocal(assetId);
-        if (code != OK) {
-            Log.e(getClass().getName(), "Cannot createAsMisc detail, error code: " + code);
-            return null;
+        if (mDirtyCachedDetails) {
+            initCachedDetails();
         }
+        long modifyTimestamp = System.currentTimeMillis();
 
-        Detail detail = null;
-        boolean updateImage = false;
-
-        if (type.equals(DetailType.Text)) {
-            detail = TextDetail.createTextDetail(assetId, label, (String) field);
-
-        } else if (type.equals(DetailType.Date)) {
-            detail = TextDetail.createDateDetail(assetId, label, (String) field);
-
-        } else if (type.equals(DetailType.Image)) {
-            Bitmap defaultPhoto = resLoader.getDefaultPhoto();
-            detail = ImageDetail.create(assetId, label, defaultPhoto);
-            updateImage = true;
+        if (mCachedDetails.containsKey(assetId)) {
+            for (FDetail detail : mCachedDetails.get(assetId)) {
+                if (detail.getId().equals(detailId)) {
+                    if (detail.getType().equals(DetailType.Text) || detail.getType().equals(DetailType.Date)) {
+                        updateDetailAndUpdateInRemote(detail, newLabel, mResLoader.getDefaultText(),
+                                true, modifyTimestamp);
+                    } else if (detail.getType().equals(DetailType.Image)) {
+                        updateDetailAndUpdateInRemote(detail, newLabel, mResLoader.getDefaultPhoto(),
+                                true, modifyTimestamp);
+                    }
+                    updateAssetModifyTimestamp(detail.getAssetId(), modifyTimestamp);
+                    break;
+                }
+            }
+        } else {
+            mRemoteRepo.retrieveDetail(detailId)
+                    .subscribeOn(mSchedulerProvider.io())
+                    .doOnNext(detail -> {
+                        if (detail.getType().equals(DetailType.Text) || detail.getType().equals(DetailType.Date)) {
+                            updateDetailAndUpdateInRemote(detail, newLabel, mResLoader.getDefaultText(),
+                                    true, modifyTimestamp);
+                        } else if (detail.getType().equals(DetailType.Image)) {
+                            updateDetailAndUpdateInRemote(detail, newLabel, mResLoader.getDefaultPhoto(),
+                                    true, modifyTimestamp);
+                        }
+                        updateAssetModifyTimestamp(detail.getAssetId(), modifyTimestamp);
+                    })
+                    .subscribe();
         }
-
-        if (detail != null)
-            cachedDetails.get(assetId).add(detail);
-        else
-            return null;
-
-        cachedAssets.get(assetId).updateTimeStamp();
-
-        if (!fileHelper.serialiseDetails(cachedDetails.get(assetId), updateImage) ||
-                !fileHelper.serialiseAsset(cachedAssets.get(assetId))) {
-            dirtyCachedAssets = true;
-            dirtyCachedDetails = true;
-            throw new UpdateLocalStorageFailedException(
-                    "Serialising TextDetail failed, Detail id: " + detail.getId() + "; Asset id: " + assetId);
-        }
-
-        return detail;
     }
 
-    private <T> Detail modifyDetail(String assetId, String detailId,
-                                    @NonNull String label, @NonNull T field) {
+    private <E> void updateDetailAndUpdateInRemote(FDetail<E> detail, String newLabel,
+                                                   E newField, boolean defaultFieldValue, long modifyTimestamp) {
+        Class fieldType = newField == null ? null : newField.getClass();
 
-        int code = loadCachedDetailsFromLocal(assetId);
-        if (code != OK) {
-            Log.e(getClass().getName(), "Cannot createAsMisc detail, error code: " + code);
-            return null;
+        if (fieldType != null) {
+            if (!detail.getType().getFieldClass().equals(fieldType))
+                throw new IllegalArgumentException("Incorrect type of detail.");
         }
 
-        Detail detail = null;
-        boolean updateImage = false;
+        if (newLabel != null)
+            detail.setLabel(newLabel);
 
-        for (Detail d : cachedDetails.get(assetId)) {
-            // if found the detail
-            if (d.getId().equals(detailId)) {
+        boolean updatingField = newField != null;
+        if (updatingField)
+            detail.setField(newField, defaultFieldValue);
 
-                // check type of the field
-                if (!field.getClass().equals(d.getType().getFieldClass()))
-                    throw new IllegalArgumentException
-                            ("Inconsistency between detail type and the type of the field.");
+        detail.setModifyTimestamp(modifyTimestamp);
 
-                detail = d;
-                detail.setLabel(label);
-                detail.setField(field);
+        mRemoteRepo.updateDetail(detail, updatingField, mOnDetailUpdated);
 
-                if (d.getType().equals(DetailType.Image)) {
-                    updateImage = true;
-                    // if it is the "Photo" detail of an asset, need to set the
-                    // photo of asset as well
-                    if(d.getLabel().equals(CategoryType.BasicDetail.PHOTO)) {
-                        cachedAssets.get(assetId).setThumbnail((Bitmap) field);
+        // if the detail is "Photo", then the thumbnail of the asset should also be updated
+        if (updatingField && detail.getType().equals(DetailType.Image) &&
+                detail.getLabel().equals(CategoryType.BasicDetail.PHOTO)) {
+            updateAssetThumbnailAndUpdateInRemote(detail.getAssetId(), (Bitmap) newField, defaultFieldValue);
+        }
+    }
+
+    private class OnAssetsDataChangeListeners implements OnAssetsDataChangeCallback {
+
+        @Override
+        public void onAssetAdded(FAsset asset) {
+            putAssetIntoCacheObjects(asset);
+        }
+
+        @Override
+        public void onAssetChanged(FAsset asset) {
+            LoggedAction updateCache = executedFromLog -> {
+                FAsset cachedOne = mCachedAssets.get(asset.getId());
+                if (cachedOne == null) return;
+
+                cachedOne.overwrittenBy(asset);
+            };
+
+            if (mDirtyCachedAssets) {
+                mActionsQueue.add(updateCache);
+            } else {
+                updateCache.execute(false);
+            }
+        }
+
+        @Override
+        public void onAssetRemoved(FAsset asset) {
+            // assets won't be removed
+        }
+
+        @Override
+        public void onAssetMoved(FAsset asset) {
+            // does not matter
+        }
+    }
+
+    private <T> void checkUpdateDetailArguments(String assetId, String detailId, DetailType type, String newLabel, T newField) {
+        checkNotNull(assetId);
+        checkNotNull(detailId);
+        if (newLabel != null) {
+            checkArgument(!newLabel.replaceAll(" ", "").isEmpty(), "The new label cannot be empty.");
+            checkArgument(newLabel.length() <= AppConstraints.DETAIL_LABEL_CAP,
+                    "Please keep the length of the text within " + AppConstraints.DETAIL_LABEL_CAP + " characters");
+        }
+        if (newField != null) {
+            checkArgument(type.getFieldClass().equals(newField.getClass()), "Incorrect type of newField.");
+            if(type.equals(DetailType.Text) || type.equals(DetailType.Date)) {
+                checkArgument(((String) newField).length() <= AppConstraints.TEXTDETAIL_FIELD_CAP,
+                        "Please keep the length of the text within " + AppConstraints.TEXTDETAIL_FIELD_CAP + " characters");
+            }
+        }
+    }
+
+    private class OnDetailsDataChangeListeners implements OnDetailsDataChangeCallback {
+
+        @Override
+        public void onDetailAdded(FDetail detail) {
+            // does not matter for now, because details won't be added without adding a new asset
+            // will pass in null, as currently set up in FirebaseHelper
+        }
+
+        @Override
+        public void onDetailChanged(FDetail detail) {
+
+            if (mDirtyCachedDetails) {
+                initCachedDetails();
+            } else {
+                if (!mCachedDetails.containsKey(detail.getAssetId())) return;
+
+                for (FDetail d : mCachedDetails.get(detail.getAssetId())) {
+                    if (d.getId().equals(detail.getId())) {
+                        d.overwrittenBy(detail);
+                        break;
                     }
                 }
-                break;
             }
         }
 
-        if (detail != null) {
-            cachedAssets.get(assetId).updateTimeStamp();
-
-            if (!fileHelper.serialiseDetails(cachedDetails.get(assetId), updateImage) ||
-                    !fileHelper.serialiseAsset(cachedAssets.get(assetId))) {
-                dirtyCachedAssets = true;
-                dirtyCachedDetails = true;
-                throw new UpdateLocalStorageFailedException(
-                        "Serialising TextDetail failed, Detail id: " + detail.getId() + "; Asset id: " + assetId);
-            }
+        @Override
+        public void onDetailRemoved(FDetail detail) {
+            // won't be removed for now
         }
 
-        return detail;
+        @Override
+        public void onDetailMoved(FDetail detail) {
+            // does not matter
+        }
     }
+
+    private IDataRepository mRemoteRepo;
+    private ISchedulerProvider mSchedulerProvider;
+    private IFileHelper mFileHelper;
+    private LocalResourceLoader mResLoader;
+    private Map<CategoryType, Category> mCategories;
+
+    private List<LoggedAction> mActionsQueue;
+
+    private FAsset mCachedRootAsset;
+    private Map<String, FAsset> mCachedAssets;
+    private Map<String, List<FDetail>> mCachedDetails;
+    private Map<String, FAsset> mCachedRecycledAssets;
+    private List<String> mCachedDetailsKeyList;
+
+    private boolean mDirtyCachedAssets;
+    private boolean mDirtyCachedDetails;
+    private IDataRepository.OnUpdatedCallback mOnAssetUpdated = new IDataRepository.OnUpdatedCallback() {
+        @Override
+        public void onSuccess(Void aVoid) {
+        }
+
+        @Override
+        public void onFailure(Throwable e) {
+            cacheAssets();
+        }
+
+        @Override
+        public void onComplete(Task task) {
+        }
+    };
+    private IDataRepository.OnUpdatedCallback mOnDetailUpdated = new IDataRepository.OnUpdatedCallback() {
+        @Override
+        public void onSuccess(Void aVoid) {
+        }
+
+        @Override
+        public void onFailure(Throwable e) {
+            mDirtyCachedDetails = true;
+            initCachedDetails();
+        }
+
+        @Override
+        public void onComplete(Task task) {
+        }
+    };
 
     //endregion
 }

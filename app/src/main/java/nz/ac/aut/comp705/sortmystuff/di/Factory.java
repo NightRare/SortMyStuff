@@ -10,7 +10,7 @@ import com.google.gson.GsonBuilder;
 
 import java.io.File;
 
-import nz.ac.aut.comp705.sortmystuff.data.FDataManager;
+import nz.ac.aut.comp705.sortmystuff.data.DataManager;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.IDataRepository;
 import nz.ac.aut.comp705.sortmystuff.data.local.FileHelper;
@@ -52,7 +52,7 @@ public class Factory implements IFactory {
             return mDataManager;
 
 //        dataManager = new DataManager(getFileHelper(), getLocalResourceLoader());
-        mDataManager = new FDataManager(getRemoteRepository(), getFileHelper(),
+        mDataManager = new DataManager(getRemoteRepository(), getFileHelper(),
                 getLocalResourceLoader(), getSchedulerProvider());
         return mDataManager;
     }

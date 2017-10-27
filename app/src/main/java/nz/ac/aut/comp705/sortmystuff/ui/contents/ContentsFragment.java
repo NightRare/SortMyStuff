@@ -334,13 +334,13 @@ public class ContentsFragment extends Fragment implements IContentsView {
                 IAsset clickedAsset = (IAsset) parent.getItemAtPosition(position);
                 //sets the selected asset's ID as the current asset (to be viewed)
                 mPresenter.setCurrentAssetId(clickedAsset.getId());
-                mPresenter.loadCurrentContents(false);
+                mPresenter.loadCurrentContents();
             }
         }
 
         @Override
         public boolean onContentAssetLongClick() {
-            mPresenter.loadCurrentContents(false, CONTENTS_SELECTION_MODE);
+            mPresenter.loadCurrentContentsWithMode(CONTENTS_SELECTION_MODE);
             return true;
         }
 
@@ -351,7 +351,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
 
         @Override
         public void onOptionsSelectionModeSelected() {
-            mPresenter.loadCurrentContents(false, CONTENTS_SELECTION_MODE);
+            mPresenter.loadCurrentContentsWithMode(CONTENTS_SELECTION_MODE);
         }
 
         @Override
@@ -384,18 +384,18 @@ public class ContentsFragment extends Fragment implements IContentsView {
         @Override
         public void onPathbarRootClick() {
             mPresenter.setCurrentAssetIdToRoot();
-            mPresenter.loadCurrentContents(false);
+            mPresenter.loadCurrentContents();
         }
 
         @Override
         public void onPathbarItemClick(String intendingAssetId) {
             mPresenter.setCurrentAssetId(intendingAssetId);
-            mPresenter.loadCurrentContents(false);
+            mPresenter.loadCurrentContents();
         }
 
         @Override
         public void onSelectionModeCancelClick() {
-            mPresenter.loadCurrentContents(false, CONTENTS_DEFAULT_MODE);
+            mPresenter.loadCurrentContentsWithMode(CONTENTS_DEFAULT_MODE);
         }
 
         @Override
@@ -415,7 +415,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
                 showMessage("Please select the assets to be deleted.");
             else {
                 showDeleteDialog(false);
-                mPresenter.loadCurrentContents(false, CONTENTS_DEFAULT_MODE);
+                mPresenter.loadCurrentContentsWithMode(CONTENTS_DEFAULT_MODE);
             }
         }
 
@@ -426,7 +426,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
             if (mSelectedAssets.isEmpty())
                 showMessage("Please select the assets to be moved.");
             else
-                mPresenter.loadCurrentContents(false, CONTENTS_MOVING_MODE);
+                mPresenter.loadCurrentContentsWithMode(CONTENTS_MOVING_MODE);
         }
 
         @Override
@@ -436,14 +436,14 @@ public class ContentsFragment extends Fragment implements IContentsView {
                         "You haven't selected any items.", Toast.LENGTH_SHORT).show();
             } else {
                 mPresenter.moveAssets(mSelectedAssets);
-                mPresenter.loadCurrentContents(false);
+                mPresenter.loadCurrentContents();
             }
-            mPresenter.loadCurrentContents(false, CONTENTS_DEFAULT_MODE);
+            mPresenter.loadCurrentContentsWithMode(CONTENTS_DEFAULT_MODE);
         }
 
         @Override
         public void onMovingModeCancelClick() {
-            mPresenter.loadCurrentContents(false, CONTENTS_DEFAULT_MODE);
+            mPresenter.loadCurrentContentsWithMode(CONTENTS_DEFAULT_MODE);
         }
 
         @Override

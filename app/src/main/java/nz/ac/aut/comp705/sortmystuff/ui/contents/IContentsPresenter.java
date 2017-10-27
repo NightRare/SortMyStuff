@@ -17,19 +17,15 @@ public interface IContentsPresenter extends IPresenter {
 
     /**
      * Loads the contents (contained assets) of the current asset as in the previous interface mode.
-     *
-     * @param forceRefreshFromLocal true if want to force reload the contents from local storage
      */
-    void loadCurrentContents(boolean forceRefreshFromLocal);
+    void loadCurrentContents();
 
     /**
-     *
      * Loads the contents (contained assets) of the current asset as in the specified interface mode.
      *
-     * @param forceRefreshFromLocal true if want to force reload the contents from local storage
      * @param mode the code of the mode, refer to {@link nz.ac.aut.comp705.sortmystuff.utils.AppCode}
      */
-    void loadCurrentContents(boolean forceRefreshFromLocal, int mode);
+    void loadCurrentContentsWithMode(int mode);
 
     /**
      * Sets the current asset id to the given one. This will change the current asset.
@@ -61,6 +57,7 @@ public interface IContentsPresenter extends IPresenter {
 
     /**
      * Move a list of assets to a new container.
+     *
      * @param assets the assets to move.
      */
     void moveAssets(List<IAsset> assets);

@@ -1,21 +1,14 @@
 package nz.ac.aut.comp705.sortmystuff.data;
 
-import android.graphics.Bitmap;
-import android.support.annotation.NonNull;
-
 import java.util.List;
 
-import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
-import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.FAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.FDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
-import nz.ac.aut.comp705.sortmystuff.data.models.ImageDetail;
-import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.utils.exceptions.ReadLocalStorageFailedException;
-import nz.ac.aut.comp705.sortmystuff.utils.exceptions.UpdateLocalStorageFailedException;
 import rx.Observable;
 
 /**
@@ -30,14 +23,18 @@ public interface IDataManager {
 
     //region READ DATA METHODS
 
-    IAsset getRoot();
-
+    /**
+     * Get the root asset, emitted from an Observable. If the root asset does not exist, a new one
+     * will be created.
+     *
+     * @return the Observable emitting the root asset
+     */
     Observable<IAsset> getRootAsset();
 
     /**
      * Get all the non-recycled assets (including root asset).
      *
-     * @return the Observable which emits one list of Assets
+     * @return the Observable which emits a list of Assets
      * @throws ReadLocalStorageFailedException if error occurred during reading data from local storage
      */
     Observable<List<IAsset>> getAssets();
@@ -51,35 +48,32 @@ public interface IDataManager {
     Observable<List<IAsset>> getRecycledAssets();
 
     /**
-     * Get the list of details of the owner asset.
+     * Get the list of details of the asset.
      *
      * @param assetId the id of the owner asset
-     * @return the Observable which emits one list of Details
+     * @return the Observable which emits one list of Details; or which emits {@code null} if the
+     * assetId cannot be found
      * @throws NullPointerException if any argument is {@code null}
-     * @throws ReadLocalStorageFailedException if error occurred during reading data from local storage
-     * @throws IllegalStateException if there is no such Asset with the given id
      */
     Observable<List<IDetail>> getDetails(String assetId);
 
     /**
      * Get an asset according to the id.
      *
-     * @param id the id of the Asset
-     * @return the Observable emitting one Asset
+     * @param assetId the id of the Asset
+     * @return the Observable emitting one Asset; or which emits {@code null} if the
+     * assetId cannot be found
      * @throws NullPointerException if any argument is {@code null}
-     * @throws ReadLocalStorageFailedException if error occurred during reading data from local storage
-     * @throws IllegalStateException if there is no such Asset with the given id
      */
-    Observable<IAsset> getAsset(String id);
+    Observable<IAsset> getAsset(String assetId);
 
     /**
      * Get the content assets of the given asset.
      *
      * @param containerId the id of the container asset
-     * @return the Observable emitting one list of Assets
+     * @return the Observable emitting one list of Assets; or which emits {@code null} if the
+     * assetId cannot be found
      * @throws NullPointerException if any argument is {@code null}
-     * @throws ReadLocalStorageFailedException if error occurred during reading data from local storage
-     * @throws IllegalStateException if there is no such Asset with the given id
      */
     Observable<List<IAsset>> getContentAssets(String containerId);
 
@@ -95,9 +89,9 @@ public interface IDataManager {
      *
      * @param assetId        the id of the asset whose parent assets are queried
      * @param rootToChildren true if the result of the order is root to children
+     * @return the Observable emitting one list of Assets; or which emits {@code null} if the
+     * assetId cannot be found
      * @throws NullPointerException if assetId is {@code null}
-     * @throws ReadLocalStorageFailedException if error occurred during reading data from local storage
-     * @throws IllegalStateException if there is no such Asset with the given id
      */
     Observable<List<IAsset>> getParentAssets(String assetId, boolean rootToChildren);
 
@@ -106,237 +100,103 @@ public interface IDataManager {
     //region CREATE DATA METHODS
 
     /**
-     * Create an asset and save it to the local storage.
+     * Create an asset as a content of the given container.
      * The default details of the asset are generated according to "Miscellaneous" category.
      *
      * @param name        the name
      * @param containerId the id of the container asset
      * @return the id of the created asset; {@code null} if failed
-     * @throws NullPointerException              if any argument is {@code null};
-     * @throws IllegalArgumentException          if name is empty or length exceeds app constraints
-     * @throws UpdateLocalStorageFailedException if update local storage failed
+     * @throws NullPointerException     if any argument is {@code null};
+     * @throws IllegalArgumentException if name is empty or length exceeds app constraints; or
+     *                                  containerId cannot be found
      */
-    String createAsset(@NonNull String name, @NonNull String containerId);
+    String createAsset(String name, String containerId);
 
     /**
-     * Create an asset and save it to the local storage.
+     * Create an asset as a content of the given container.
      * The default details of the asset are generated according to the given category.
      *
      * @param name         the name
      * @param containerId  the id of the container asset
      * @param categoryType the CategoryType
      * @return the id of the created asset; {@code null} if failed
-     * @throws NullPointerException              if any argument is {@code null};
-     * @throws IllegalArgumentException          if name is empty or length exceeds app constraints
-     * @throws UpdateLocalStorageFailedException if update local storage failed
+     * @throws NullPointerException     if any argument is {@code null};
+     * @throws IllegalArgumentException if name is empty or length exceeds app constraints; or
+     *                                  containerId cannot be found
      */
-    String createAsset(@NonNull String name, @NonNull String containerId, CategoryType categoryType);
-
-
-    /**
-     * Create a TextDetail and save it to the local storage. Cannot createAsMisc Detail for Root
-     * asset.
-     *
-     * @param asset the owner
-     * @param label the title
-     * @param field the content of this detail
-     * @return the Id of the created TextDetail; or null if failed
-     * @throws NullPointerException              if any argument is {@code null}
-     * @throws IllegalArgumentException          if label is empty string; or the length of
-     *                                           label or field exceeds app constraints
-     * @throws UpdateLocalStorageFailedException if update local storage failed
-     */
-    @Deprecated
-    String createTextDetail(@NonNull Asset asset, @NonNull String label, @NonNull String field);
-
-    /**
-     * Create a TextDetail and save it to the local storage. Cannot createAsMisc Detail for Root
-     * asset.
-     *
-     * @param assetId the id of the owner
-     * @param label   the title
-     * @param field   the content of this detail
-     * @return the Id of the created TextDetail; or null if failed
-     * @throws NullPointerException              if any argument is {@code null}
-     * @throws IllegalArgumentException          if label is empty string; or the length of
-     *                                           label or field exceeds app constraints
-     * @throws UpdateLocalStorageFailedException if update local storage failed
-     */
-    @Deprecated
-    String createTextDetail(@NonNull String assetId, @NonNull String label, @NonNull String field);
+    String createAsset(String name, String containerId, CategoryType categoryType);
 
     //endregion
 
     //region UPDATE DATA METHODS
 
     /**
-     * Update the name of the asset in memory and local storage.
-     *
-     * @param asset   the asset to be updated
-     * @param newName the new name
-     * @return true if successful update
-     * @throws NullPointerException              if any argument is {@code null}
-     * @throws IllegalArgumentException          if newName is empty or length exceeds app constraints
-     * @throws UpdateLocalStorageFailedException if update local storage failed
-     */
-    @Deprecated
-    void updateAssetName(@NonNull Asset asset, @NonNull String newName);
-
-
-    /**
-     * Update the name of the asset in memory and local storage.
+     * Update the name of the asset to the given new name.
+     * It does nothing if assetId equals to the id of the root asset.
      *
      * @param assetId the id of the asset to be updated
      * @param newName the new name
      * @return true if successful update
-     * @throws NullPointerException              if any argument is {@code null}
-     * @throws IllegalArgumentException          if newName is empty or length exceeds app constraints
-     * @throws UpdateLocalStorageFailedException if update local storage failed
+     * @throws NullPointerException     if any argument is {@code null}
+     * @throws IllegalArgumentException if newName is empty or length exceeds app constraints;
      */
-    void updateAssetName(@NonNull String assetId, @NonNull String newName);
-
+    void updateAssetName(String assetId, String newName);
 
     /**
-     * Move an asset to another container.
-     *
-     * @param asset          the asset
-     * @param newContainerId the id of the new container
-     * @throws NullPointerException              if any argument is {@code null}
-     * @throws UpdateLocalStorageFailedException if update local storage failed
-     */
-    @Deprecated
-    void moveAsset(@NonNull Asset asset, @NonNull String newContainerId);
-
-    /**
-     * Move the asset with given id to another container
+     * Move the asset with given id to another container.
+     * It does nothing if assetId equals to the id of the root asset.
      *
      * @param assetId        the asset id
      * @param newContainerId the id of the new container
-     * @throws NullPointerException              if any argument is {@code null}
-     * @throws UpdateLocalStorageFailedException if update local storage failed
+     * @throws NullPointerException if any argument is {@code null}
      */
-    void moveAsset(@NonNull String assetId, @NonNull String newContainerId);
+    void moveAsset(String assetId, String newContainerId);
 
     /**
      * Recycle the asset with given id and all its children assets.
+     * It does nothing if assetId equals to the id of the root asset.
      *
      * @param assetId the id of the asset to be recycled
-     * @throws NullPointerException              if any argument is {@code null}
-     * @throws UpdateLocalStorageFailedException if update local storage failed
+     * @throws NullPointerException if any argument is {@code null}
      */
-    void recycleAssetRecursively(@NonNull String assetId);
+    void recycleAssetAndItsContents(String assetId);
 
     /**
-     * Recycle the asset with given id and all its children assets.
-     *
-     * @param asset the asset to be recycled
-     * @throws NullPointerException              if any argument is {@code null}
-     * @throws UpdateLocalStorageFailedException if update local storage failed
-     */
-    @Deprecated
-    void recycleAssetRecursively(@NonNull Asset asset);
-
-    /**
-     * Update the TextDetail according to the given arguments.
-     *
-     * @param detail the detail
-     * @param label  the new label
-     * @param field  the new field
-     * @throws NullPointerException              if any argument is {@code null}
-     * @throws IllegalArgumentException          if label is empty string; or the length of
-     *                                           label or field exceeds app constraints
-     * @throws UpdateLocalStorageFailedException if update local storage failed
-     */
-    @Deprecated
-    void updateTextDetail(@NonNull TextDetail detail,
-                          @NonNull String label, @NonNull String field);
-
-    /**
-     * Update the TextDetail according to the given arguments.
+     * Update a detail with the given new label and/or field.
+     * It won't update the detail if newLabel and newField are both {@code null}; or the detailId
+     * does not belong to the asset.
      *
      * @param assetId  the id of the owner asset
      * @param detailId the id of the detail
-     * @param label    the new label
-     * @param field    the new field
-     * @throws NullPointerException              if any argument is {@code null}
-     * @throws IllegalArgumentException          if label is empty string; or the length of
-     *                                           label or field exceeds app constraints
-     * @throws UpdateLocalStorageFailedException if update local storage failed
+     * @param type     the DetailType of the detail
+     * @param newLabel the new label, or {@code null} if no need to update
+     * @param newField the new Field, or {@code null} if no need to update
+     * @param <T>      the type of the field
+     * @throws NullPointerException     if assetId or detailId is {@code null}
+     * @throws IllegalArgumentException if newLabel is empty or overlong; or if newField is overlong when
+     *                                  updating Text or Date Detail; or if the type of newField is
+     *                                  not consistent with the DetailType
      */
-    void updateTextDetail(@NonNull String assetId, @NonNull String detailId,
-                          @NonNull String label, @NonNull String field);
+    <T> void updateDetail(String assetId, String detailId, DetailType type, String newLabel, T newField);
 
     /**
-     * Reset the field (image) of the ImageDetail to the default image.
+     * Reset the field (image) of an ImageDetail to the default image.
+     * It won't reset the detail if newLabel and newField are both {@code null}; or the detailId
+     * does not belong to the asset.
      *
-     * @param detail the ImageDetail to be reset
+     * @param assetId  the id of the asset to which this detail belongs
+     * @param detailId the id of the detail
+     * @throws NullPointerException if assetId or detailId is {@code null}
      */
-    @Deprecated
-    void resetImageDetail(@NonNull IDetail<Bitmap> detail);
-
     void resetImageDetail(String assetId, String detailId);
-
-    /**
-     * Update the ImageDetail according to the given arguments.
-     *
-     * @param detail the detail
-     * @param label  the new label
-     * @param field  the new field
-     * @throws NullPointerException              if any argument is {@code null}
-     * @throws IllegalArgumentException          if label is empty string; or the length of
-     *                                           label exceeds app constraints
-     * @throws UpdateLocalStorageFailedException if update local storage failed
-     */
-    @Deprecated
-    void updateImageDetail(@NonNull ImageDetail detail, @NonNull String label, @NonNull Bitmap field);
-
-    @Deprecated
-    void updateImageDetail(@NonNull IDetail<Bitmap> detail, @NonNull String label, @NonNull Bitmap field);
-
-    void updateImageDetail(String assetId, String detailId, String label, Bitmap field);
-
-    /*
-    TODO methods to be added in the future
-    void restoreAsset(@NonNull Asset asset);
-
-    void restoreAsset(@NonNull String assetId);
-     */
-
-    //endregion
-
-    //region DELETE DATA METHODS
-
-    /**
-     * Remove the detail from the asset.
-     *
-     * @param detail the detail
-     * @throws NullPointerException              if any argument is {@code null}
-     * @throws UpdateLocalStorageFailedException if update local storage failed
-     */
-    @Deprecated
-    void removeDetail(@NonNull Detail detail);
-
-    /**
-     * Remove the detail from the asset.
-     *
-     * @param assetId  the id of the owner asset
-     * @param detailId the id of the detail
-     * @throws NullPointerException              if any argument is {@code null}
-     * @throws UpdateLocalStorageFailedException if update local storage failed
-     */
-    @Deprecated
-    void removeDetail(@NonNull String assetId, @NonNull String detailId);
 
     //endregion
 
     //region OTHER METHODS
 
     /**
-     * Force reload data from local storage.
+     * Re-cache the data from remote data source.
      */
-    @Deprecated
-    void refreshFromLocal();
-
     void reCacheFromRemoteDataSource();
 
     /*
@@ -352,197 +212,27 @@ public interface IDataManager {
 
     }
 
-    interface OnAssetsDataChangeCallback extends onDataChangeCallback{
+    interface OnAssetsDataChangeCallback extends onDataChangeCallback {
+
         void onAssetAdded(FAsset asset);
+
         void onAssetChanged(FAsset asset);
+
         void onAssetRemoved(FAsset asset);
+
         void onAssetMoved(FAsset asset);
     }
 
     interface OnDetailsDataChangeCallback extends onDataChangeCallback {
+
         void onDetailAdded(FDetail detail);
+
         void onDetailChanged(FDetail detail);
+
         void onDetailRemoved(FDetail detail);
+
         void onDetailMoved(FDetail detail);
     }
-
-    /**
-     * A callback interface for asynchronised loading methods.
-     */
-    interface LoaderCallback {
-
-        /**
-         * It fires when the requested data is not available.
-         *
-         * @param errorCode the errorCode
-         */
-        void dataNotAvailable(int errorCode);
-    }
-
-    interface LoadAssetsCallback extends LoaderCallback {
-
-        /**
-         * It fires when the requested list of assets is ready.
-         *
-         * @param assets the requested list of Asset
-         */
-        void onAssetsLoaded(List<Asset> assets);
-    }
-
-    interface GetAssetCallback extends LoaderCallback {
-
-        /**
-         * It fires when the requested asset is ready.
-         *
-         * @param asset the requested Asset
-         */
-        void onAssetLoaded(Asset asset);
-    }
-
-    interface LoadDetailsCallback extends LoaderCallback {
-
-        /**
-         * It fires when the requested list of details is ready.
-         *
-         * @param details the requested list of Detail
-         */
-        void onDetailsLoaded(List<Detail> details);
-    }
-
-    interface GetDetailCallback extends LoaderCallback {
-
-        /**
-         * It fires when the requested detail is ready.
-         *
-         * @param detail the requested Detail
-         */
-        void onDetailLoaded(Detail detail);
-    }
-
-    //endregion
-
-    //region DEPRECATED METHODS
-
-    /**
-     * Get all the non-recycled assets (including root asset).
-     *
-     * @param callback see {@link LoadAssetsCallback}
-     * @throws NullPointerException if callback is {@code null}
-     */
-    @Deprecated
-    void getAllAssetsAsync(@NonNull LoadAssetsCallback callback);
-
-    /**
-     * Get all the recycled assets.
-     *
-     * @param callback see {@link LoadAssetsCallback}
-     * @throws NullPointerException if callback is {@code null}
-     */
-    @Deprecated
-    void getRecycledAssetsAsync(@NonNull LoadAssetsCallback callback);
-
-    /**
-     * Get the list of assets which are contents to the given Asset.
-     *
-     * @param container the container Asset
-     * @param callback  see {@link LoadAssetsCallback}
-     * @throws NullPointerException if any argument is {@code null}
-     */
-    @Deprecated
-    void getContentAssetsAsync(@NonNull Asset container, @NonNull LoadAssetsCallback callback);
-
-    /**
-     * Get the list of assets which are contents to the Asset whose id as given.
-     *
-     * @param containerId the id of the container Asset
-     * @param callback    see {@link LoadAssetsCallback}
-     * @throws NullPointerException if any argument is {@code null}
-     */
-    @Deprecated
-    void getContentAssetsAsync(@NonNull String containerId, @NonNull LoadAssetsCallback callback);
-
-    /**
-     * Get the parent assets stored in a list in which the first element is the container of the
-     * asset and the last element is the Root asset (if this asset is not contained by Root).
-     * For example, Root -> Apartment -> Bookshelf -> Drawer, if query the parent Assets of Drawer
-     * the items in list would be [Bookshelf, Apartment, Root].
-     *
-     * @param asset    the asset whose parent assets are queried
-     * @param callback see {@link LoadAssetsCallback}
-     * @throws NullPointerException if any argument is {@code null}
-     */
-    @Deprecated
-    void getParentAssetsAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback);
-
-    /**
-     * Get the parent assets stored in a list in which the first element is the container of the
-     * asset and the last element is the Root asset (if this asset is not contained by Root).
-     * For example, Root -> Apartment -> Bookshelf -> Drawer, if query the parent Assets of Drawer
-     * the items in list would be [Bookshelf, Apartment, Root].
-     *
-     * @param assetId  the id of the asset whose parent assets are queried
-     * @param callback see {@link LoadAssetsCallback}
-     * @throws NullPointerException if any argument is {@code null}
-     */
-    @Deprecated
-    void getParentAssetsAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback);
-
-    /**
-     * Get the parent assets stored in a list in which the first element is the Root asset
-     * and the last element is the asset itself (if this asset is not contained by Root).
-     * For example, Root -> Apartment -> Bookshelf -> Drawer, if query the parent Assets of Drawer
-     * in descendant order, the items in list would be [Root, Apartment, Bookshelf, Drawer].
-     *
-     * @param asset    the asset whose parent assets are queried
-     * @param callback see {@link LoadAssetsCallback}
-     * @throws NullPointerException if any argument is {@code null}
-     */
-    @Deprecated
-    void getParentAssetsDescAsync(@NonNull Asset asset, @NonNull LoadAssetsCallback callback);
-
-    /**
-     * Get the parent assets stored in a list in which the first element is the Root asset
-     * and the last element is the asset itself (if this asset is not contained by Root).
-     * For example, Root -> Apartment -> Bookshelf -> Drawer, if query the parent Assets of Drawer
-     * in descendant order, the items in list would be [Root, Apartment, Bookshelf, Drawer].
-     *
-     * @param assetId  the id of the asset whose parent assets are queried
-     * @param callback see {@link LoadAssetsCallback}
-     * @throws NullPointerException if any argument is {@code null}
-     */
-    @Deprecated
-    void getParentAssetsDescAsync(@NonNull String assetId, @NonNull LoadAssetsCallback callback);
-
-
-    /**
-     * Get an asset according to the id.
-     *
-     * @param assetId  the id
-     * @param callback see {@link GetAssetCallback}
-     * @throws NullPointerException if any argument is {@code null}
-     */
-    @Deprecated
-    void getAssetAsync(@NonNull String assetId, @NonNull GetAssetCallback callback);
-
-    /**
-     * Get the list of details of the owner asset.
-     *
-     * @param asset    the owner asset
-     * @param callback see {@link LoadDetailsCallback}
-     * @throws NullPointerException if any argument is {@code null}
-     */
-    @Deprecated
-    void getDetailsAsync(@NonNull Asset asset, @NonNull LoadDetailsCallback callback);
-
-    /**
-     * Get the list of details of the owner asset.
-     *
-     * @param assetId  the id of the owner asset
-     * @param callback see {@link LoadDetailsCallback}
-     * @throws NullPointerException if any argument is {@code null}
-     */
-    @Deprecated
-    void getDetailsAsync(@NonNull String assetId, @NonNull LoadDetailsCallback callback);
 
     //endregion
 }

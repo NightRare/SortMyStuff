@@ -39,12 +39,9 @@ public class ContentsPresenter implements IContentsPresenter {
 
     //region IContentsPresenter METHODS
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void subscribe() {
-        loadCurrentContents(true);
+        loadCurrentContents();
     }
 
     @Override
@@ -52,14 +49,8 @@ public class ContentsPresenter implements IContentsPresenter {
         mSubscriptions.clear();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void loadCurrentContents(boolean forceRefreshFromLocal) {
-        if (forceRefreshFromLocal)
-            mDataManager.refreshFromLocal();
-
+    public void loadCurrentContents() {
         mView.setLoadingIndicator(true);
 
         mSubscriptions.clear();
@@ -97,42 +88,13 @@ public class ContentsPresenter implements IContentsPresenter {
                         //onCompleted
                         () -> mView.setLoadingIndicator(false)
                 );
-
-//
-//        Subscription subscription2 = mDataManager
-//                .getAsset(mCurrentAssetId)
-//                .zipWith(contentAssetsObservable, (currentAsset, contentAssets) -> {
-//                    List<Object> args = new ArrayList<>();
-//                    args.add(0, currentAsset);
-//                    args.add(1, contentAssets);
-//                    return args;
-//                })
-//                .zipWith(parentAssetsObservable, (args, parentAssets) -> {
-//                    args.add(2, parentAssets);
-//                    return args;
-//                })
-//                .subscribeOn(mSchedulerProvider.io())
-//                .observeOn(mSchedulerProvider.ui())
-//                .subscribe(
-//                        //onNext
-//                        args -> processContentResults((IAsset) args.get(0),
-//                                (List<IAsset>) args.get(1),
-//                                (List<IAsset>) args.get(2)),
-//                        //onError
-//                        throwable -> mView.showLoadingContentsError(throwable),
-//                        //onCompleted
-//                        () -> mView.setLoadingIndicator(false)
-//                );
         mSubscriptions.add(subscription);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void loadCurrentContents(boolean forceRefreshFromLocal, int mode) {
+    public void loadCurrentContentsWithMode(int mode) {
         mContentsDisplayMode = mode;
-        loadCurrentContents(forceRefreshFromLocal);
+        loadCurrentContents();
     }
 
     @Override
@@ -140,26 +102,15 @@ public class ContentsPresenter implements IContentsPresenter {
         mCurrentAssetId = checkNotNull(assetId);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setCurrentAssetIdToRoot() {
         setCurrentAssetId(ROOT_ASSET_ID);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public String getCurrentAssetId() {
         return mCurrentAssetId;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @param assetName the name of the new asset.
-     */
     @Override
     public void createAsset(String assetName, CategoryType category) {
         try {
@@ -168,7 +119,7 @@ public class ContentsPresenter implements IContentsPresenter {
         } catch (NullPointerException | IllegalArgumentException e) {
             mView.showMessage(e.getMessage());
         }
-        loadCurrentContents(false);
+        loadCurrentContents();
     }
 
     @Override
@@ -199,17 +150,17 @@ public class ContentsPresenter implements IContentsPresenter {
     public void recycleCurrentAssetRecursively() {
         String deleteAssetId = mCurrentAssetId;
         setCurrentAssetIdToContainer();
-        mDataManager.recycleAssetRecursively(deleteAssetId);
-        loadCurrentContents(true);
+        mDataManager.recycleAssetAndItsContents(deleteAssetId);
+        loadCurrentContents();
     }
 
     @Override
     public void recycleAssetsRecursively(List<IAsset> assets) {
         checkNotNull(assets);
         for (IAsset a : assets) {
-            mDataManager.recycleAssetRecursively(a.getId());
+            mDataManager.recycleAssetAndItsContents(a.getId());
         }
-        loadCurrentContents(true);
+        loadCurrentContents();
     }
 
     //endregion
