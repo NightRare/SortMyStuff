@@ -5,26 +5,16 @@ import android.graphics.Bitmap;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
-import nz.ac.aut.comp705.sortmystuff.di.IFactory;
 import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
 import rx.Observable;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.gson.internal.$Gson$Preconditions.checkNotNull;
 
 public class DemoDebugger {
 
-    private IFactory mFactory;
-    private IDataManager mDataManager;
-    private ISchedulerProvider mSchedulerProvider;
-
-    public DemoDebugger(IFactory factory) {
-        mFactory = checkNotNull(factory);
-        mDataManager = mFactory.getDataManager();
-        mSchedulerProvider = mFactory.getSchedulerProvider();
-    }
-
-    public void cleanExistingData() {
-        mFactory.getDataDebugHelper().removeCurrentUserData();
+    public DemoDebugger(IDataManager dataManager, ISchedulerProvider schedulerProvider) {
+        mDataManager = checkNotNull(dataManager);
+        mSchedulerProvider = checkNotNull(schedulerProvider);
     }
 
     public void setPhoto(String assetId, final Bitmap photo) {
@@ -50,4 +40,7 @@ public class DemoDebugger {
                         d -> mDataManager.updateDetail(assetId, d.getId(), d.getType(), null, field)
                 );
     }
+
+    private IDataManager mDataManager;
+    private ISchedulerProvider mSchedulerProvider;
 }

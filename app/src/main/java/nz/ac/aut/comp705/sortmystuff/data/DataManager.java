@@ -1,6 +1,7 @@
 package nz.ac.aut.comp705.sortmystuff.data;
 
 import android.graphics.Bitmap;
+import android.os.SystemClock;
 
 import com.google.android.gms.tasks.Task;
 import com.google.common.base.Preconditions;
@@ -23,6 +24,7 @@ import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
 import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
 import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
+import nz.ac.aut.comp705.sortmystuff.utils.DemoDebugger;
 import nz.ac.aut.comp705.sortmystuff.utils.Log;
 import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
 import rx.Observable;
@@ -488,12 +490,14 @@ public class DataManager implements IDataManager, IDebugHelper {
                 .flatMap(Observable::from)
                 .doOnNext(this::putAssetIntoCacheObjects)
                 .doOnCompleted(() -> {
-                    // apply logged changes to the cache as the caching has ended
-                    while (!mActionsQueue.isEmpty()) {
-                        mActionsQueue.remove(0).execute(true);
-                    }
                     synchronized (DataManager.this) {
+                        // apply logged changes to the cache as the caching has ended
+                        while (!mActionsQueue.isEmpty()) {
+                            mActionsQueue.remove(0).execute(true);
+                        }
+
                         mDirtyCachedAssets = false;
+//                        prepareDemoData();
                     }
                 })
                 .subscribe();
@@ -843,6 +847,78 @@ public class DataManager implements IDataManager, IDebugHelper {
         public void onDetailMoved(FDetail detail) {
             // does not matter
         }
+    }
+
+    private void prepareDemoData() {
+
+        Map<String, Bitmap> photos = mResLoader.getDemoPhotos();
+
+        DemoDebugger dd = new DemoDebugger(this, mSchedulerProvider);
+
+        String studyRoomId = createAsset("Study Room", ROOT_ASSET_ID, CategoryType.Places);
+        SystemClock.sleep(1000);
+
+        dd.setPhoto(studyRoomId, photos.get("StudyRoom.jpg"));
+        SystemClock.sleep(1000);
+
+        String office = createAsset("Office", ROOT_ASSET_ID, CategoryType.Places);
+        SystemClock.sleep(1000);
+
+        dd.setPhoto(office, photos.get("Office.jpg"));
+        SystemClock.sleep(1000);
+
+        String bedroomId = createAsset("Bedroom", ROOT_ASSET_ID, CategoryType.Places);
+        SystemClock.sleep(1000);
+
+        dd.setPhoto(bedroomId, photos.get("Bedroom.jpg"));
+        SystemClock.sleep(1000);
+
+        String bookshelfPhilosophyId = createAsset("Bookshelf Philosophy", studyRoomId, CategoryType.Miscellaneous);
+        SystemClock.sleep(1000);
+
+        dd.setPhoto(bookshelfPhilosophyId, photos.get("BookshelfPhilosophy.jpg"));
+        SystemClock.sleep(1000);
+
+        String bookshelfLiteratureId = createAsset("Bookshelf Literature", studyRoomId, CategoryType.Miscellaneous);
+        SystemClock.sleep(1000);
+
+        dd.setPhoto(bookshelfLiteratureId, photos.get("BookshelfLiterature.jpg"));
+        SystemClock.sleep(1000);
+
+        String kindleId = createAsset("Kindle", bedroomId, CategoryType.Appliances);
+        SystemClock.sleep(1000);
+
+        dd.setPhoto(kindleId, photos.get("Kindle.jpg"));
+        SystemClock.sleep(1000);
+
+        dd.updateTextDetail(kindleId, "Purchase Date", "14/01/2016");
+        SystemClock.sleep(1000);
+
+        dd.updateTextDetail(kindleId, "Warranty Expiry", "14/01/2019");
+        SystemClock.sleep(1000);
+
+        dd.updateTextDetail(kindleId, "Model Number", "B0186FET66");
+        SystemClock.sleep(1000);
+
+        dd.updateTextDetail(kindleId, "Serial Number", "9Q8EWR7923");
+        SystemClock.sleep(1000);
+
+        String theEssentialHusserlId = createAsset("The Essential Husserl", bookshelfPhilosophyId, CategoryType.Books);
+        SystemClock.sleep(1000);
+
+        dd.setPhoto(theEssentialHusserlId, photos.get("TheEssentialHusserl.jpg"));
+        SystemClock.sleep(1000);
+
+        String theRepublicId = createAsset("The Republic", bookshelfPhilosophyId, CategoryType.Books);
+        SystemClock.sleep(1000);
+
+        dd.setPhoto(theRepublicId, photos.get("TheRepublic.jpg"));
+        SystemClock.sleep(1000);
+
+        String beingAndTimeId = createAsset("Being and Time", bookshelfPhilosophyId, CategoryType.Books);
+        SystemClock.sleep(1000);
+
+        dd.setPhoto(beingAndTimeId, photos.get("BeingAndTime.jpg"));
     }
 
     private IDataRepository mRemoteRepo;

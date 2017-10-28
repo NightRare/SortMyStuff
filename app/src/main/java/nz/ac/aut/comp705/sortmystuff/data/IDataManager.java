@@ -19,7 +19,6 @@ import rx.Observable;
 
 public interface IDataManager {
 
-
     //region READ DATA METHODS
 
     /**
