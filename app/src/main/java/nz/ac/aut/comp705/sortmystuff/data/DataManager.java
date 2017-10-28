@@ -43,7 +43,7 @@ import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.ROOT_ASSET_ID;
  * @author Yuan
  */
 
-public class DataManager implements IDataManager {
+public class DataManager implements IDataManager, IDebugHelper {
 
     public DataManager(IDataRepository remoteRepo, IFileHelper fileHelper, LocalResourceLoader resLoader,
                        ISchedulerProvider schedulerProvider) {
@@ -52,8 +52,10 @@ public class DataManager implements IDataManager {
         mResLoader = checkNotNull(resLoader);
         mSchedulerProvider = checkNotNull(schedulerProvider);
 
-        mDirtyCachedAssets = true;
-        mDirtyCachedDetails = true;
+        synchronized (this) {
+            mDirtyCachedAssets = true;
+            mDirtyCachedDetails = true;
+        }
 
         initCachedDetails();
         mRemoteRepo.setOnDataChangeCallback(new OnDetailsDataChangeListeners());
@@ -455,6 +457,15 @@ public class DataManager implements IDataManager {
         initCachedDetails();
     }
 
+    @Override
+    public void removeCurrentUserData() {
+        if (mRemoteRepo instanceof IDebugHelper) {
+            ((IDebugHelper) mRemoteRepo).removeCurrentUserData();
+            createRootAsset();
+        }
+        reCacheFromRemoteDataSource();
+    }
+
     //endregion
 
     interface LoggedAction {
@@ -464,8 +475,9 @@ public class DataManager implements IDataManager {
 
     //region PRIVATE STUFF
 
-    private void cacheAssets() {
+    private synchronized void cacheAssets() {
         mDirtyCachedAssets = true;
+
         mActionsQueue = new ArrayList<>();
         mCachedAssets = new HashMap<>();
         mCachedRecycledAssets = new HashMap<>();
@@ -480,7 +492,9 @@ public class DataManager implements IDataManager {
                     while (!mActionsQueue.isEmpty()) {
                         mActionsQueue.remove(0).execute(true);
                     }
-                    mDirtyCachedAssets = false;
+                    synchronized (DataManager.this) {
+                        mDirtyCachedAssets = false;
+                    }
                 })
                 .subscribe();
     }
@@ -494,7 +508,7 @@ public class DataManager implements IDataManager {
         }
     }
 
-    private void initCachedDetails() {
+    private synchronized void initCachedDetails() {
         mCachedDetails = new HashMap<>();
         mCachedDetailsKeyList = new LinkedList<>();
         mDirtyCachedDetails = false;

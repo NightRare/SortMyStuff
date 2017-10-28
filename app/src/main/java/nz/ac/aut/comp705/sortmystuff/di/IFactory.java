@@ -5,6 +5,7 @@ import com.google.firebase.storage.StorageReference;
 
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.IDataRepository;
+import nz.ac.aut.comp705.sortmystuff.data.IDebugHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.IFileHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
 import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
@@ -28,6 +29,8 @@ public interface IFactory {
     IDataRepository getRemoteRepository();
 
     IDataRepository getLocalRepository();
+
+    IDebugHelper getDataDebugHelper();
 
     LocalResourceLoader getLocalResourceLoader();
 

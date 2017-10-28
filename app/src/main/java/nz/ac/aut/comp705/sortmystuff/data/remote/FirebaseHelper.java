@@ -14,18 +14,20 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import nz.ac.aut.comp705.sortmystuff.data.IDataRepository;
+import nz.ac.aut.comp705.sortmystuff.data.IDebugHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.FAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.FCategory;
 import nz.ac.aut.comp705.sortmystuff.data.models.FDetail;
+import nz.ac.aut.comp705.sortmystuff.utils.Log;
 import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
 import rx.Observable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static nz.ac.aut.comp705.sortmystuff.data.models.FDetail.DETAIL_FIELD;
 
-public class FirebaseHelper implements IDataRepository {
+public class FirebaseHelper implements IDataRepository, IDebugHelper {
 
     public static final String DB_ASSETS = "assets";
     public static final String DB_DETAILS = "details";
@@ -50,7 +52,11 @@ public class FirebaseHelper implements IDataRepository {
         checkNotNull(assetId, "The assetId cannot be null.");
         return RxFirebaseDatabase
                 .observeSingleValueEvent(mDatabase.child(DB_ASSETS).child(checkNotNull(assetId)))
-                .map(dataSnapshot -> dataToObject(dataSnapshot, FAsset.class));
+                .map(dataSnapshot -> dataToObject(dataSnapshot, FAsset.class))
+                .onErrorReturn(throwable -> {
+                    Log.e(FirebaseHelper.class.getName(), throwable.getMessage(), throwable);
+                    return null;
+                });
     }
 
     @Override
@@ -339,6 +345,11 @@ public class FirebaseHelper implements IDataRepository {
         public void onComplete(Task task) {
         }
     };
+
+    @Override
+    public void removeCurrentUserData() {
+        mDatabase.removeValue();
+    }
 
     //region
 }

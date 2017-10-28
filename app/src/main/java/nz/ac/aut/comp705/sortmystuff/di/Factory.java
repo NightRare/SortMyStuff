@@ -13,6 +13,7 @@ import java.io.File;
 import nz.ac.aut.comp705.sortmystuff.data.DataManager;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.IDataRepository;
+import nz.ac.aut.comp705.sortmystuff.data.IDebugHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.FileHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.IFileHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
@@ -84,6 +85,17 @@ public class Factory implements IFactory {
             return mLocalRepo;
 
         return null;
+    }
+
+    @Override
+    public IDebugHelper getDataDebugHelper() {
+        IDataManager dataManager = getDataManager();
+        if(dataManager instanceof IDebugHelper) {
+            return (IDebugHelper) dataManager;
+        }
+
+        // avoid NullPointerException when dataManager does not implement IDebugHelper
+        return () -> { };
     }
 
     @Override

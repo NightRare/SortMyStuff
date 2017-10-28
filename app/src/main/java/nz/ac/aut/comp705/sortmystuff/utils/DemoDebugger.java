@@ -25,9 +25,7 @@ public class DemoDebugger {
     }
 
     public void cleanExistingData() {
-        mFactory.getDatabaseReference().removeValue();
-        mFactory.getStorageReference().delete();
-        mDataManager.reCacheFromRemoteDataSource();
+        mFactory.getDataDebugHelper().removeCurrentUserData();
     }
 
     public void setPhoto(String assetId, final Bitmap photo) {

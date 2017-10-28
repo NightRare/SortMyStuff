@@ -2,6 +2,7 @@ package nz.ac.aut.comp705.sortmystuff;
 
 import android.app.Application;
 import android.graphics.Bitmap;
+import android.os.SystemClock;
 
 import java.util.Map;
 
@@ -67,6 +68,8 @@ public class SortMyStuffApp extends Application {
 
         String beingAndTimeId = dm.createAsset("Being and Time", bookshelfPhilosophyId, CategoryType.Books);
         dd.setPhoto(beingAndTimeId, photos.get("BeingAndTime.jpg"));
+
+        SystemClock.sleep(1000);
     }
 
 

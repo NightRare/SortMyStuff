@@ -29,7 +29,6 @@ public class FDetail<T> implements IDetail<T>, Comparable {
 
     //region FIELD NAMES
 
-    public static final String DETAILS_LIST = "details";
     public static final String DETAIL_ID = "id";
     public static final String DETAIL_ASSETID = "assetId";
     public static final String DETAIL_TYPE = "type";

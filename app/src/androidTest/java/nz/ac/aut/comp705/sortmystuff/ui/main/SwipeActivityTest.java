@@ -98,7 +98,7 @@ public class SwipeActivityTest {
         }
         mDataManager = mFactory.getDataManager();
 
-        cleanAssetsData();
+        mFactory.getDataDebugHelper().removeCurrentUserData();
     }
 
     @After
@@ -882,13 +882,6 @@ public class SwipeActivityTest {
     //endregion
 
     //region PRIVATE STUFF
-
-    private void cleanAssetsData() {
-
-        mFactory.getDatabaseReference().removeValue();
-        mDataManager.reCacheFromRemoteDataSource();
-        mDataManager.getRootAsset().subscribe();
-    }
 
     private void addAsset(String assetName) {
         onView(withId(R.id.add_asset_button)).perform(click());

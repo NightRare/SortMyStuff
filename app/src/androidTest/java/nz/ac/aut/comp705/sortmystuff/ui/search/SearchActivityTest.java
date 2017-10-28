@@ -58,12 +58,7 @@ public class SearchActivityTest {
         }
         mDataManager = mFactory.getDataManager();
 
-        cleanAssetsData();
-
-        if (firstRun) {
-            SystemClock.sleep(2000);
-            firstRun = false;
-        }
+        mFactory.getDataDebugHelper().removeCurrentUserData();
 
         addAsset(ONE_RESULT_SEARCH_ITEM);
         addAsset(TWO_RESULT_SEARCH_ITEM_1);
@@ -127,13 +122,6 @@ public class SearchActivityTest {
     //endregion
 
     //region PRIVATE STUFF
-
-    private void cleanAssetsData() {
-
-        mFactory.getDatabaseReference().removeValue();
-        mDataManager.reCacheFromRemoteDataSource();
-        mDataManager.getRootAsset().subscribe();
-    }
 
     private void addAsset(String assetName) {
         onView(withId(R.id.add_asset_button)).perform(click());
