@@ -6,16 +6,11 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.google.gson.GsonBuilder;
-
-import java.io.File;
 
 import nz.ac.aut.comp705.sortmystuff.data.DataManager;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.IDataRepository;
 import nz.ac.aut.comp705.sortmystuff.data.IDebugHelper;
-import nz.ac.aut.comp705.sortmystuff.data.local.FileHelper;
-import nz.ac.aut.comp705.sortmystuff.data.local.IFileHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
 import nz.ac.aut.comp705.sortmystuff.data.remote.FirebaseHelper;
 import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
@@ -38,12 +33,12 @@ public class Factory implements IFactory {
     }
 
     @Override
-    public ISchedulerProvider getImmediateSchedulerProvider() {
+    public synchronized ISchedulerProvider getImmediateSchedulerProvider() {
         return new ImmediateSchedularProvider();
     }
 
     @Override
-    public ISchedulerProvider getSchedulerProvider() {
+    public synchronized ISchedulerProvider getSchedulerProvider() {
         return SchedulerProvider.getInstance();
     }
 
@@ -53,24 +48,13 @@ public class Factory implements IFactory {
             return mDataManager;
 
 //        dataManager = new DataManager(getFileHelper(), getLocalResourceLoader());
-        mDataManager = new DataManager(getRemoteRepository(), getFileHelper(),
-                getLocalResourceLoader(), getSchedulerProvider());
+        mDataManager = new DataManager(getRemoteRepository(), getLocalResourceLoader(),
+                getSchedulerProvider());
         return mDataManager;
     }
 
-    public synchronized IFileHelper getFileHelper() {
-        if (mFileHelper != null)
-            return mFileHelper;
-
-        File userDir = new File(
-                mApp.getFilesDir().getPath() + File.separator + mUserId);
-
-        mFileHelper = new FileHelper(getLocalResourceLoader(), userDir, new GsonBuilder());
-        return mFileHelper;
-    }
-
     @Override
-    public IDataRepository getRemoteRepository() {
+    public synchronized IDataRepository getRemoteRepository() {
         if (mRemoteRepo != null)
             return mRemoteRepo;
 
@@ -83,7 +67,7 @@ public class Factory implements IFactory {
     }
 
     @Override
-    public IDataRepository getLocalRepository() {
+    public synchronized IDataRepository getLocalRepository() {
         if(mLocalRepo != null)
             return mLocalRepo;
 
@@ -91,7 +75,7 @@ public class Factory implements IFactory {
     }
 
     @Override
-    public IDebugHelper getDataDebugHelper() {
+    public synchronized IDebugHelper getDataDebugHelper() {
         IDataManager dataManager = getDataManager();
         if(dataManager instanceof IDebugHelper) {
             return (IDebugHelper) dataManager;
@@ -102,7 +86,7 @@ public class Factory implements IFactory {
     }
 
     @Override
-    public LocalResourceLoader getLocalResourceLoader() {
+    public synchronized LocalResourceLoader getLocalResourceLoader() {
         if (mResLoader != null)
             return mResLoader;
 
@@ -111,11 +95,10 @@ public class Factory implements IFactory {
     }
 
     @Override
-    public void setUserId(String userId) {
+    public synchronized void setUserId(String userId) {
         if(checkNotNull(userId).equals(mUserId)) return;
 
         mUserId = userId;
-        mFileHelper = null;
         mRemoteRepo = null;
         mLocalRepo = null;
         mDataManager = null;
@@ -135,7 +118,6 @@ public class Factory implements IFactory {
     private Application mApp;
     private String mUserId;
     private LocalResourceLoader mResLoader;
-    private IFileHelper mFileHelper;
     private IDataRepository mRemoteRepo;
     private IDataRepository mLocalRepo;
     private IDataManager mDataManager;

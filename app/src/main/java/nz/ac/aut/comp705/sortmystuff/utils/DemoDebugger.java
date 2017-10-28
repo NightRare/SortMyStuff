@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
-import nz.ac.aut.comp705.sortmystuff.data.models.TextDetail;
 import nz.ac.aut.comp705.sortmystuff.di.IFactory;
 import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
 import rx.Observable;
@@ -45,7 +44,7 @@ public class DemoDebugger {
                 .subscribeOn(mSchedulerProvider.io())
                 .flatMap(Observable::from)
                 .filter(d -> d.getLabel().equals(label)
-                        && (d instanceof TextDetail))
+                        && (d.getField().getClass().equals(String.class)))
                 .subscribe(
                         //onNext
                         d -> mDataManager.updateDetail(assetId, d.getId(), d.getType(), null, field)

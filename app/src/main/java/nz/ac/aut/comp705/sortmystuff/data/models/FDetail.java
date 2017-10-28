@@ -164,22 +164,6 @@ public class FDetail<T> implements IDetail<T>, Comparable {
     }
 
     @Exclude
-    public static FDetail fromDetail(Detail source) {
-        checkNotNull(source, "The source detail cannot be null");
-
-        String id = source.getId();
-        String assetId = source.getAssetId();
-        DetailType type = source.getType();
-        String label = source.getLabel();
-        Object field = source.getField();
-        long createTimestamp = System.currentTimeMillis();
-        int position = source.getPosition();
-        boolean defaultFieldValue = source.isDefaultFieldValue();
-
-        return new FDetail(id, assetId, type, label, field, createTimestamp, createTimestamp, position, defaultFieldValue);
-    }
-
-    @Exclude
     public void overwrittenBy(FDetail source) {
         if (!field.getClass().equals(checkNotNull(source).getField().getClass()))
             throw new IllegalStateException("Cannot be overwritten by a different type of FDetail");

@@ -3,7 +3,6 @@ package nz.ac.aut.comp705.sortmystuff.di;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.IDataRepository;
 import nz.ac.aut.comp705.sortmystuff.data.IDebugHelper;
-import nz.ac.aut.comp705.sortmystuff.data.local.IFileHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
 import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
 
@@ -20,8 +19,6 @@ public interface IFactory {
     ISchedulerProvider getSchedulerProvider();
 
     IDataManager getDataManager();
-
-    IFileHelper getFileHelper();
 
     IDataRepository getRemoteRepository();
 
