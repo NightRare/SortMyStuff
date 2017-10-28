@@ -13,12 +13,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import nz.ac.aut.comp705.sortmystuff.data.local.IFileHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
-import nz.ac.aut.comp705.sortmystuff.data.models.Category;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.FAsset;
+import nz.ac.aut.comp705.sortmystuff.data.models.FCategory;
 import nz.ac.aut.comp705.sortmystuff.data.models.FDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
@@ -45,16 +44,16 @@ import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.ROOT_ASSET_ID;
 
 public class DataManager implements IDataManager, IDebugHelper {
 
-    public DataManager(IDataRepository remoteRepo, IFileHelper fileHelper, LocalResourceLoader resLoader,
+    public DataManager(IDataRepository remoteRepo, LocalResourceLoader resLoader,
                        ISchedulerProvider schedulerProvider) {
         mRemoteRepo = checkNotNull(remoteRepo);
-        mFileHelper = checkNotNull(fileHelper);
         mResLoader = checkNotNull(resLoader);
         mSchedulerProvider = checkNotNull(schedulerProvider);
 
         synchronized (this) {
             mDirtyCachedAssets = true;
             mDirtyCachedDetails = true;
+            mDirtyCachedCategories = true;
         }
 
         initCachedDetails();
@@ -62,6 +61,7 @@ public class DataManager implements IDataManager, IDebugHelper {
         mRemoteRepo.setOnDataChangeCallback(new OnAssetsDataChangeListeners());
 
         cacheAssets();
+        cacheCategories();
     }
 
     //region RETRIEVE METHODS
@@ -236,36 +236,21 @@ public class DataManager implements IDataManager, IDebugHelper {
                 + AppConstraints.ASSET_NAME_CAP + " characters");
 
         FAsset asset = FAsset.create(name, containerId, categoryType);
-        List<FDetail> details = getCategory(categoryType).generateFDetails(asset.getId());
-        for (FDetail d : details) {
-            asset.addDetailId(d.getId());
-            mRemoteRepo.addDetail(d, mOnDetailUpdated);
-        }
-        mRemoteRepo.addOrUpdateAsset(asset, mOnAssetUpdated);
 
-        LoggedAction updateCacheData = executedFromLog -> {
-            FAsset container = mCachedAssets.get(containerId);
-            if (container == null) return;
-
-            container.addContentId(asset.getId());
-            mCachedAssets.put(asset.getId(), asset);
-
-            if (!executedFromLog)
-                mRemoteRepo.addOrUpdateAsset(container, mOnAssetUpdated);
-        };
-
-        if (mDirtyCachedAssets) {
-            // needs to update the contentIds of the container asset
-            mRemoteRepo.retrieveAsset(containerId)
+        if (mDirtyCachedCategories) {
+            mRemoteRepo.retrieveCategories()
                     .subscribeOn(mSchedulerProvider.io())
-                    .subscribe(container -> {
-                        if (container == null) return;
-                        container.addContentId(asset.getId());
-                        mRemoteRepo.addOrUpdateAsset(container, mOnAssetUpdated);
-                        mActionsQueue.add(updateCacheData);
-                    });
+                    .flatMap(Observable::from)
+                    .filter(category -> category.getName().equals(categoryType.toString()))
+                    .first()
+                    .map(category -> category.generateDetails(asset.getId()))
+                    .subscribe(
+                            //onNext
+                            details -> createAssetProcess(asset, details)
+                    );
         } else {
-            updateCacheData.execute(false);
+            List<FDetail> details = mCachedCategories.get(categoryType).generateDetails(asset.getId());
+            createAssetProcess(asset, details);
         }
 
         return asset.getId();
@@ -475,6 +460,21 @@ public class DataManager implements IDataManager, IDebugHelper {
 
     //region PRIVATE STUFF
 
+    private synchronized void cacheCategories() {
+        mCachedCategories = new HashMap<>();
+
+        mRemoteRepo.retrieveCategories()
+                .subscribeOn(mSchedulerProvider.computation())
+                .flatMap(Observable::from)
+                .doOnNext(category -> mCachedCategories.put(CategoryType.valueOf(category.getName()), category))
+                .doOnCompleted(() -> {
+                    synchronized (DataManager.this) {
+                        mDirtyCachedCategories = false;
+                    }
+                })
+                .subscribe();
+    }
+
     private synchronized void cacheAssets() {
         mDirtyCachedAssets = true;
 
@@ -536,22 +536,44 @@ public class DataManager implements IDataManager, IDebugHelper {
                 });
     }
 
-    private Category getCategory(CategoryType categoryType) {
-        if (mCategories == null) {
-            mCategories = new HashMap<>();
-            for (Category c : mFileHelper.deserialiseCategories()) {
-                mCategories.put(Enum.valueOf(CategoryType.class, c.getName()),
-                        c);
-            }
-        }
-
-        return mCategories.get(categoryType);
-    }
-
     private FAsset createRootAsset() {
         FAsset root = FAsset.createRoot();
         mRemoteRepo.addOrUpdateAsset(root, null);
         return root;
+    }
+
+    private void createAssetProcess(FAsset asset, List<FDetail> details) {
+
+        for (FDetail d : details) {
+            asset.addDetailId(d.getId());
+            mRemoteRepo.addDetail(d, mOnDetailUpdated);
+        }
+        mRemoteRepo.addOrUpdateAsset(asset, mOnAssetUpdated);
+
+        LoggedAction updateCacheData = executedFromLog -> {
+            FAsset container = mCachedAssets.get(asset.getContainerId());
+            if (container == null) return;
+
+            container.addContentId(asset.getId());
+            mCachedAssets.put(asset.getId(), asset);
+
+            if (!executedFromLog)
+                mRemoteRepo.addOrUpdateAsset(container, mOnAssetUpdated);
+        };
+
+        if (mDirtyCachedAssets) {
+            // needs to update the contentIds of the container asset
+            mRemoteRepo.retrieveAsset(asset.getContainerId())
+                    .subscribeOn(mSchedulerProvider.io())
+                    .subscribe(container -> {
+                        if (container == null) return;
+                        container.addContentId(asset.getId());
+                        mRemoteRepo.addOrUpdateAsset(container, mOnAssetUpdated);
+                        mActionsQueue.add(updateCacheData);
+                    });
+        } else {
+            updateCacheData.execute(false);
+        }
     }
 
     private void updateAssetModifyTimestamp(String assetId, long modifyTimestamp) {
@@ -825,9 +847,7 @@ public class DataManager implements IDataManager, IDebugHelper {
 
     private IDataRepository mRemoteRepo;
     private ISchedulerProvider mSchedulerProvider;
-    private IFileHelper mFileHelper;
     private LocalResourceLoader mResLoader;
-    private Map<CategoryType, Category> mCategories;
 
     private List<LoggedAction> mActionsQueue;
 
@@ -836,9 +856,12 @@ public class DataManager implements IDataManager, IDebugHelper {
     private Map<String, List<FDetail>> mCachedDetails;
     private Map<String, FAsset> mCachedRecycledAssets;
     private List<String> mCachedDetailsKeyList;
+    private Map<CategoryType, FCategory> mCachedCategories;
+
 
     private boolean mDirtyCachedAssets;
     private boolean mDirtyCachedDetails;
+    private boolean mDirtyCachedCategories;
     private IDataRepository.OnUpdatedCallback mOnAssetUpdated = new IDataRepository.OnUpdatedCallback() {
         @Override
         public void onSuccess(Void aVoid) {

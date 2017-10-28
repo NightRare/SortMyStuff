@@ -22,7 +22,7 @@ public class SortMyStuffApp extends Application {
     public void onCreate() {
         super.onCreate();
 
-        factory = new Factory(this, "default-user");
+        factory = new Factory(this, "default");
 
 //        prepareDemoData();
     }

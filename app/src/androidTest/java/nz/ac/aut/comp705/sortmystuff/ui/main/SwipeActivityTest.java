@@ -44,6 +44,7 @@ import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.di.IFactory;
+import nz.ac.aut.comp705.sortmystuff.ui.testutils.TestConfigs;
 import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
 import rx.Observable;
 import rx.schedulers.Schedulers;
@@ -91,8 +92,8 @@ public class SwipeActivityTest {
         mApp = (SortMyStuffApp) mContext.getApplicationContext();
         mActivity = swipeActivityRule.getActivity();
         mFactory = mApp.getFactory();
-        if (!mFactory.getUserId().equals("androidTest-user")) {
-            mFactory.setUserId("androidTest-user");
+        if (!mFactory.getUserId().equals(TestConfigs.ANDROID_TEST_USER_ID)) {
+            mFactory.setUserId(TestConfigs.ANDROID_TEST_USER_ID);
             mActivity.finish();
             mActivity.startActivity(mActivity.getIntent());
         }

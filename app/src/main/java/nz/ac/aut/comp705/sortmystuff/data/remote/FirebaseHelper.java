@@ -31,11 +31,14 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
 
     public static final String DB_ASSETS = "assets";
     public static final String DB_DETAILS = "details";
+    public static final String DB_CATEGORIES = "categories";
 
-    public FirebaseHelper(LocalResourceLoader resLoader, DatabaseReference databaseReference,
-                          StorageReference storageReference, ISchedulerProvider schedulerProvider) {
+    public FirebaseHelper(LocalResourceLoader resLoader, DatabaseReference userDB,
+                          DatabaseReference appResDB, StorageReference storageReference,
+                          ISchedulerProvider schedulerProvider) {
         mResLoader = checkNotNull(resLoader);
-        mDatabase = checkNotNull(databaseReference);
+        mUserDB = checkNotNull(userDB);
+        mAppResDB = checkNotNull(appResDB);
         mStroage = checkNotNull(storageReference);
         mSchedulerProvider = checkNotNull(schedulerProvider);
     }
@@ -43,7 +46,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     @Override
     public Observable<List<FAsset>> retrieveAllAssets() {
         return RxFirebaseDatabase
-                .observeSingleValueEvent(mDatabase.child(DB_ASSETS))
+                .observeSingleValueEvent(mUserDB.child(DB_ASSETS))
                 .map(dataSnapshot -> dataToList(dataSnapshot, FAsset.class));
     }
 
@@ -51,7 +54,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     public Observable<FAsset> retrieveAsset(String assetId) {
         checkNotNull(assetId, "The assetId cannot be null.");
         return RxFirebaseDatabase
-                .observeSingleValueEvent(mDatabase.child(DB_ASSETS).child(checkNotNull(assetId)))
+                .observeSingleValueEvent(mUserDB.child(DB_ASSETS).child(checkNotNull(assetId)))
                 .map(dataSnapshot -> dataToObject(dataSnapshot, FAsset.class))
                 .onErrorReturn(throwable -> {
                     Log.e(FirebaseHelper.class.getName(), throwable.getMessage(), throwable);
@@ -62,7 +65,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     @Override
     public Observable<List<FDetail>> retrieveAllDetails() {
         return RxFirebaseDatabase
-                .observeSingleValueEvent(mDatabase.child(DB_DETAILS))
+                .observeSingleValueEvent(mUserDB.child(DB_DETAILS))
                 .map(dataSnapshot -> dataToList(dataSnapshot, FDetail.class));
     }
 
@@ -84,21 +87,21 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     public Observable<FDetail> retrieveDetail(String detailId) {
         checkNotNull(detailId, "The detailId cannot be null.");
         return RxFirebaseDatabase
-                .observeSingleValueEvent(mDatabase.child(DB_DETAILS).child(detailId))
+                .observeSingleValueEvent(mUserDB.child(DB_DETAILS).child(detailId))
                 .map(dataSnapshot -> dataToObject(dataSnapshot, FDetail.class));
     }
 
     @Override
     public Observable<List<FCategory>> retrieveCategories() {
-        //TODO: to be implemented
-        return Observable.just(new ArrayList<>());
+        return RxFirebaseDatabase.observeSingleValueEvent(mAppResDB.child(DB_CATEGORIES))
+                .map(dataSnapshot -> dataToList(dataSnapshot, FCategory.class));
     }
 
     @Override
     public void addOrUpdateAsset(FAsset asset, OnUpdatedCallback onUpdatedCallback) {
         OnUpdatedCallback callback = onUpdatedCallback == null ? mDoNothingCallback : onUpdatedCallback;
 
-        mDatabase.child(DB_ASSETS).child(checkNotNull(asset).getId()).setValue(asset.toMap())
+        mUserDB.child(DB_ASSETS).child(checkNotNull(asset).getId()).setValue(asset.toMap())
                 .addOnSuccessListener(callback::onSuccess)
                 .addOnFailureListener(callback::onFailure)
                 .addOnCompleteListener(callback::onComplete);
@@ -116,7 +119,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
                 })
                 .subscribe(
                         //onNext
-                        isEmpty -> mDatabase.child(DB_DETAILS).child(detail.getId()).setValue(detail.toMap())
+                        isEmpty -> mUserDB.child(DB_DETAILS).child(detail.getId()).setValue(detail.toMap())
                                 .addOnSuccessListener(callback::onSuccess)
                                 .addOnFailureListener(callback::onFailure)
                                 .addOnCompleteListener(callback::onComplete),
@@ -138,7 +141,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
             throw e;
         }
 
-        mDatabase.child(DB_ASSETS).child(checkNotNull(assetId)).child(checkNotNull(key))
+        mUserDB.child(DB_ASSETS).child(checkNotNull(assetId)).child(checkNotNull(key))
                 .setValue(value)
                 .addOnSuccessListener(callback::onSuccess)
                 .addOnFailureListener(callback::onFailure)
@@ -150,7 +153,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
         OnUpdatedCallback callback = onUpdatedCallback == null ? mDoNothingCallback : onUpdatedCallback;
 
         if (updatingField) {
-            mDatabase.child(DB_DETAILS).child(detail.getId()).setValue(detail.toMap())
+            mUserDB.child(DB_DETAILS).child(detail.getId()).setValue(detail.toMap())
                     .addOnSuccessListener(callback::onSuccess)
                     .addOnFailureListener(callback::onFailure)
                     .addOnCompleteListener(callback::onComplete);
@@ -162,7 +165,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
 
         for (Map.Entry<String, Object> member : members.entrySet()) {
             if (!member.getKey().equals(DETAIL_FIELD)) {
-                Task<Void> updateTask = mDatabase.child(DB_DETAILS).child(detail.getId()).child(member.getKey())
+                Task<Void> updateTask = mUserDB.child(DB_DETAILS).child(detail.getId()).child(member.getKey())
                         .setValue(member.getValue())
                         .addOnFailureListener(callback::onFailure);
                 tasks.add(updateTask);
@@ -219,6 +222,12 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
             }
             return (E) detail;
 
+        } else if (type.equals(FCategory.class)) {
+            FCategory category = FCategory.fromMap(members);
+            category.setDefaultFieldValue(mResLoader.getDefaultText(), mResLoader.getDefaultPhoto());
+
+            return (E) category;
+
         } else return null;
     }
 
@@ -236,23 +245,16 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
      */
     private <E> List<E> dataToList(DataSnapshot dataSnapshot, Class<E> type) {
         List<E> objects = new ArrayList<>();
-        if (type.equals(FAsset.class)) {
-            for (DataSnapshot objectData : dataSnapshot.getChildren()) {
-                objects.add((E) dataToObject(objectData, FAsset.class));
-            }
-        } else if (type.equals(FDetail.class)) {
-            for (DataSnapshot objectData : dataSnapshot.getChildren()) {
-                objects.add((E) dataToObject(objectData, FDetail.class));
-            }
+        for (DataSnapshot objectData : dataSnapshot.getChildren()) {
+            objects.add((E) dataToObject(objectData, type));
         }
-
         return objects;
     }
 
     private void attachAssetsDataChangeListener() {
         if (mOnAssetsDataChangeCallback == null) return;
 
-        RxFirebaseDatabase.observeChildEvent(mDatabase.child(DB_ASSETS))
+        RxFirebaseDatabase.observeChildEvent(mUserDB.child(DB_ASSETS))
                 .subscribe(
                         //onNext
                         dataSnapshotRxFirebaseChildEvent -> {
@@ -267,7 +269,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     private void attachDetailsDataChangeListener() {
         if (mOnDetailsDataChangeCallback == null) return;
 
-        RxFirebaseDatabase.observeChildEvent(mDatabase.child(DB_DETAILS))
+        RxFirebaseDatabase.observeChildEvent(mUserDB.child(DB_DETAILS))
                 .subscribe(
                         //onNext
                         dataSnapshotRxFirebaseChildEvent -> {
@@ -325,7 +327,8 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
         }
     }
 
-    private DatabaseReference mDatabase;
+    private DatabaseReference mUserDB;
+    private DatabaseReference mAppResDB;
     private StorageReference mStroage;
     private LocalResourceLoader mResLoader;
     private ISchedulerProvider mSchedulerProvider;
@@ -348,7 +351,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
 
     @Override
     public void removeCurrentUserData() {
-        mDatabase.removeValue();
+        mUserDB.removeValue();
     }
 
     //region

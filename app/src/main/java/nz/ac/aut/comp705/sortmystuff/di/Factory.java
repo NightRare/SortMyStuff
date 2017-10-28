@@ -74,8 +74,11 @@ public class Factory implements IFactory {
         if (mRemoteRepo != null)
             return mRemoteRepo;
 
-        mRemoteRepo = new FirebaseHelper(getLocalResourceLoader(),
-                getDatabaseReference(), getStorageReference(), getSchedulerProvider());
+        DatabaseReference userDB = FirebaseDatabase.getInstance().getReference().child(USER_DATA).child(mUserId);
+        DatabaseReference appResDB = FirebaseDatabase.getInstance().getReference().child(APP_RESOURCES);
+        StorageReference storage = FirebaseStorage.getInstance().getReference().child(USER_DATA).child(mUserId);
+
+        mRemoteRepo = new FirebaseHelper(getLocalResourceLoader(), userDB, appResDB, storage, getSchedulerProvider());
         return mRemoteRepo;
     }
 
@@ -108,16 +111,6 @@ public class Factory implements IFactory {
     }
 
     @Override
-    public DatabaseReference getDatabaseReference() {
-        return FirebaseDatabase.getInstance().getReference().child(mUserId);
-    }
-
-    @Override
-    public StorageReference getStorageReference() {
-        return FirebaseStorage.getInstance().getReference().child(mUserId);
-    }
-
-    @Override
     public void setUserId(String userId) {
         if(checkNotNull(userId).equals(mUserId)) return;
 
@@ -135,6 +128,9 @@ public class Factory implements IFactory {
 
 
     //region Private stuff
+
+    private static final String USER_DATA = "user_data";
+    private static final String APP_RESOURCES = "app_resources";
 
     private Application mApp;
     private String mUserId;

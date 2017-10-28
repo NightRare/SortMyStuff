@@ -125,7 +125,8 @@ public class FDetail<T> implements IDetail<T>, Comparable {
         boolean defaultFieldValue = (boolean) members.get(DETAIL_DEFAULTFIELDVALUE);
 
         if (type.equals(DetailType.Date) || type.equals(DetailType.Text)) {
-            String field = members.get(DETAIL_FIELD).toString();
+            String field = (String) members.get(DETAIL_FIELD);
+            if (field == null) field = "";
             return new FDetail<String>(id, assetId, type, label, field, createTimestamp, modifyTimestamp, position, defaultFieldValue);
         } else if (type.equals(DetailType.Image)) {
             Bitmap field = null;

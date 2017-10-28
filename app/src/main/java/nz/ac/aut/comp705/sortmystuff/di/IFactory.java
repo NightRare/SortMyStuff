@@ -1,8 +1,5 @@
 package nz.ac.aut.comp705.sortmystuff.di;
 
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.storage.StorageReference;
-
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.IDataRepository;
 import nz.ac.aut.comp705.sortmystuff.data.IDebugHelper;
@@ -33,10 +30,6 @@ public interface IFactory {
     IDebugHelper getDataDebugHelper();
 
     LocalResourceLoader getLocalResourceLoader();
-
-    DatabaseReference getDatabaseReference();
-
-    StorageReference getStorageReference();
 
     void setUserId(String userId);
 

@@ -50,6 +50,8 @@ public class Category {
         return new Category(name, details);
     }
 
+    //endregion
+
     //region ACCESSORS
 
     /**

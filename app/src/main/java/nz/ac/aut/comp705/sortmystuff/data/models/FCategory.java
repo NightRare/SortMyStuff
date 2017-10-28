@@ -6,8 +6,7 @@ import com.google.firebase.database.Exclude;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
+import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -21,36 +20,52 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Created by Yuan on 2017/5/27.
  */
 
-public class FCategory {
+public class FCategory implements ICategory {
 
-    //region DATA FIELDS
+    //region FIELD NAMES
 
-    private String name;
-
-    private List<Detail> details;
+    public static final String CATEGORY_NAME = "name";
+    public static final String CATEGORY_DETAILS = "details";
 
     //endregion
 
-    //region STATIC FACTORY
+    //region DATA FIELDS
+
+    /**
+     * Unique identifier of the category
+     */
+    private String name;
+
+    private List<FDetail> details;
+
+    //endregion
+
+    //region CONSTRUCTORS
 
     public FCategory() {
         // Default constructor required for calls to DataSnapshot.getValue(Post.class)
     }
-    /**
-     * Static factory to create a Category whose name is as given.
-     *
-     * @param name the name of the category
-     * @return the Category instance
-     * @throws NullPointerException     if name is {@code null}
-     * @throws IllegalArgumentException if name if whitespaces, empty, or exceeds the length
-     *                                  {@link AppConstraints#CATEGORY_NAME_CAP}
-     */
-    public static FCategory create(String name) {
-        checkIllegalName(name);
-        List<Detail> details = new ArrayList<>();
 
+    //endregion
+
+    //region TRANSFORMERS
+
+    @Exclude
+    public static FCategory fromMap(Map<String, Object> members) {
+        String name = (String) members.get(CATEGORY_NAME);
+        List<Map> detailObjects = (List<Map>) members.get(CATEGORY_DETAILS);
+        if(detailObjects == null) detailObjects = new ArrayList<>();
+
+        List<FDetail> details = new ArrayList<>();
+        for (Map<String, Object> dMember : detailObjects) {
+            FDetail detail = FDetail.fromMap(dMember);
+            if (detail != null)
+                details.add(detail);
+        }
         return new FCategory(name, details);
     }
+
+    //endregion
 
     //region ACCESSORS
 
@@ -59,175 +74,76 @@ public class FCategory {
      *
      * @return the name
      */
+    @Override
     public String getName() {
         return name;
     }
 
-    /**
-     * <p><em>
-     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
-     * </em></p>
-     * <p>
-     * Gets the shallow clone list of template details.
-     *
-     * @return the list of template details
-     */
-    @Deprecated
-    public List<Detail> getDetails() {
-        return new ArrayList<>(details);
-    }
-
     //endregion
 
-    //region MODIFIERS
+    //region OTHER METHODS
 
-    /**
-     * <p><em>
-     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
-     * </em></p>
-     * <p>
-     * Sets the name of the category.
-     *
-     * @param name the name of the category
-     * @throws NullPointerException     if name is {@code null}
-     * @throws IllegalArgumentException if name if whitespaces, empty, or exceeds the length
-     *                                  {@link AppConstraints#CATEGORY_NAME_CAP}
-     */
-    @Deprecated
-    public void setName(String name) {
-        checkIllegalName(name);
-        this.name = name;
-    }
+    public void setDefaultFieldValue(String defaultTextValue, Bitmap defaultImageValue) {
+        for (FDetail detail : details) {
+            if (detail.getType().equals(DetailType.Text) || detail.getType().equals(DetailType.Date)) {
+                detail.setField(defaultTextValue, true);
 
-    @Deprecated
-    public void setDetails(List<Detail> details) {
-        this.details = checkNotNull(details);
-    }
-
-    /**
-     * <p><em>
-     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
-     * </em></p>
-     * <p>
-     * Adds the detail to the list of template details.
-     *
-     * @param detail the detail to be added
-     * @return true if add successfully
-     */
-    @Deprecated
-    @Exclude
-    public boolean addDetail(Detail detail) {
-        return hasLabel(detail.getLabel()) ?
-                false : details.add(duplicateDetail(DUMMY_ASSET_ID, detail));
-    }
-
-    /**
-     * <p><em>
-     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
-     * </em></p>
-     * <p>
-     * Removes the detail whose label is as given from the list of template details.
-     *
-     * @param label the label of the detail which needs to be removed
-     * @return true if remove successfully
-     */
-    @Deprecated
-    @Exclude
-    public boolean removeDetail(String label) {
-        for (Detail d : details) {
-            if (d.getLabel().equals(label))
-                return details.remove(d);
+            } else if (detail.getType().equals(DetailType.Image)) {
+                detail.setField(defaultImageValue, true);
+            }
         }
-        return false;
     }
 
-    //endregion
-
     /**
-     * <p><em>
-     * Annotated with Deprecated to prevent invocation outside {@link nz.ac.aut.comp705.sortmystuff.data} package.
-     * </em></p>
-     * <p>
-     * <p>
      * Generates a list of details for the Asset whose id is as the given argument. The details
      * are cloned from the template list only with a different assetid.
      *
      * @param assetId the id of the owner asset
      * @return the lit of details
-     * @throws NullPointerException if asssetId is {@code null}
+     * @throws NullPointerException if assetId is {@code null}
      */
-    @Deprecated
     @Exclude
-    public List<Detail> generateDetails(String assetId) {
-        checkNotNull(assetId);
-
-        List<Detail> clone = new ArrayList<>();
-        for (Detail d : details) {
-            clone.add(duplicateDetail(assetId, d));
-        }
-        return clone;
-    }
-
-    @Exclude
-    public List<FDetail> generateFDetails(String assetId) {
+    public List<FDetail> generateDetails(String assetId) {
         checkNotNull(assetId);
 
         List<FDetail> clone = new ArrayList<>();
-        for (Detail d : details) {
-            FDetail fDetail = FDetail.fromDetail(duplicateDetail(assetId, d));
-            clone.add(fDetail);
+        for (FDetail d : details) {
+            FDetail fDetail = duplicateDetail(assetId, d);
+            if (fDetail != null)
+                clone.add(fDetail);
         }
         return clone;
     }
+
+    //endregion
 
     //region PRIVATE STUFF
 
     @Exclude
     private static final String DUMMY_ASSET_ID = "DUMMY_ASSET_ID";
 
-    private FCategory(String name, List<Detail> details) {
+    private FCategory(String name, List<FDetail> details) {
         this.name = name;
         this.details = details;
     }
 
-    /**
-     * Returns true if there is already a detail with the same label in template list.
-     *
-     * @param label
-     * @return
-     */
     @Exclude
-    private boolean hasLabel(String label) {
-        for (Detail d : details) {
-            if (d.getLabel().equals(label))
-                return true;
+    private FDetail duplicateDetail(String assetId, FDetail detail) {
+        FDetail output = null;
+        DetailType type = detail.getType();
+        if (type.equals(DetailType.Image)) {
+            output = FDetail.createImageDetail(assetId, detail.getLabel(), (Bitmap) detail.getField());
+            output.setPosition(detail.getPosition());
+
+        } else if (type.equals(DetailType.Date)) {
+            output = FDetail.createDateDetail(assetId, detail.getLabel(), (String) detail.getField());
+            output.setPosition(detail.getPosition());
+
+        } else if (type.equals(DetailType.Text)) {
+            output = FDetail.createTextDetail(assetId, detail.getLabel(), (String) detail.getField());
+            output.setPosition(detail.getPosition());
         }
-        return false;
-    }
-
-    @Exclude
-    private static void checkIllegalName(String name) {
-        checkNotNull(name);
-        if (name.isEmpty())
-            throw new IllegalArgumentException("cannot be empty");
-        if (name.length() > AppConstraints.CATEGORY_NAME_CAP)
-            throw new IllegalArgumentException("string length exceeds cap");
-    }
-
-    @Exclude
-    private static Detail duplicateDetail(String assetId, Detail detail) {
-        if (detail instanceof ImageDetail) {
-            return ImageDetail.create(assetId, detail.getLabel(), (Bitmap) detail.getField());
-        }
-
-        if (detail instanceof TextDetail) {
-            if (detail.getType().equals(DetailType.Date))
-                return TextDetail.createDateDetail(assetId, detail.getLabel(), (String) detail.getField());
-
-            if (detail.getType().equals(DetailType.Text))
-                return TextDetail.createTextDetail(assetId, detail.getLabel(), (String) detail.getField());
-        }
-        return null;
+        return output;
     }
 
     //endregion
