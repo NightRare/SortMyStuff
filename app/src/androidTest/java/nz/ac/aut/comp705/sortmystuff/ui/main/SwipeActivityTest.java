@@ -789,8 +789,6 @@ public class SwipeActivityTest {
         Intent resultData = new Intent();
         resultData.setData(imageUri);
         Instrumentation.ActivityResult result = new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData);
-        final Bitmap newImage = MediaStore.Images.Media.getBitmap(
-                InstrumentationRegistry.getTargetContext().getContentResolver(), imageUri);
 
         Bitmap defaultThumbnail = mFactory.getLocalResourceLoader().getDefaultThumbnail();
         Bitmap defaultPhoto = mFactory.getLocalResourceLoader().getDefaultPhoto();
@@ -804,7 +802,6 @@ public class SwipeActivityTest {
         intended(hasComponent(CameraActivity.class.getName()));
 
         mDataManager.getAssets()
-                .subscribeOn(Schedulers.immediate())
                 .flatMap(Observable::from)
                 .filter(asset -> asset.getName().equals(ASSET_LIVING_ROOM))
                 .first()
