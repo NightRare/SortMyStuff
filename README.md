@@ -46,6 +46,7 @@ Firebase (Realtime Database)
 - [Gson](https://github.com/google/gson)
 - [RxJava](https://github.com/ReactiveX/RxJava/tree/1.x)
 - [RxFirebase](https://github.com/nmoskalenko/RxFirebase)
+- [Dagger 2](https://github.com/google/dagger)
 - The photo taking feature is dependent on [SquareCamera by boxme](https://github.com/boxme/SquareCamera.git)
 
 ## Declaration of the use of resources
