@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import javax.inject.Inject;
+
 import nz.ac.aut.comp705.sortmystuff.data.IDataRepository;
 import nz.ac.aut.comp705.sortmystuff.data.IDebugHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
@@ -20,6 +22,9 @@ import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.FAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.FCategory;
 import nz.ac.aut.comp705.sortmystuff.data.models.FDetail;
+import nz.ac.aut.comp705.sortmystuff.di.qualifiers.AppResDatabaseRef;
+import nz.ac.aut.comp705.sortmystuff.di.qualifiers.RegularScheduler;
+import nz.ac.aut.comp705.sortmystuff.di.qualifiers.UserDatabaseRef;
 import nz.ac.aut.comp705.sortmystuff.utils.Log;
 import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
 import rx.Observable;
@@ -33,9 +38,10 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     public static final String DB_DETAILS = "details";
     public static final String DB_CATEGORIES = "categories";
 
-    public FirebaseHelper(LocalResourceLoader resLoader, DatabaseReference userDB,
-                          DatabaseReference appResDB, StorageReference storageReference,
-                          ISchedulerProvider schedulerProvider) {
+    @Inject
+    public FirebaseHelper(LocalResourceLoader resLoader, @UserDatabaseRef DatabaseReference userDB,
+                          @AppResDatabaseRef DatabaseReference appResDB, StorageReference storageReference,
+                          @RegularScheduler ISchedulerProvider schedulerProvider) {
         mResLoader = checkNotNull(resLoader);
         mUserDB = checkNotNull(userDB);
         mAppResDB = checkNotNull(appResDB);

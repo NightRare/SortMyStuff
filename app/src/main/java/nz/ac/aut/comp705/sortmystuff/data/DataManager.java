@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import javax.inject.Inject;
+
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
@@ -22,6 +24,7 @@ import nz.ac.aut.comp705.sortmystuff.data.models.FCategory;
 import nz.ac.aut.comp705.sortmystuff.data.models.FDetail;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
+import nz.ac.aut.comp705.sortmystuff.di.qualifiers.RegularScheduler;
 import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
 import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
 import nz.ac.aut.comp705.sortmystuff.utils.DemoDebugger;
@@ -46,8 +49,9 @@ import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.ROOT_ASSET_ID;
 
 public class DataManager implements IDataManager, IDebugHelper {
 
+    @Inject
     public DataManager(IDataRepository remoteRepo, LocalResourceLoader resLoader,
-                       ISchedulerProvider schedulerProvider) {
+                       @RegularScheduler ISchedulerProvider schedulerProvider) {
         mRemoteRepo = checkNotNull(remoteRepo);
         mResLoader = checkNotNull(resLoader);
         mSchedulerProvider = checkNotNull(schedulerProvider);

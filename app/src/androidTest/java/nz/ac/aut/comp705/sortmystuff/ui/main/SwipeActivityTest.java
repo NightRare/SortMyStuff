@@ -16,9 +16,9 @@ import android.support.test.espresso.intent.rule.IntentsTestRule;
 import android.support.test.espresso.matcher.RootMatchers;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
-import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.desmond.squarecamera.CameraActivity;
 import com.google.common.base.Preconditions;
@@ -69,6 +69,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.isNotChecked;
 import static android.support.test.espresso.matcher.ViewMatchers.withChild;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static android.support.test.espresso.matcher.ViewMatchers.withParent;
 import static android.support.test.espresso.matcher.ViewMatchers.withSpinnerText;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
@@ -90,12 +91,13 @@ public class SwipeActivityTest {
     public void setup() {
         mContext = InstrumentationRegistry.getTargetContext();
         mApp = (SortMyStuffApp) mContext.getApplicationContext();
-        mActivity = swipeActivityRule.getActivity();
         mFactory = mApp.getFactory();
+        mActivity = swipeActivityRule.getActivity();
         if (!mFactory.getUserId().equals(TestConfigs.ANDROID_TEST_USER_ID)) {
             mFactory.setUserId(TestConfigs.ANDROID_TEST_USER_ID);
             mActivity.finish();
             mActivity.startActivity(mActivity.getIntent());
+            mActivity = swipeActivityRule.getActivity();
         }
         mDataManager = mFactory.getDataManager();
 
@@ -126,7 +128,7 @@ public class SwipeActivityTest {
     public void onLaunch_displayRootAssetTitle() {
         onView(withId(R.id.main_toolbar)).check(matches(isDisplayed()));
 
-        Assert.assertTrue(getToolbarTitle().equals(ROOT_ASSET_NAME));
+        checkToolbarTitle(ROOT_ASSET_NAME);
     }
 
     @Test
@@ -190,7 +192,7 @@ public class SwipeActivityTest {
 
         clickAsset(0);
         swipeToDetailsPage();
-        Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
+        checkToolbarTitle(ASSET1_NAME);
 
         // check if the category is displayed correctly
         onView(withId(R.id.assetCategory_detail))
@@ -217,7 +219,7 @@ public class SwipeActivityTest {
 
         clickAsset(0);
         swipeToDetailsPage();
-        Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
+        checkToolbarTitle(ASSET1_NAME);
 
         // check if the category is displayed correctly
         onView(withId(R.id.assetCategory_detail))
@@ -232,7 +234,7 @@ public class SwipeActivityTest {
         clickAsset(0);
         onView(withId(R.id.main_toolbar)).check(matches(isDisplayed()));
         //check that the name on the toolbar is the name of the selected asset
-        Assert.assertTrue(getToolbarTitle().equals(ASSET1_NAME));
+        checkToolbarTitle(ASSET1_NAME);
     }
 
     @Test
@@ -304,13 +306,13 @@ public class SwipeActivityTest {
                 .check(matches(isDisplayed()));
 
         // make sure its directed to asset1's contents view
-        Assert.assertTrue(getToolbarTitle().equals(ASSET1_NAME));
+        checkToolbarTitle(ASSET1_NAME);
 
         onView(withId(R.id.pathbar_root)).perform(click());
 
         // after click on Root asset on path bar
         // should direct back to Root's contents view and asset1 removed from path bar
-        Assert.assertTrue(getToolbarTitle().equals(ROOT_ASSET_NAME));
+        checkToolbarTitle(ROOT_ASSET_NAME);
         onView(withItemTextOnPathBar(PATH_BAR_0_PREFIX + ASSET1_NAME))
                 .check(doesNotExist());
     }
@@ -329,14 +331,14 @@ public class SwipeActivityTest {
                 .check(matches(isDisplayed()));
 
         // make sure its directed to asset2's contents view
-        Assert.assertTrue(getToolbarTitle().equals(ASSET2_NAME));
+        checkToolbarTitle(ASSET2_NAME);
 
         // click on asset1 while in asset2's contents view
         onView(withItemTextOnPathBar(PATH_BAR_0_PREFIX + ASSET1_NAME))
                 .perform(click());
 
         // should direct back to asset1's contents view and asset2 removed from path bar
-        Assert.assertTrue(getToolbarTitle().equals(ASSET1_NAME));
+        checkToolbarTitle(ASSET1_NAME);
         onView(withItemTextOnPathBar(PATH_BAR_PREFIX + ASSET2_NAME))
                 .check(doesNotExist());
     }
@@ -353,7 +355,7 @@ public class SwipeActivityTest {
         }
 
         // make sure its directed to asset2's contents view
-        Assert.assertTrue(getToolbarTitle().equals(names.get(4)));
+        checkToolbarTitle(names.get(4));
 
         // swipe the path bar to the first asset (asset0), then the first asset shall be displayed
         onView(withId(R.id.pathbar_pathview))
@@ -363,7 +365,7 @@ public class SwipeActivityTest {
 
         // should direct back to asset0's contents view and all other assets
         // should be removed from path bar
-        Assert.assertTrue(getToolbarTitle().equals(names.get(0)));
+        checkToolbarTitle(names.get(0));
         onView(withItemTextOnPathBar(PATH_BAR_PREFIX + names.get(1)))
                 .check(doesNotExist());
     }
@@ -595,13 +597,13 @@ public class SwipeActivityTest {
 
         //the selected two items should not be interactive
         // (to prevent from moving assets to themselves or their children)
-        Assert.assertEquals(ASSET_DINING_ROOM, getToolbarTitle());
+        checkToolbarTitle(ASSET_DINING_ROOM);
         onData(anything()).inAdapterView((withId(R.id.assets_list)))
                 .atPosition(0).perform(click());
-        Assert.assertEquals(ASSET_DINING_ROOM, getToolbarTitle());
+        checkToolbarTitle(ASSET_DINING_ROOM);
         onData(anything()).inAdapterView((withId(R.id.assets_list)))
                 .atPosition(1).perform(click());
-        Assert.assertEquals(ASSET_DINING_ROOM, getToolbarTitle());
+        checkToolbarTitle(ASSET_DINING_ROOM);
 
         //go to the living room where tables will be moved
         onView(withId(R.id.pathbar_root)).perform(click());
@@ -628,7 +630,7 @@ public class SwipeActivityTest {
         clickAsset(0);
 
         // check if the current asset is asset1
-        Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
+        checkToolbarTitle(ASSET1_NAME);
 
         openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
         onView(withText(R.string.delete_current_asset)).perform(click());
@@ -636,7 +638,7 @@ public class SwipeActivityTest {
 
         // current asset set back to the container (in this case the Root) asset and asset1 no
         // longer exists
-        Assert.assertEquals(ROOT_ASSET_NAME, getToolbarTitle());
+        checkToolbarTitle(ROOT_ASSET_NAME);
         onView(withChild(withText(ASSET1_NAME))).check(doesNotExist());
     }
 
@@ -646,14 +648,18 @@ public class SwipeActivityTest {
         clickAsset(0);
 
         // check if the current asset is asset1
-        Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
+        onView(allOf(instanceOf(TextView.class), withParent(withId(R.id.main_toolbar))))
+                .check(matches(withText(ASSET1_NAME)));
+//        Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
 
         openActionBarOverflowOrOptionsMenu(InstrumentationRegistry.getTargetContext());
         onView(withText(R.string.delete_current_asset)).perform(click());
         onView(withText(R.string.cancel_button)).perform(click());
 
         // current asset should still be asset1
-        Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
+        onView(allOf(instanceOf(TextView.class), withParent(withId(R.id.main_toolbar))))
+                .check(matches(withText(ASSET1_NAME)));
+//        Assert.assertEquals(ASSET1_NAME, getToolbarTitle());
     }
 
     @Test
@@ -906,9 +912,9 @@ public class SwipeActivityTest {
                 .atPosition(num).perform(click());
     }
 
-    private String getToolbarTitle() {
-        Toolbar toolbar = (Toolbar) mActivity.findViewById(R.id.main_toolbar);
-        return toolbar.getTitle().toString();
+    private void checkToolbarTitle(String expectedTitle) {
+        onView(allOf(instanceOf(TextView.class), withParent(withId(R.id.main_toolbar))))
+                .check(matches(withText(expectedTitle)));
     }
 
     private void swipeToDetailsPage() {

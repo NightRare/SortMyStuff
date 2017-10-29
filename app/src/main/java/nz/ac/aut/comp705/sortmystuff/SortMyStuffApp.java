@@ -19,6 +19,7 @@ public class SortMyStuffApp extends Application {
         FirebaseDatabase.getInstance().setPersistenceEnabled(true);
 
         factory = new Factory(this, "default");
+
     }
 
     public IFactory getFactory() {

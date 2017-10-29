@@ -2,14 +2,19 @@ package nz.ac.aut.comp705.sortmystuff.utils.schedulers;
 
 import android.support.annotation.NonNull;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import rx.Scheduler;
 import rx.schedulers.Schedulers;
 
-/**
- * Created by YuanY on 2017/9/23.
- */
+@Singleton
+public class ImmediateSchedulerProvider implements ISchedulerProvider {
 
-public class ImmediateSchedularProvider implements ISchedulerProvider {
+    @Inject
+    public ImmediateSchedulerProvider() {
+
+    }
 
     @NonNull
     @Override

@@ -1,5 +1,6 @@
 package nz.ac.aut.comp705.sortmystuff.data.local;
 
+import android.app.Application;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -13,6 +14,9 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
 import nz.ac.aut.comp705.sortmystuff.utils.Log;
 
@@ -24,6 +28,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Yuan
  */
 
+@Singleton
 public class LocalResourceLoader {
 
     private static final String TAG_DEFAULT_PHOTO = "TAG_DEFAULT_PHOTO";
@@ -32,10 +37,6 @@ public class LocalResourceLoader {
     private static final String TAG_CATEGORIES_JSON = "TAG_CATEGORIES_JSON";
     private static final String TAG_DEMO_PHOTOS = "TAG_DEMO_PHOTOS";
 
-    /**
-     * When change the value of this constant, also need to change the format in
-     * {@link FileHelper#writeToImageFile(Bitmap, File)}
-     */
     public final static String IMAGE_DETAIL_FORMAT = ".jpg";
     public final static String DEFAULT_PHOTO_FILENAME = "default_square" + IMAGE_DETAIL_FORMAT;
     public final static String DEFAULT_PHOTO_PATH = "images" + File.separator + DEFAULT_PHOTO_FILENAME;
@@ -46,11 +47,12 @@ public class LocalResourceLoader {
     /**
      * Initialises a LocalResourceLoader
      *
-     * @param am the AssetManager
+     * @param app the Application
      * @throws NullPointerException if am is {@code null}
      */
-    public LocalResourceLoader(AssetManager am) {
-        mAssetManager = checkNotNull(am);
+    @Inject
+    public LocalResourceLoader(Application app) {
+        mAssetManager = checkNotNull(app).getAssets();
         loadResources();
     }
 
