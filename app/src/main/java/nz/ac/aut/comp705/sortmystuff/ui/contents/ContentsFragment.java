@@ -244,7 +244,12 @@ public class ContentsFragment extends Fragment implements IContentsView {
 
     private void checkIntendedAsset() {
         String intendedAssetId = mActivity.getIntent().getStringExtra(INTENT_ASSET_ID);
-        if (intendedAssetId != null) mPresenter.setCurrentAssetId(intendedAssetId);
+        if (intendedAssetId != null) {
+            // once acquired the intended asset, remove it from the intent
+            mActivity.getIntent().removeExtra(INTENT_ASSET_ID);
+
+            mPresenter.setCurrentAssetId(intendedAssetId);
+        }
     }
 
     private void setSelectionModeButtonsVisibility(boolean isVisible) {

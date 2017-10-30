@@ -33,8 +33,13 @@ public class SwipeActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         // Load previously saved state, if available
-        String currentAssetId = savedInstanceState == null ?
-                AppConstraints.ROOT_ASSET_ID : savedInstanceState.getString(CURRENT_ASSET_ID);
+        String currentAssetId = AppConstraints.ROOT_ASSET_ID;
+        if(savedInstanceState != null) {
+            String intendedAssetId = savedInstanceState.getString(CURRENT_ASSET_ID);
+            currentAssetId = intendedAssetId == null ? currentAssetId : intendedAssetId;
+            //remove it from the savedInstanceState
+            savedInstanceState.remove(CURRENT_ASSET_ID);
+        }
 
         mSwipeAdapter = new SwipeAdapter(getSupportFragmentManager(), this, currentAssetId);
 
@@ -58,6 +63,8 @@ public class SwipeActivity extends AppCompatActivity {
 
         super.onSaveInstanceState(outState);
     }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
