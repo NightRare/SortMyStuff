@@ -91,13 +91,15 @@ public class SearchActivity extends AppCompatActivity implements ISearchView {
     @Override
     public void turnToAssetPage(String assetId) {
         Intent goToDetail = new Intent(this, SwipeActivity.class);
+        goToDetail.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         goToDetail.putExtra(AppCode.INTENT_ASSET_ID, assetId);
         startActivity(goToDetail);
+        finish();
     }
 
     @Override
     public void showMessage(String message) {
-        Toast msg = Toast.makeText(this, message, Toast.LENGTH_LONG);
+        Toast msg = Toast.makeText(this, message, Toast.LENGTH_SHORT);
         msg.setGravity(Gravity.CENTER, 0, 0);
         msg.show();
     }

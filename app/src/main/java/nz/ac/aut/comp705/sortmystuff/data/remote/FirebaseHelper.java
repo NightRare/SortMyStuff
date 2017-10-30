@@ -183,16 +183,23 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     }
 
     @Override
-    public void setOnDataChangeCallback(OnDataChangeCallback onDataChangeCallback) {
+    public <T> void setOnDataChangeCallback(OnDataChangeCallback<T> onDataChangeCallback, Class<T> type) {
         if (onDataChangeCallback == null) {
-            mOnAssetsDataChangeCallback = null;
-            mOnDetailsDataChangeCallback = null;
-        } else if (onDataChangeCallback instanceof OnAssetsDataChangeCallback) {
-            mOnAssetsDataChangeCallback = (OnAssetsDataChangeCallback) onDataChangeCallback;
+            if (type == null) {
+                mOnAssetsDataChangeCallback = null;
+                mOnDetailsDataChangeCallback = null;
+            } else if (type.equals(FAsset.class)) {
+                mOnAssetsDataChangeCallback = null;
+            } else if (type.equals(FDetail.class)) {
+                mOnDetailsDataChangeCallback = null;
+            }
+
+        } else if (type.equals(FAsset.class)) {
+            mOnAssetsDataChangeCallback = (OnDataChangeCallback<FAsset>) onDataChangeCallback;
             attachAssetsDataChangeListener();
 
-        } else if (onDataChangeCallback instanceof OnDetailsDataChangeCallback) {
-            mOnDetailsDataChangeCallback = (OnDetailsDataChangeCallback) onDataChangeCallback;
+        } else if (type.equals(FDetail.class)) {
+            mOnDetailsDataChangeCallback = (OnDataChangeCallback<FDetail>) onDataChangeCallback;
             attachDetailsDataChangeListener();
         }
     }
@@ -266,7 +273,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
                         dataSnapshotRxFirebaseChildEvent -> {
                             DataSnapshot dataSnapshot = dataSnapshotRxFirebaseChildEvent.getValue();
                             FAsset asset = dataToObject(dataSnapshot, FAsset.class);
-                            processAssetsListChildData(asset, dataSnapshotRxFirebaseChildEvent.getEventType());
+                            processDataChangedObject(asset, FAsset.class, dataSnapshotRxFirebaseChildEvent.getEventType());
                         }
                         //onError
                 );
@@ -285,51 +292,41 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
                             // if the event is Detail Added then do nothing, otherwise every detail
                             // including images will be downloaded at the initialisation of this FirebaseHelper
                             if (eventType.equals(RxFirebaseChildEvent.EventType.ADDED)) {
-                                mOnDetailsDataChangeCallback.onDetailAdded(null);
+                                mOnDetailsDataChangeCallback.onDataAdded(null);
                                 return;
                             }
 
-                            processDetailsListChildData(dataToObject(dataSnapshot, FDetail.class), eventType);
+                            processDataChangedObject(dataToObject(dataSnapshot, FDetail.class), FDetail.class, eventType);
                         }
                         //onError
                 );
     }
 
-    private void processAssetsListChildData(FAsset asset, RxFirebaseChildEvent.EventType eventType) {
-        switch (eventType) {
-            case ADDED:
-                mOnAssetsDataChangeCallback.onAssetAdded(asset);
-                break;
-            case CHANGED:
-                mOnAssetsDataChangeCallback.onAssetChanged(asset);
-                break;
-            case REMOVED:
-                mOnAssetsDataChangeCallback.onAssetRemoved(asset);
-                break;
-            case MOVED:
-                mOnAssetsDataChangeCallback.onAssetMoved(asset);
-                break;
-            default:
+    private <T> void processDataChangedObject(T object, Class<T> type, RxFirebaseChildEvent.EventType eventType) {
+
+        OnDataChangeCallback<T> theCallback = null;
+        if (type.equals(FAsset.class)) {
+            theCallback = (OnDataChangeCallback<T>) mOnAssetsDataChangeCallback;
+        } else if (type.equals(FDetail.class)) {
+            theCallback = (OnDataChangeCallback<T>) mOnDetailsDataChangeCallback;
         }
-    }
 
-    private void processDetailsListChildData(FDetail detail, RxFirebaseChildEvent.EventType eventType) {
-
-
-        switch (eventType) {
-            case ADDED:
-                mOnDetailsDataChangeCallback.onDetailAdded(detail);
-                break;
-            case CHANGED:
-                mOnDetailsDataChangeCallback.onDetailChanged(detail);
-                break;
-            case REMOVED:
-                mOnDetailsDataChangeCallback.onDetailRemoved(detail);
-                break;
-            case MOVED:
-                mOnDetailsDataChangeCallback.onDetailMoved(detail);
-                break;
-            default:
+        if (theCallback != null) {
+            switch (eventType) {
+                case ADDED:
+                    theCallback.onDataAdded(object);
+                    break;
+                case CHANGED:
+                    theCallback.onDataChanged(object);
+                    break;
+                case REMOVED:
+                    theCallback.onDataRemoved(object);
+                    break;
+                case MOVED:
+                    theCallback.onDataMoved(object);
+                    break;
+                default:
+            }
         }
     }
 
@@ -338,8 +335,8 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     private StorageReference mStroage;
     private LocalResourceLoader mResLoader;
     private ISchedulerProvider mSchedulerProvider;
-    private OnAssetsDataChangeCallback mOnAssetsDataChangeCallback;
-    private OnDetailsDataChangeCallback mOnDetailsDataChangeCallback;
+    private OnDataChangeCallback<FAsset> mOnAssetsDataChangeCallback;
+    private OnDataChangeCallback<FDetail> mOnDetailsDataChangeCallback;
 
     private OnUpdatedCallback mDoNothingCallback = new OnUpdatedCallback() {
         @Override

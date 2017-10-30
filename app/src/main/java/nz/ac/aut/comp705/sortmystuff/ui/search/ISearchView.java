@@ -13,6 +13,12 @@ public interface ISearchView extends IView<ISearchPresenter> {
      */
     void showResultList(List<IAsset> resultList);
 
+    /**
+     * Turns to the intending asset page and clear all the other activities in task stack.
+     * (So no going back)
+     *
+     * @param assetId the id of the asset
+     */
     void turnToAssetPage(String assetId);
 
     void showMessage(String message);

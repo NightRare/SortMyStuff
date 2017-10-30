@@ -12,10 +12,6 @@ import rx.subscriptions.CompositeSubscription;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-/**
- * Created by Donna on 23 May 2017.
- */
-
 public class SearchPresenter implements ISearchPresenter{
 
     public SearchPresenter(IDataManager dataManager, ISearchView view, ISchedulerProvider schedulerProvider){

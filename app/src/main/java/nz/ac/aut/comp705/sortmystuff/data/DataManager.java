@@ -63,8 +63,8 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
 
         initCachedDetails();
-        mRemoteRepo.setOnDataChangeCallback(new OnDetailsDataChangeListeners());
-        mRemoteRepo.setOnDataChangeCallback(new OnAssetsDataChangeListeners());
+        mRemoteRepo.setOnDataChangeCallback(new OnDetailsDataChangeListeners(), FDetail.class);
+        mRemoteRepo.setOnDataChangeCallback(new OnAssetsDataChangeListeners(), FAsset.class);
 
         cacheAssets();
         cacheCategories();
@@ -765,16 +765,16 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
     }
 
-    private class OnAssetsDataChangeListeners implements IDataRepository.OnAssetsDataChangeCallback {
+    private class OnAssetsDataChangeListeners implements IDataRepository.OnDataChangeCallback<FAsset> {
 
         @Override
-        public void onAssetAdded(FAsset asset) {
+        public void onDataAdded(FAsset asset) {
             if (!mCachedAssets.containsKey(asset.getId()))
                 putAssetIntoCacheObjects(asset);
         }
 
         @Override
-        public void onAssetChanged(FAsset asset) {
+        public void onDataChanged(FAsset asset) {
             LoggedAction updateCache = executedFromLog -> {
                 FAsset cachedOne = mCachedAssets.get(asset.getId());
                 if (cachedOne == null) return;
@@ -790,12 +790,12 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
 
         @Override
-        public void onAssetRemoved(FAsset asset) {
+        public void onDataRemoved(FAsset asset) {
             // assets won't be removed
         }
 
         @Override
-        public void onAssetMoved(FAsset asset) {
+        public void onDataMoved(FAsset asset) {
             // does not matter
         }
     }
@@ -817,16 +817,16 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
     }
 
-    private class OnDetailsDataChangeListeners implements IDataRepository.OnDetailsDataChangeCallback {
+    private class OnDetailsDataChangeListeners implements IDataRepository.OnDataChangeCallback<FDetail> {
 
         @Override
-        public void onDetailAdded(FDetail detail) {
+        public void onDataAdded(FDetail detail) {
             // does not matter for now, because details won't be added without adding a new asset
             // will pass in null, as currently set up in FirebaseHelper
         }
 
         @Override
-        public void onDetailChanged(FDetail detail) {
+        public void onDataChanged(FDetail detail) {
 
             if (mDirtyCachedDetails) {
                 initCachedDetails();
@@ -843,12 +843,12 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
 
         @Override
-        public void onDetailRemoved(FDetail detail) {
+        public void onDataRemoved(FDetail detail) {
             // won't be removed for now
         }
 
         @Override
-        public void onDetailMoved(FDetail detail) {
+        public void onDataMoved(FDetail detail) {
             // does not matter
         }
     }

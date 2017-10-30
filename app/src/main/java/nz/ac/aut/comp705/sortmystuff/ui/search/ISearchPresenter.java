@@ -2,10 +2,6 @@ package nz.ac.aut.comp705.sortmystuff.ui.search;
 
 import nz.ac.aut.comp705.sortmystuff.ui.IPresenter;
 
-/**
- * Created by DonnaCello on 23 May 2017.
- */
-
 public interface ISearchPresenter extends IPresenter {
 
     /**

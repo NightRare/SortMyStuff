@@ -136,34 +136,19 @@ public interface IDataRepository {
      *
      * @param onDataChangeCallback the listener; or {@code null} to detach all the listeners
      */
-    void setOnDataChangeCallback(OnDataChangeCallback onDataChangeCallback);
+    <T> void setOnDataChangeCallback(OnDataChangeCallback<T> onDataChangeCallback, Class<T> type);
 
     //endregion
 
-    interface OnDataChangeCallback {
+    interface OnDataChangeCallback<T> {
 
-    }
+        void onDataAdded(T object);
 
-    interface OnAssetsDataChangeCallback extends OnDataChangeCallback {
+        void onDataChanged(T object);
 
-        void onAssetAdded(FAsset asset);
+        void onDataRemoved(T object);
 
-        void onAssetChanged(FAsset asset);
-
-        void onAssetRemoved(FAsset asset);
-
-        void onAssetMoved(FAsset asset);
-    }
-
-    interface OnDetailsDataChangeCallback extends OnDataChangeCallback {
-
-        void onDetailAdded(FDetail detail);
-
-        void onDetailChanged(FDetail detail);
-
-        void onDetailRemoved(FDetail detail);
-
-        void onDetailMoved(FDetail detail);
+        void onDataMoved(T object);
     }
 
     interface OnUpdatedCallback {

@@ -7,36 +7,29 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import com.google.common.base.Preconditions;
-
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 
-/**
- * Created by YuanY on 2017/9/11.
- */
+import static com.google.gson.internal.$Gson$Preconditions.checkNotNull;
 
 public class SearchListAdapter extends BaseAdapter{
 
     public SearchListAdapter(List<IAsset> resultList, Context context) {
-        Preconditions.checkNotNull(resultList);
-        Preconditions.checkNotNull(context);
 
-        this.resultList = resultList;
-        this.context = context;
-        inflater = LayoutInflater.from(context);
+        mResultList = checkNotNull(resultList);
+        mInflater = LayoutInflater.from(checkNotNull(context));
     }
 
     @Override
     public int getCount() {
-        return resultList.size();
+        return mResultList.size();
     }
 
     @Override
     public Object getItem(int position) {
-        return resultList.get(position);
+        return mResultList.get(position);
     }
 
     @Override
@@ -50,7 +43,7 @@ public class SearchListAdapter extends BaseAdapter{
 
         if(convertView == null) {
             holder = new ViewHolder();
-            convertView = inflater.inflate(R.layout.search_result_layout, null);
+            convertView = mInflater.inflate(R.layout.search_result_layout, null);
 
             holder.titleView = (TextView) convertView.findViewById(R.id.search_result_title);
             holder.categoriesView = (TextView) convertView.findViewById(R.id.search_result_categories);
@@ -60,7 +53,7 @@ public class SearchListAdapter extends BaseAdapter{
             holder = (ViewHolder) convertView.getTag();
         }
 
-        IAsset result = resultList.get(position);
+        IAsset result = mResultList.get(position);
 
         holder.titleView.setText(result.getName());
         // TODO: It now only displays one category type according to the data structure
@@ -71,9 +64,8 @@ public class SearchListAdapter extends BaseAdapter{
 
     //region PRIVATE STUFF
 
-    private List<IAsset> resultList;
-    private LayoutInflater inflater;
-    private Context context;
+    private List<IAsset> mResultList;
+    private LayoutInflater mInflater;
 
     //endregion
 
