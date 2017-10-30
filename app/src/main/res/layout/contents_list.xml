@@ -22,22 +22,26 @@
         <Button
             android:id="@+id/selection_cancel_button"
             style="@style/action_button_style"
-            android:text="Cancel" />
+            android:text="Cancel"
+            android:background="@color/light_grey"/>
 
         <Button
             android:id="@+id/selection_select_all_button"
             style="@style/action_button_style"
-            android:text="ALL" />
+            android:text="ALL"
+            android:background="@color/light_grey" />
 
         <Button
             android:id="@+id/selection_delete_button"
             style="@style/action_button_style"
-            android:text="DELETE" />
+            android:text="DELETE"
+            android:background="@color/light_grey" />
 
         <Button
             android:id="@+id/selection_move_button"
             style="@style/action_button_style"
-            android:text="Move" />
+            android:text="Move"
+            android:background="@color/light_grey" />
 
     </LinearLayout>
 

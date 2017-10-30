@@ -32,7 +32,7 @@ public class AppConstraints {
     // IDataManager
     //********************************************
 
-    public final static int CACHED_DETAILS_LIST_NUM = 10;
+    public final static int CACHED_DETAILS_LIST_NUM = 5;
 
     //********************************************
     // IDataRepostiory

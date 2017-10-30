@@ -14,6 +14,7 @@ import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -204,8 +205,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
         if (deletingCurrentAsset) {
             message = "Deleting \'" + mActivity.getTitle().toString() + "\'\n" +
                     "and its children assets.";
-        }
-        else {
+        } else {
             message = "Deleting selected assets\n" +
                     "and their children assets.";
         }
@@ -234,7 +234,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
 
     @Override
     public void setLoadingIndicator(boolean active) {
-        if(mRootView == null) return;
+        if (mRootView == null) return;
 
         SwipeRefreshLayout srl = (SwipeRefreshLayout) mRootView.findViewById(R.id.contents_refresh_layout);
         srl.post(() -> srl.setRefreshing(active));
@@ -267,11 +267,10 @@ public class ContentsFragment extends Fragment implements IContentsView {
     }
 
     private void setMovingModeFabsVisibility(boolean isVisible) {
-        if(isVisible) {
+        if (isVisible) {
             mFabCancelMoveButton.setVisibility(View.VISIBLE);
             mFabConfirmMoveButton.setVisibility(View.VISIBLE);
-        }
-        else {
+        } else {
             mFabCancelMoveButton.setVisibility(View.GONE);
             mFabConfirmMoveButton.setVisibility(View.GONE);
         }
@@ -402,7 +401,10 @@ public class ContentsFragment extends Fragment implements IContentsView {
 
             builder.setNegativeButton(R.string.cancel_button, (dialog, id) -> dialog.cancel());
 
-            builder.create().show();
+            builder.show()
+                    // auto pop up the keyboard
+                    .getWindow()
+                    .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);;
         }
 
         @Override
@@ -477,7 +479,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
 
         @Override
         public void onDeleteDialogConfirmClick(boolean deletingCurrentAsset) {
-            if(deletingCurrentAsset)
+            if (deletingCurrentAsset)
                 mPresenter.recycleCurrentAssetRecursively();
             else
                 mPresenter.recycleAssetsRecursively(mSelectedAssets);

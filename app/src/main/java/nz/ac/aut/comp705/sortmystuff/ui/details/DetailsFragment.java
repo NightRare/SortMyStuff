@@ -19,6 +19,7 @@ import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -264,29 +265,33 @@ public class DetailsFragment extends Fragment implements IDetailsView {
         swipeRefreshLayout.setOnRefreshListener(() -> mPresenter.loadDetails());
     }
 
-    private ViewListeners mViewListeners = new ViewListeners() {
-
+    private class DetailsViewListeners implements IDetailsView.ViewListeners {
         @Override
         public void onItemClick(View view, IDetail item) {
             if (!item.getType().equals(DetailType.Text))
                 return;
 
-            AlertDialog.Builder dialog = new AlertDialog.Builder(view.getContext());
-            dialog.setTitle(item.getLabel());
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(view.getContext());
+            dialogBuilder.setTitle(item.getLabel());
             //dialog box setup
             Context context = view.getContext();
             LinearLayout layout = new LinearLayout(context);
             layout.setOrientation(LinearLayout.VERTICAL);
             //field text configuration
-            final EditText fieldText = createEditText(context, layout);
+            EditText fieldText = createEditText(context, layout);
             fieldText.setText((String) item.getField());
+
             //button setup
-            dialog.setView(layout);
-            dialog.setPositiveButton(R.string.edit_detail_confirm_button, (dialog2, which) ->
+            dialogBuilder.setView(layout);
+            dialogBuilder.setPositiveButton(R.string.edit_detail_confirm_button, (dialog2, which) ->
                     onConfirmEditTextDetail(item, fieldText.getText().toString()));
-            dialog.setNegativeButton(R.string.cancel_button, (dialog2, which) ->
+            dialogBuilder.setNegativeButton(R.string.cancel_button, (dialog2, which) ->
                     onCancelEditTextDetail(dialog2, item, fieldText.getText().toString()));
-            dialog.show();
+
+            dialogBuilder.show()
+                    // auto pop up the keyboard
+                    .getWindow()
+                    .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
         }
 
         @Override
@@ -326,7 +331,7 @@ public class DetailsFragment extends Fragment implements IDetailsView {
         public void onCancelEditTextDetail(DialogInterface dialog, IDetail<String> item, String text) {
             dialog.cancel();
         }
-    };
+    }
 
     private static final int REQUEST_CAMERA_PERMISSION = 1;
 
@@ -335,6 +340,7 @@ public class DetailsFragment extends Fragment implements IDetailsView {
     private DetailsAdapter mDetailsAdapter;
     private ListView mDetails;
     private View mRootView;
+    ViewListeners mViewListeners = new DetailsViewListeners();
 
     private IDetail<Bitmap> mPhotoToBeReplaced;
 
