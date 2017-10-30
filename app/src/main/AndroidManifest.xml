@@ -18,23 +18,30 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        tools:replace="android:theme" >
+        tools:replace="android:theme">
+
         <activity
-            android:name=".ui.main.SwipeActivity"
-            android:theme="@style/AppTheme.NoActionBar"
+            android:name=".ui.login.LoginActivity"
+            android:configChanges="orientation"
             android:screenOrientation="portrait"
-            android:configChanges="orientation">
+            android:theme="@style/AppTheme.NoTitleBar" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ui.main.SwipeActivity"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar" />
+
         <activity
             android:name=".ui.search.SearchActivity"
-            android:theme="@style/AppTheme.NoActionBar"
+            android:configChanges="orientation"
             android:screenOrientation="portrait"
-            android:configChanges="orientation">
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH" />
             </intent-filter>
@@ -43,7 +50,9 @@
                 android:name="android.app.searchable"
                 android:resource="@xml/searchable" />
         </activity>
+
         <activity android:name="com.desmond.squarecamera.CameraActivity" />
+
     </application>
 
 </manifest>

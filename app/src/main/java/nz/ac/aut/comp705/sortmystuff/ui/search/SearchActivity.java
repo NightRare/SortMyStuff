@@ -90,10 +90,10 @@ public class SearchActivity extends AppCompatActivity implements ISearchView {
 
     @Override
     public void turnToAssetPage(String assetId) {
-        Intent goToDetail = new Intent(this, SwipeActivity.class);
-        goToDetail.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        goToDetail.putExtra(AppCode.INTENT_ASSET_ID, assetId);
-        startActivity(goToDetail);
+        Intent goToAsset = new Intent(this, SwipeActivity.class);
+        goToAsset.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        goToAsset.putExtra(AppCode.INTENT_ASSET_ID, assetId);
+        startActivity(goToAsset);
         finish();
     }
 

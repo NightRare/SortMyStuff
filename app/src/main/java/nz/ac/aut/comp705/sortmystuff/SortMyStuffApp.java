@@ -17,13 +17,13 @@ public class SortMyStuffApp extends Application {
 
         // enable local data persistent to deal with offline situation
         FirebaseDatabase.getInstance().setPersistenceEnabled(true);
-
-        factory = new Factory(this, "default");
-
     }
 
     public IFactory getFactory() {
         return factory;
     }
 
+    public void initialiseFactory(String userId) {
+        factory = new Factory(this, userId);
+    }
 }

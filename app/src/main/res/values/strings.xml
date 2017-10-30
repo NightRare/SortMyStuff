@@ -6,8 +6,6 @@
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="title_activity_index_page">IndexPage</string>
-    <string name="title_activity_detail">DetailActivity</string>
     <string name="search_hint">Search all assets</string>
 
     <string name="selection_mode">Selection Mode</string>

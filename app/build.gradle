@@ -57,7 +57,8 @@ dependencies {
     compile "com.google.dagger:dagger:$daggerVersion"
     annotationProcessor "com.google.dagger:dagger-compiler:$daggerVersion"
     compile "com.google.dagger:dagger-android:$daggerVersion"
-    compile "com.google.dagger:dagger-android-support:$daggerVersion" // if you use the support libraries
+    compile "com.google.dagger:dagger-android-support:$daggerVersion"
+    // if you use the support libraries
     annotationProcessor "com.google.dagger:dagger-android-processor:$daggerVersion"
     provided 'org.glassfish:javax.annotation:10.0-b28'
 
