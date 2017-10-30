@@ -17,6 +17,10 @@ This project was created as the culmination of our work for the paper Software D
 
 ### Some Demos
 
+- **Sign in and sync data**
+
+![Sign in](https://i.imgur.com/x6HEuUL.gif)
+
 - **Add an asset**
 
 ![Add an asset](https://i.imgur.com/JQGTi2a.gif)
