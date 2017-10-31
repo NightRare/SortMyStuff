@@ -2,6 +2,9 @@ package nz.ac.aut.comp705.sortmystuff.di;
 
 import android.app.Application;
 
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.firebase.auth.FirebaseUser;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -23,11 +26,21 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Factory implements IFactory {
 
-    public Factory(Application app, String userId) {
+    public Factory(Application app, FirebaseUser user) {
         mApp = checkNotNull(app);
-        mUserId = checkNotNull(userId);
+        mCurrentUser = checkNotNull(user);
 
-        mFactoryModule = new FactoryModule(mApp, mUserId);
+        mFactoryModule = new FactoryModule(mApp, mCurrentUser.getUid());
+        mFactoryComponent = DaggerFactoryComponent.builder().factoryModule(mFactoryModule).build();
+        mFactoryComponent.inject(this);
+    }
+
+    public Factory(Application app, FirebaseUser user, GoogleApiClient googleApiClient) {
+        mApp = checkNotNull(app);
+        mCurrentUser = checkNotNull(user);
+        mGoogleApiClient = checkNotNull(googleApiClient);
+
+        mFactoryModule = new FactoryModule(mApp, mCurrentUser.getUid());
         mFactoryComponent = DaggerFactoryComponent.builder().factoryModule(mFactoryModule).build();
         mFactoryComponent.inject(this);
     }
@@ -74,16 +87,31 @@ public class Factory implements IFactory {
     }
 
     @Override
-    public synchronized void setUserId(String userId) {
-        if (checkNotNull(userId).equals(mUserId)) return;
+    public void setUser(FirebaseUser user) {
+        mCurrentUser = checkNotNull(user);
 
-        mFactoryModule.setUserId(userId);
+        mFactoryModule.setUserId(mCurrentUser.getUid());
         mFactoryComponent.inject(this);
     }
 
     @Override
-    public String getUserId() {
-        return mUserId;
+    public synchronized void setUser(FirebaseUser user, GoogleApiClient googleApiClient) {
+        mCurrentUser = checkNotNull(user);
+        mGoogleApiClient = checkNotNull(googleApiClient);
+
+        mFactoryModule.setUserId(mCurrentUser.getUid());
+        mFactoryComponent.inject(this);
+    }
+
+    @Override
+    public FirebaseUser getCurrentUser() {
+        return mCurrentUser;
+    }
+
+
+    @Override
+    public GoogleApiClient getGoogleApiClient() {
+        return mGoogleApiClient;
     }
 
     //region INJECTION
@@ -113,9 +141,10 @@ public class Factory implements IFactory {
     //region PRIVATE STUFF
 
     private Application mApp;
-    private String mUserId;
     private FactoryComponent mFactoryComponent;
     private FactoryModule mFactoryModule;
+    private FirebaseUser mCurrentUser;
+    private GoogleApiClient mGoogleApiClient;
 
     private Factory() {
     }

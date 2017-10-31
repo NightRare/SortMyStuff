@@ -2,6 +2,8 @@ package nz.ac.aut.comp705.sortmystuff;
 
 import android.app.Application;
 
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.FirebaseDatabase;
 
 import nz.ac.aut.comp705.sortmystuff.di.Factory;
@@ -23,7 +25,19 @@ public class SortMyStuffApp extends Application {
         return factory;
     }
 
-    public void initialiseFactory(String userId) {
-        factory = new Factory(this, userId);
+    public void initialiseFactory(FirebaseUser user) {
+        if (factory == null) {
+            factory = new Factory(this, user);
+        } else {
+            factory.setUser(user);
+        }
+    }
+
+    public void initialiseFactory(FirebaseUser user, GoogleApiClient googleApiClient) {
+        if (factory == null) {
+            factory = new Factory(this, user, googleApiClient);
+        } else {
+            factory.setUser(user, googleApiClient);
+        }
     }
 }

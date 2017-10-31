@@ -37,9 +37,8 @@ public class LoginActivity extends BaseActivity {
                 .requestEmail()
                 .build();
 
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this /* FragmentActivity */,
-                        this::onConnectionFailed)
+        mGoogleApiClient = new GoogleApiClient.Builder(this.getApplicationContext())
+                .addOnConnectionFailedListener(this::onConnectionFailed)
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
@@ -53,7 +52,7 @@ public class LoginActivity extends BaseActivity {
         FirebaseUser currentUser = mAuth.getCurrentUser();
 
         // if there is user signed in
-        if (currentUser != null) {
+        if (currentUser != null && !currentUser.isAnonymous()) {
             successfulSignIn(currentUser);
         }
     }
@@ -85,6 +84,7 @@ public class LoginActivity extends BaseActivity {
         showProgressDialog("Logging in ...");
 
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
+
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
@@ -113,7 +113,7 @@ public class LoginActivity extends BaseActivity {
 
     private void successfulSignIn(FirebaseUser user) {
         //init factory
-        ((SortMyStuffApp) getApplication()).initialiseFactory(user.getUid());
+        ((SortMyStuffApp) getApplication()).initialiseFactory(user, mGoogleApiClient);
 
         Intent toContentsPage = new Intent(this, SwipeActivity.class);
         toContentsPage.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -126,7 +126,6 @@ public class LoginActivity extends BaseActivity {
 
     private FirebaseAuth mAuth;
     private GoogleApiClient mGoogleApiClient;
-
 
     //endregion
 }

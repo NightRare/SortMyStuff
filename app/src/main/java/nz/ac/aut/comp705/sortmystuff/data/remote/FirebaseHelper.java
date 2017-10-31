@@ -2,10 +2,11 @@ package nz.ac.aut.comp705.sortmystuff.data.remote;
 
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.storage.StorageReference;
-import com.kelvinapps.rxfirebase.RxFirebaseChildEvent;
 import com.kelvinapps.rxfirebase.RxFirebaseDatabase;
 
 import java.util.ArrayList;
@@ -184,25 +185,40 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
 
     @Override
     public <T> void setOnDataChangeCallback(OnDataChangeCallback<T> onDataChangeCallback, Class<T> type) {
-        if (onDataChangeCallback == null) {
-            if (type == null) {
-                mOnAssetsDataChangeCallback = null;
-                mOnDetailsDataChangeCallback = null;
-            } else if (type.equals(FAsset.class)) {
-                mOnAssetsDataChangeCallback = null;
-            } else if (type.equals(FDetail.class)) {
-                mOnDetailsDataChangeCallback = null;
-            }
+        checkNotNull(onDataChangeCallback);
+        checkNotNull(type);
 
-        } else if (type.equals(FAsset.class)) {
+        if (type.equals(FAsset.class)) {
             mOnAssetsDataChangeCallback = (OnDataChangeCallback<FAsset>) onDataChangeCallback;
-            attachAssetsDataChangeListener();
+            reloadDataChangeListener(type);
 
         } else if (type.equals(FDetail.class)) {
             mOnDetailsDataChangeCallback = (OnDataChangeCallback<FDetail>) onDataChangeCallback;
-            attachDetailsDataChangeListener();
+            reloadDataChangeListener(type);
         }
     }
+
+    @Override
+    public <T> void removeOnDataChangeCallback(Class<T> type) {
+        if (type == null) {
+            mOnAssetsDataChangeCallback = null;
+            mOnDetailsDataChangeCallback = null;
+            reloadDataChangeListener(FAsset.class);
+            reloadDataChangeListener(FDetail.class);
+        } else if (type.equals(FAsset.class)) {
+            mOnAssetsDataChangeCallback = null;
+            reloadDataChangeListener(FAsset.class);
+        } else if (type.equals(FDetail.class)) {
+            mOnDetailsDataChangeCallback = null;
+            reloadDataChangeListener(FDetail.class);
+        }
+    }
+
+    @Override
+    public void removeCurrentUserData() {
+        mUserDB.removeValue();
+    }
+
 
     //region PRIVATE STUFF
 
@@ -264,79 +280,74 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
         return objects;
     }
 
-    private void attachAssetsDataChangeListener() {
-        if (mOnAssetsDataChangeCallback == null) return;
-
-        RxFirebaseDatabase.observeChildEvent(mUserDB.child(DB_ASSETS))
-                .subscribe(
-                        //onNext
-                        dataSnapshotRxFirebaseChildEvent -> {
-                            DataSnapshot dataSnapshot = dataSnapshotRxFirebaseChildEvent.getValue();
-                            FAsset asset = dataToObject(dataSnapshot, FAsset.class);
-                            processDataChangedObject(asset, FAsset.class, dataSnapshotRxFirebaseChildEvent.getEventType());
-                        }
-                        //onError
-                );
-    }
-
-    private void attachDetailsDataChangeListener() {
-        if (mOnDetailsDataChangeCallback == null) return;
-
-        RxFirebaseDatabase.observeChildEvent(mUserDB.child(DB_DETAILS))
-                .subscribe(
-                        //onNext
-                        dataSnapshotRxFirebaseChildEvent -> {
-                            DataSnapshot dataSnapshot = dataSnapshotRxFirebaseChildEvent.getValue();
-                            RxFirebaseChildEvent.EventType eventType = dataSnapshotRxFirebaseChildEvent.getEventType();
-
-                            // if the event is Detail Added then do nothing, otherwise every detail
-                            // including images will be downloaded at the initialisation of this FirebaseHelper
-                            if (eventType.equals(RxFirebaseChildEvent.EventType.ADDED)) {
-                                mOnDetailsDataChangeCallback.onDataAdded(null);
-                                return;
-                            }
-
-                            processDataChangedObject(dataToObject(dataSnapshot, FDetail.class), FDetail.class, eventType);
-                        }
-                        //onError
-                );
-    }
-
-    private <T> void processDataChangedObject(T object, Class<T> type, RxFirebaseChildEvent.EventType eventType) {
-
-        OnDataChangeCallback<T> theCallback = null;
+    private <T> void reloadDataChangeListener(Class<T> type) {
+        checkNotNull(type);
         if (type.equals(FAsset.class)) {
-            theCallback = (OnDataChangeCallback<T>) mOnAssetsDataChangeCallback;
+            mUserDB.child(DB_ASSETS).removeEventListener(mAssetChildEventListener);
+            if (mOnAssetsDataChangeCallback != null) {
+                mUserDB.child(DB_ASSETS).addChildEventListener(mAssetChildEventListener);
+            }
         } else if (type.equals(FDetail.class)) {
-            theCallback = (OnDataChangeCallback<T>) mOnDetailsDataChangeCallback;
-        }
-
-        if (theCallback != null) {
-            switch (eventType) {
-                case ADDED:
-                    theCallback.onDataAdded(object);
-                    break;
-                case CHANGED:
-                    theCallback.onDataChanged(object);
-                    break;
-                case REMOVED:
-                    theCallback.onDataRemoved(object);
-                    break;
-                case MOVED:
-                    theCallback.onDataMoved(object);
-                    break;
-                default:
+            mUserDB.child(DB_DETAILS).removeEventListener(mDetailChildListener);
+            if (mOnDetailsDataChangeCallback != null) {
+                mUserDB.child(DB_DETAILS).addChildEventListener(mDetailChildListener);
             }
         }
     }
 
-    private DatabaseReference mUserDB;
-    private DatabaseReference mAppResDB;
-    private StorageReference mStroage;
-    private LocalResourceLoader mResLoader;
-    private ISchedulerProvider mSchedulerProvider;
-    private OnDataChangeCallback<FAsset> mOnAssetsDataChangeCallback;
-    private OnDataChangeCallback<FDetail> mOnDetailsDataChangeCallback;
+    ChildEventListener mAssetChildEventListener = new ChildEventListener() {
+        @Override
+        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+            mOnAssetsDataChangeCallback.onDataAdded(dataToObject(dataSnapshot, FAsset.class));
+        }
+
+        @Override
+        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            mOnAssetsDataChangeCallback.onDataChanged(dataToObject(dataSnapshot, FAsset.class));
+        }
+
+        @Override
+        public void onChildRemoved(DataSnapshot dataSnapshot) {
+            mOnAssetsDataChangeCallback.onDataRemoved(dataToObject(dataSnapshot, FAsset.class));
+        }
+
+        @Override
+        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+            mOnAssetsDataChangeCallback.onDataMoved(dataToObject(dataSnapshot, FAsset.class));
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
+        }
+    };
+
+    ChildEventListener mDetailChildListener = new ChildEventListener() {
+        @Override
+        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+            mOnDetailsDataChangeCallback.onDataAdded(dataToObject(dataSnapshot, FDetail.class));
+        }
+
+        @Override
+        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            mOnDetailsDataChangeCallback.onDataChanged(dataToObject(dataSnapshot, FDetail.class));
+        }
+
+        @Override
+        public void onChildRemoved(DataSnapshot dataSnapshot) {
+            mOnDetailsDataChangeCallback.onDataRemoved(dataToObject(dataSnapshot, FDetail.class));
+        }
+
+        @Override
+        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+            mOnDetailsDataChangeCallback.onDataMoved(dataToObject(dataSnapshot, FDetail.class));
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
+        }
+    };
 
     private OnUpdatedCallback mDoNothingCallback = new OnUpdatedCallback() {
         @Override
@@ -352,10 +363,12 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
         }
     };
 
-    @Override
-    public void removeCurrentUserData() {
-        mUserDB.removeValue();
-    }
+    private DatabaseReference mUserDB;
+    private DatabaseReference mAppResDB;
+    private StorageReference mStroage;
+    private LocalResourceLoader mResLoader;
+    private ISchedulerProvider mSchedulerProvider;
+    private OnDataChangeCallback<FAsset> mOnAssetsDataChangeCallback;
+    private OnDataChangeCallback<FDetail> mOnDetailsDataChangeCallback;
 
-    //region
 }

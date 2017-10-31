@@ -1,5 +1,8 @@
 package nz.ac.aut.comp705.sortmystuff.di;
 
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.firebase.auth.FirebaseUser;
+
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.IDataRepository;
 import nz.ac.aut.comp705.sortmystuff.data.IDebugHelper;
@@ -28,7 +31,11 @@ public interface IFactory {
 
     LocalResourceLoader getLocalResourceLoader();
 
-    void setUserId(String userId);
+    void setUser(FirebaseUser user);
 
-    String getUserId();
+    void setUser(FirebaseUser user, GoogleApiClient googleApiClient);
+
+    FirebaseUser getCurrentUser();
+
+    GoogleApiClient getGoogleApiClient();
 }

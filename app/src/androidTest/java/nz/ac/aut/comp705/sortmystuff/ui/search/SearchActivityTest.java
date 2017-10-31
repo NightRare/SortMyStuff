@@ -44,7 +44,6 @@ import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static nz.ac.aut.comp705.sortmystuff.ui.testutils.TestConfigs.TEST_USER_EMAIL;
-import static nz.ac.aut.comp705.sortmystuff.ui.testutils.TestConfigs.TEST_USER_ID;
 import static nz.ac.aut.comp705.sortmystuff.ui.testutils.TestConfigs.TEST_USER_PASSWORD;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anything;
@@ -78,7 +77,7 @@ public class SearchActivityTest {
         mContext = InstrumentationRegistry.getTargetContext();
         mApp = (SortMyStuffApp) mContext.getApplicationContext();
         if (mApp.getFactory() == null)
-            mApp.initialiseFactory(TEST_USER_ID);
+            mApp.initialiseFactory(FirebaseAuth.getInstance().getCurrentUser());
         mFactory = mApp.getFactory();
         mDataManager = mFactory.getDataManager();
 

@@ -26,4 +26,6 @@
     <string name="details_page_categories_title">Categories</string>
     <string name="delete_asset_confirm_button">Confirm</string>
 
+    <string name="nav_drawer_menu_sign_out">Sign Out</string>
+
 </resources>

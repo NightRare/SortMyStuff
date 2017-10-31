@@ -112,13 +112,13 @@ public interface IDataRepository {
     /**
      * Update the detail to the data repository.
      *
-     * @param detail the detail to be updated
-     * @param updatingField the field of the detail will be updated as well if set to true, otherwise
-     *                      the field won't be updated
+     * @param detail            the detail to be updated
+     * @param updatingField     the field of the detail will be updated as well if set to true, otherwise
+     *                          the field won't be updated
      * @param onUpdatedCallback the callback methods when the task is successful, failed or completed;
      *                          put in {@code null} if no following actions required; onFailure won't
      *                          be invoked if NullPointerException is thrown due to null arguments
-     * @throws NullPointerException     if detail or key is {@code null}
+     * @throws NullPointerException if detail or key is {@code null}
      */
     void updateDetail(FDetail detail, boolean updatingField, OnUpdatedCallback onUpdatedCallback);
 
@@ -136,7 +136,29 @@ public interface IDataRepository {
      *
      * @param onDataChangeCallback the listener; or {@code null} to detach all the listeners
      */
+
+    /**
+     * Corresponding callback methods will be called whenever the attached data has changed in the
+     * data repository.
+     * All the data will be retrieved from the repository every time a new OnDataChangeCallback is
+     * attached to this repository.
+     *
+     * @param onDataChangeCallback the listener
+     * @param type                 the type of the data
+     * @param <T>                  the type of the data
+     * @throws NullPointerException if any argument is {@code null}
+     */
     <T> void setOnDataChangeCallback(OnDataChangeCallback<T> onDataChangeCallback, Class<T> type);
+
+    /**
+     * Detach the callback of the specified type of data.
+     *
+     * Pass in {@code null} to detach all the callback.
+     *
+     * @param type the type of the data
+     * @param <T> the type of the data
+     */
+    <T> void removeOnDataChangeCallback(Class<T> type);
 
     //endregion
 

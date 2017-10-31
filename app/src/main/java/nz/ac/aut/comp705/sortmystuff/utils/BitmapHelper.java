@@ -2,9 +2,17 @@ package nz.ac.aut.comp705.sortmystuff.utils;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.util.Base64;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.concurrent.ExecutionException;
+
+import rx.Observable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.ASSET_THUMBNAIL_LENGTH;
@@ -46,5 +54,36 @@ public class BitmapHelper {
     public static Bitmap toThumbnail(Bitmap original) {
         return Bitmap.createScaledBitmap(checkNotNull(original),
                 ASSET_THUMBNAIL_WIDTH, ASSET_THUMBNAIL_LENGTH, false);
+    }
+
+    public static Observable<Bitmap> fromURI(URL url) {
+        return Observable.defer(() -> {
+            LoadingBitmapAsync loadingBitmapAsync = new LoadingBitmapAsync();
+            try {
+                return Observable.just(loadingBitmapAsync.execute(url).get());
+            } catch (InterruptedException | ExecutionException e) {
+                return Observable.just(null);
+            }
+        });
+    }
+
+    private static class LoadingBitmapAsync extends AsyncTask<URL, Void, Bitmap> {
+        @Override
+        protected Bitmap doInBackground(URL... urls) {
+            for (URL url : urls) {
+                try {
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                    connection.setDoInput(true);
+                    connection.connect();
+                    InputStream input = connection.getInputStream();
+                    Bitmap output = BitmapFactory.decodeStream(input);
+                    return output;
+                } catch (IOException e) {
+                    // Log exception
+                    return null;
+                }
+            }
+            return null;
+        }
     }
 }
