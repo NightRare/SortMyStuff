@@ -2,19 +2,25 @@ package nz.ac.aut.comp705.sortmystuff.ui.search;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.SystemClock;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
+
+import com.google.firebase.auth.FirebaseAuth;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,7 +30,6 @@ import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.di.IFactory;
 import nz.ac.aut.comp705.sortmystuff.ui.main.SwipeActivity;
-import nz.ac.aut.comp705.sortmystuff.ui.testutils.TestConfigs;
 
 import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
@@ -38,6 +43,9 @@ import static android.support.test.espresso.matcher.ViewMatchers.withChild;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static nz.ac.aut.comp705.sortmystuff.ui.testutils.TestConfigs.TEST_USER_EMAIL;
+import static nz.ac.aut.comp705.sortmystuff.ui.testutils.TestConfigs.TEST_USER_ID;
+import static nz.ac.aut.comp705.sortmystuff.ui.testutils.TestConfigs.TEST_USER_PASSWORD;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.endsWith;
@@ -46,20 +54,39 @@ import static org.hamcrest.Matchers.is;
 @RunWith(AndroidJUnit4.class)
 public class SearchActivityTest {
 
+    @BeforeClass
+    public static void setUpBeforeClass() {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) {
+            auth.signInWithEmailAndPassword(TEST_USER_EMAIL, TEST_USER_PASSWORD)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            Log.d(TAG, "signInWithEmail:success");
+                        } else {
+                            Log.e(TAG, "signInWithEmail:failure", task.getException());
+                        }
+
+                        if (!task.isSuccessful()) {
+                            Log.e(TAG, "signInWithEmail:failure", task.getException());
+                        }
+                    });
+        }
+    }
+
     @Before
     public void setup() {
         mContext = InstrumentationRegistry.getTargetContext();
         mApp = (SortMyStuffApp) mContext.getApplicationContext();
-        mActivity = swipeActivityTestRule.getActivity();
+        if (mApp.getFactory() == null)
+            mApp.initialiseFactory(TEST_USER_ID);
         mFactory = mApp.getFactory();
-        if (!mFactory.getUserId().equals(TestConfigs.ANDROID_TEST_USER_ID)) {
-            mFactory.setUserId(TestConfigs.ANDROID_TEST_USER_ID);
-            mActivity.finish();
-            mActivity.startActivity(mActivity.getIntent());
-        }
         mDataManager = mFactory.getDataManager();
 
+        // remove current user data
         mFactory.getDataDebugHelper().removeCurrentUserData();
+
+        Intent intent = new Intent(mApp, SwipeActivity.class);
+        mActivity = swipeActivityRule.launchActivity(intent);
 
         addAsset(ONE_RESULT_SEARCH_ITEM);
         addAsset(TWO_RESULT_SEARCH_ITEM_1);
@@ -69,15 +96,17 @@ public class SearchActivityTest {
 
     @After
     public void tearDown() {
-        mContext = null;
-        mApp = null;
-        mActivity = null;
-        mDataManager = null;
+        mActivity.finish();
+    }
+
+    @AfterClass
+    public static void tearDownAfterClass() {
+        FirebaseAuth.getInstance().signOut();
     }
 
     @Rule
-    public ActivityTestRule<SwipeActivity> swipeActivityTestRule
-            = new ActivityTestRule<>(SwipeActivity.class);
+    public ActivityTestRule<SwipeActivity> swipeActivityRule
+            = new ActivityTestRule<>(SwipeActivity.class, false, false);
 
     //region TESTS
 
@@ -157,7 +186,7 @@ public class SearchActivityTest {
     private IDataManager mDataManager;
     private IFactory mFactory;
 
-    private boolean firstRun = true;
+    private static final String TAG = "SearchActivity";
 
     private static final String ONE_RESULT_SEARCH_ITEM = "Orange";
     private static final String TWO_RESULT_SEARCH_PREFIX = "Ap";
