@@ -1,7 +1,5 @@
 package nz.ac.aut.comp705.sortmystuff.data.models;
 
-import android.graphics.Bitmap;
-
 import com.google.firebase.database.Exclude;
 
 import java.util.ArrayList;
@@ -83,13 +81,13 @@ public class FCategory implements ICategory {
 
     //region OTHER METHODS
 
-    public void setDefaultFieldValue(String defaultTextValue, Bitmap defaultImageValue) {
+    public void setDefaultFieldValue(String defaultTextValue, String defaultImageValue) {
         for (FDetail detail : details) {
             if (detail.getType().equals(DetailType.Text) || detail.getType().equals(DetailType.Date)) {
-                detail.setField(defaultTextValue, true);
+                detail.setFieldData(defaultTextValue, true);
 
             } else if (detail.getType().equals(DetailType.Image)) {
-                detail.setField(defaultImageValue, true);
+                detail.setFieldData(defaultImageValue, true);
             }
         }
     }
@@ -108,7 +106,7 @@ public class FCategory implements ICategory {
 
         List<FDetail> clone = new ArrayList<>();
         for (FDetail d : details) {
-            FDetail fDetail = duplicateDetail(assetId, d);
+            FDetail fDetail = FDetail.createDetail(assetId, d.getType(), d.getLabel(), d.getFieldData());
             if (fDetail != null)
                 clone.add(fDetail);
         }
@@ -125,25 +123,6 @@ public class FCategory implements ICategory {
     private FCategory(String name, List<FDetail> details) {
         this.name = name;
         this.details = details;
-    }
-
-    @Exclude
-    private FDetail duplicateDetail(String assetId, FDetail detail) {
-        FDetail output = null;
-        DetailType type = detail.getType();
-        if (type.equals(DetailType.Image)) {
-            output = FDetail.createImageDetail(assetId, detail.getLabel(), (Bitmap) detail.getField());
-            output.setPosition(detail.getPosition());
-
-        } else if (type.equals(DetailType.Date)) {
-            output = FDetail.createDateDetail(assetId, detail.getLabel(), (String) detail.getField());
-            output.setPosition(detail.getPosition());
-
-        } else if (type.equals(DetailType.Text)) {
-            output = FDetail.createTextDetail(assetId, detail.getLabel(), (String) detail.getField());
-            output.setPosition(detail.getPosition());
-        }
-        return output;
     }
 
     //endregion

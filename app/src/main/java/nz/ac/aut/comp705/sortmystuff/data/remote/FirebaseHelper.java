@@ -247,13 +247,13 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
             FDetail detail = FDetail.fromMap(members);
 
             if (detail.isDefaultFieldValue() && detail.getType().equals(DetailType.Image)) {
-                detail.setField(mResLoader.getDefaultPhoto(), true);
+                detail.setFieldData(mResLoader.getDefaultPhotoDataString(), true);
             }
             return (E) detail;
 
         } else if (type.equals(FCategory.class)) {
             FCategory category = FCategory.fromMap(members);
-            category.setDefaultFieldValue(mResLoader.getDefaultText(), mResLoader.getDefaultPhoto());
+            category.setDefaultFieldValue(mResLoader.getDefaultText(), mResLoader.getDefaultPhotoDataString());
 
             return (E) category;
 

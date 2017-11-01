@@ -33,6 +33,8 @@ public class LocalResourceLoader {
 
     private static final String TAG_DEFAULT_PHOTO = "TAG_DEFAULT_PHOTO";
     private static final String TAG_DEFAULT_THUMBNAIL = "TAG_DEFAULT_THUMBNAIL";
+    private static final String TAG_DEFAULT_PHOTO_DATASTRING = "TAG_DEFAULT_PHOTO_DATASTRING";
+    private static final String TAG_DEFAULT_THUMBNAIL_DATASTRING = "TAG_DEFAULT_PHOTO_DATASTRING";
     private static final String TAG_DEFAULT_TEXT = "TAG_DEFAULT_TEXT";
     private static final String TAG_CATEGORIES_JSON = "TAG_CATEGORIES_JSON";
     private static final String TAG_DEMO_PHOTOS = "TAG_DEMO_PHOTOS";
@@ -76,8 +78,16 @@ public class LocalResourceLoader {
         return (Bitmap) mResources.get(TAG_DEFAULT_PHOTO);
     }
 
+    public String getDefaultPhotoDataString() {
+        return (String) mResources.get(TAG_DEFAULT_PHOTO_DATASTRING);
+    }
+
     public Bitmap getDefaultThumbnail() {
         return (Bitmap) mResources.get(TAG_DEFAULT_THUMBNAIL);
+    }
+
+    public String getDefaultThumbnailDatastring() {
+        return (String) mResources.get(TAG_DEFAULT_THUMBNAIL_DATASTRING);
     }
 
     public String getDefaultText() {
@@ -108,8 +118,11 @@ public class LocalResourceLoader {
             is = mAssetManager.open(DEFAULT_PHOTO_PATH);
             Bitmap defaultPhoto = BitmapFactory.decodeStream(is);
             mResources.put(TAG_DEFAULT_PHOTO, defaultPhoto);
+            mResources.put(TAG_DEFAULT_PHOTO_DATASTRING, BitmapHelper.toString(defaultPhoto));
 
-            mResources.put(TAG_DEFAULT_THUMBNAIL, BitmapHelper.toThumbnail(defaultPhoto));
+            Bitmap thumbnail = BitmapHelper.toThumbnail(defaultPhoto);
+            mResources.put(TAG_DEFAULT_THUMBNAIL, thumbnail);
+            mResources.put(TAG_DEFAULT_THUMBNAIL_DATASTRING, BitmapHelper.toString(thumbnail));
 
             mResources.put(TAG_DEFAULT_TEXT, "");
 

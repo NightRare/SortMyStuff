@@ -2,9 +2,11 @@ package nz.ac.aut.comp705.sortmystuff.data.models;
 
 import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.google.firebase.database.Exclude;
 
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -51,7 +53,9 @@ public class FDetail<T> implements IDetail<T>, Comparable {
 
     private String label;
 
-    private T field;
+    private String fieldData;
+
+    private WeakReference<T> fieldObject;
 
     private long createTimestamp;
 
@@ -70,42 +74,54 @@ public class FDetail<T> implements IDetail<T>, Comparable {
     }
 
     @Exclude
-    public static FDetail<String> createTextDetail(String assetId, String label, String field) {
+    public static FDetail createDetail(String assetId, DetailType type, String label, String fieldData) {
         checkIllegalAssetId(assetId);
         checkIllegalLabel(label);
-        checkNotNull(field);
+        checkNotNull(fieldData);
+        checkNotNull(type);
+
+        String id = UUID.randomUUID().toString();
+        long createTimestamp = System.currentTimeMillis();
+        return new FDetail(id, assetId, type, label, fieldData, createTimestamp, createTimestamp, -1, true);
+    }
+
+    @Exclude
+    public static FDetail<String> createTextDetail(String assetId, String label, String fieldData) {
+        checkIllegalAssetId(assetId);
+        checkIllegalLabel(label);
+        checkNotNull(fieldData);
 
         String id = UUID.randomUUID().toString();
         DetailType type = DetailType.Text;
         long createTimestamp = System.currentTimeMillis();
 
-        return new FDetail<String>(id, assetId, type, label, field, createTimestamp, createTimestamp, -1, true);
+        return new FDetail<String>(id, assetId, type, label, fieldData, createTimestamp, createTimestamp, -1, true);
     }
 
     @Exclude
-    public static FDetail<String> createDateDetail(String assetId, String label, String field) {
+    public static FDetail<String> createDateDetail(String assetId, String label, String fieldData) {
         checkIllegalAssetId(assetId);
         checkIllegalLabel(label);
-        checkNotNull(field);
+        checkNotNull(fieldData);
 
         String id = UUID.randomUUID().toString();
         DetailType type = DetailType.Date;
         long createTimestamp = System.currentTimeMillis();
 
-        return new FDetail<String>(id, assetId, type, label, field, createTimestamp, createTimestamp, -1, true);
+        return new FDetail<String>(id, assetId, type, label, fieldData, createTimestamp, createTimestamp, -1, true);
     }
 
     @Exclude
-    public static FDetail<Bitmap> createImageDetail(String assetId, String label, Bitmap field) {
+    public static FDetail<Bitmap> createImageDetail(String assetId, String label, String fieldData) {
         checkIllegalAssetId(assetId);
         checkIllegalLabel(label);
-        checkNotNull(field);
+        checkNotNull(fieldData);
 
         String id = UUID.randomUUID().toString();
         DetailType type = DetailType.Image;
         long createTimestamp = System.currentTimeMillis();
 
-        return new FDetail<Bitmap>(id, assetId, type, label, field, createTimestamp, createTimestamp, -1, true);
+        return new FDetail<Bitmap>(id, assetId, type, label, fieldData, createTimestamp, createTimestamp, -1, true);
     }
 
     //endregion
@@ -124,17 +140,12 @@ public class FDetail<T> implements IDetail<T>, Comparable {
         int position = Integer.valueOf((members.get(DETAIL_POSITION).toString()));
         boolean defaultFieldValue = (boolean) members.get(DETAIL_DEFAULTFIELDVALUE);
 
+        String fieldData = (String) members.get(DETAIL_FIELD);
         if (type.equals(DetailType.Date) || type.equals(DetailType.Text)) {
-            String field = (String) members.get(DETAIL_FIELD);
-            if (field == null) field = "";
-            return new FDetail<String>(id, assetId, type, label, field, createTimestamp, modifyTimestamp, position, defaultFieldValue);
+            if (fieldData == null) fieldData = "";
+            return new FDetail<String>(id, assetId, type, label, fieldData, createTimestamp, modifyTimestamp, position, defaultFieldValue);
         } else if (type.equals(DetailType.Image)) {
-            Bitmap field = null;
-            if (!defaultFieldValue) {
-                String byteArrayString = (String) members.get(DETAIL_FIELD);
-                field = byteArrayString == null ? null : BitmapHelper.toBitmap(byteArrayString);
-            }
-            return new FDetail<Bitmap>(id, assetId, type, label, field, createTimestamp, modifyTimestamp, position, defaultFieldValue);
+            return new FDetail<Bitmap>(id, assetId, type, label, fieldData, createTimestamp, modifyTimestamp, position, defaultFieldValue);
         } else return null;
     }
 
@@ -151,32 +162,29 @@ public class FDetail<T> implements IDetail<T>, Comparable {
         map.put(DETAIL_POSITION, position);
         map.put(DETAIL_DEFAULTFIELDVALUE, defaultFieldValue);
 
-        if (type.equals(DetailType.Date) || type.equals(DetailType.Text)) {
-            map.put(DETAIL_FIELD, field.toString());
-        } else if (type.equals(DetailType.Image)) {
-            String fieldValue = null;
-            if (!defaultFieldValue) {
-                fieldValue = field == null ? null : BitmapHelper.toString((Bitmap) field);
-            }
-            map.put(DETAIL_FIELD, fieldValue);
+        String field = fieldData;
+        if (type.equals(DetailType.Image) && isDefaultFieldValue()) {
+            // do not convert default photo data
+            field = null;
         }
+        map.put(DETAIL_FIELD, field);
+
         return map;
     }
 
     @Exclude
     public void overwrittenBy(FDetail source) {
-        if (!field.getClass().equals(checkNotNull(source).getField().getClass()))
+        if (!type.equals(source.getType()))
             throw new IllegalStateException("Cannot be overwritten by a different type of FDetail");
 
         id = source.getId();
         assetId = source.getAssetId();
-        type = source.getType();
         label = source.getLabel();
-        field = (T) source.getField();
+        fieldData = source.getFieldData();
         createTimestamp = source.getCreateTimestamp();
         modifyTimestamp = source.getModifyTimestamp();
         position = source.getPosition();
-        boolean defaultFieldValue = source.isDefaultFieldValue();
+        defaultFieldValue = source.isDefaultFieldValue();
     }
 
     //endregion
@@ -234,7 +242,15 @@ public class FDetail<T> implements IDetail<T>, Comparable {
     @Override
     @Exclude
     public T getField() {
-        return field;
+        if (type.equals(DetailType.Image)) {
+            if (fieldObject == null || fieldObject.get() == null) {
+                fieldObject = new WeakReference<T>((T) BitmapHelper.toBitmap(fieldData));
+            }
+
+            return fieldObject.get();
+        } else {
+            return (T) fieldData;
+        }
     }
 
     @Override
@@ -257,6 +273,10 @@ public class FDetail<T> implements IDetail<T>, Comparable {
         return defaultFieldValue;
     }
 
+    public String getFieldData() {
+        return fieldData;
+    }
+
     //endregion
 
     //region MODIFIERS
@@ -265,18 +285,6 @@ public class FDetail<T> implements IDetail<T>, Comparable {
     public void setLabel(String label) {
         checkIllegalLabel(label);
         this.label = label;
-    }
-
-    /**
-     * Sets the field to the given value.
-     *
-     * @param field the field to be set.
-     * @throws NullPointerException if field is {@code null}
-     */
-    @Exclude
-    public void setField(T field, boolean defaultFieldValue) {
-        this.field = checkNotNull(field);
-        this.defaultFieldValue = defaultFieldValue;
     }
 
     /**
@@ -295,6 +303,14 @@ public class FDetail<T> implements IDetail<T>, Comparable {
     public void setPosition(int position) {
         if (position < 0) return;
         this.position = position;
+    }
+
+    public void setFieldData(@Nullable String fieldData, boolean defaultFieldValue) {
+        this.defaultFieldValue = defaultFieldValue;
+        this.fieldData = fieldData;
+
+        // remove cached fieldObject
+        fieldObject = null;
     }
 
     //endregion
@@ -351,13 +367,13 @@ public class FDetail<T> implements IDetail<T>, Comparable {
 
     //region PRIVATE STUFF
 
-    private FDetail(String id, String assetId, DetailType type, String label, T field,
+    private FDetail(String id, String assetId, DetailType type, String label, String fieldData,
                     long createTimestamp, long modifyTimestamp, int position, boolean defaultFieldValue) {
         this.id = id;
         this.assetId = assetId;
         this.type = type;
         this.label = label;
-        this.field = field;
+        this.fieldData = fieldData;
         this.createTimestamp = createTimestamp;
         this.modifyTimestamp = modifyTimestamp;
         this.position = position;

@@ -13,6 +13,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.WeakHashMap;
 
 import javax.inject.Inject;
 
@@ -63,7 +64,7 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
 
         initCachedDetails();
-        mRemoteRepo.setOnDataChangeCallback(new OnDetailsDataChangeListeners(), FDetail.class);
+//        mRemoteRepo.setOnDataChangeCallback(new OnDetailsDataChangeListeners(), FDetail.class);
         mRemoteRepo.setOnDataChangeCallback(new OnAssetsDataChangeListeners(), FAsset.class);
 
         cacheAssets();
@@ -406,9 +407,18 @@ public class DataManager implements IDataManager, IDebugHelper {
         updateDetailWithDefaultFieldValue(assetId, detailId, null);
     }
 
+    @Override
     public <T> void updateDetail(String assetId, String detailId, DetailType type, String newLabel, T newField) {
         checkUpdateDetailArguments(assetId, detailId, type, newLabel, newField);
         if (newLabel == null && newField == null) return;
+
+        String stupidLambdaValueContainer = null;
+        if (newField != null && type.equals(DetailType.Image)) {
+            stupidLambdaValueContainer = BitmapHelper.toString((Bitmap) newField);
+        } else {
+            stupidLambdaValueContainer = (String) newField;
+        }
+        final String fieldData = stupidLambdaValueContainer;
 
         if (mDirtyCachedDetails) {
             initCachedDetails();
@@ -418,7 +428,7 @@ public class DataManager implements IDataManager, IDebugHelper {
         if (mCachedDetails.containsKey(assetId)) {
             for (FDetail detail : mCachedDetails.get(assetId)) {
                 if (detail.getId().equals(detailId) && detail.getAssetId().equals(assetId)) {
-                    updateDetailAndUpdateInRemote(detail, newLabel, newField, false, modifyTimestamp);
+                    updateDetailAndUpdateInRemote(detail, newLabel, fieldData, false, modifyTimestamp);
                     updateAssetModifyTimestamp(detail.getAssetId(), modifyTimestamp);
                     break;
                 }
@@ -429,7 +439,7 @@ public class DataManager implements IDataManager, IDebugHelper {
                     .doOnNext(detail -> {
                         if (detail == null || !detail.getAssetId().equals(assetId))
                             return;
-                        updateDetailAndUpdateInRemote(detail, newLabel, newField, false, modifyTimestamp);
+                        updateDetailAndUpdateInRemote(detail, newLabel, fieldData, false, modifyTimestamp);
                         updateAssetModifyTimestamp(detail.getAssetId(), modifyTimestamp);
                     })
                     .subscribe();
@@ -517,7 +527,7 @@ public class DataManager implements IDataManager, IDebugHelper {
     }
 
     private synchronized void initCachedDetails() {
-        mCachedDetails = new HashMap<>();
+        mCachedDetails = new WeakHashMap<>();
         mCachedDetailsKeyList = new LinkedList<>();
         mDirtyCachedDetails = false;
     }
@@ -675,9 +685,7 @@ public class DataManager implements IDataManager, IDebugHelper {
                         .flatMap(this::recycleAssetGetAllChildrenAssets));
     }
 
-    private void updateAssetThumbnailAndUpdateInRemote(String assetId, Bitmap originalPhoto, boolean usingDefaultPhoto) {
-        Bitmap thumbnail = usingDefaultPhoto ?
-                mResLoader.getDefaultThumbnail() : BitmapHelper.toThumbnail(originalPhoto);
+    private void updateAssetThumbnailAndUpdateInRemote(String assetId, Bitmap thumbnail, boolean usingDefaultPhoto) {
         String thumbnailDataString = usingDefaultPhoto ? null : BitmapHelper.toString(thumbnail);
 
         LoggedAction updateThumbnail = executedFromLog -> {
@@ -712,7 +720,7 @@ public class DataManager implements IDataManager, IDebugHelper {
                         updateDetailAndUpdateInRemote(detail, newLabel, mResLoader.getDefaultText(),
                                 true, modifyTimestamp);
                     } else if (detail.getType().equals(DetailType.Image)) {
-                        updateDetailAndUpdateInRemote(detail, newLabel, mResLoader.getDefaultPhoto(),
+                        updateDetailAndUpdateInRemote(detail, newLabel, mResLoader.getDefaultPhotoDataString(),
                                 true, modifyTimestamp);
                     }
                     updateAssetModifyTimestamp(detail.getAssetId(), modifyTimestamp);
@@ -729,7 +737,7 @@ public class DataManager implements IDataManager, IDebugHelper {
                             updateDetailAndUpdateInRemote(detail, newLabel, mResLoader.getDefaultText(),
                                     true, modifyTimestamp);
                         } else if (detail.getType().equals(DetailType.Image)) {
-                            updateDetailAndUpdateInRemote(detail, newLabel, mResLoader.getDefaultPhoto(),
+                            updateDetailAndUpdateInRemote(detail, newLabel, mResLoader.getDefaultPhotoDataString(),
                                     true, modifyTimestamp);
                         }
                         updateAssetModifyTimestamp(detail.getAssetId(), modifyTimestamp);
@@ -739,20 +747,13 @@ public class DataManager implements IDataManager, IDebugHelper {
     }
 
     private <E> void updateDetailAndUpdateInRemote(FDetail<E> detail, String newLabel,
-                                                   E newField, boolean defaultFieldValue, long modifyTimestamp) {
-        Class fieldType = newField == null ? null : newField.getClass();
-
-        if (fieldType != null) {
-            if (!detail.getType().getFieldClass().equals(fieldType))
-                throw new IllegalArgumentException("Incorrect type of detail.");
-        }
-
+                                                   String newFieldData, boolean defaultFieldValue, long modifyTimestamp) {
         if (newLabel != null)
             detail.setLabel(newLabel);
 
-        boolean updatingField = newField != null;
+        boolean updatingField = newFieldData != null;
         if (updatingField)
-            detail.setField(newField, defaultFieldValue);
+            detail.setFieldData(newFieldData, defaultFieldValue);
 
         detail.setModifyTimestamp(modifyTimestamp);
 
@@ -761,7 +762,10 @@ public class DataManager implements IDataManager, IDebugHelper {
         // if the detail is "Photo", then the thumbnail of the asset should also be updated
         if (updatingField && detail.getType().equals(DetailType.Image) &&
                 detail.getLabel().equals(CategoryType.BasicDetail.PHOTO)) {
-            updateAssetThumbnailAndUpdateInRemote(detail.getAssetId(), (Bitmap) newField, defaultFieldValue);
+            Bitmap thumbnail = defaultFieldValue ?
+                    mResLoader.getDefaultThumbnail() :
+                    BitmapHelper.toThumbnail(BitmapHelper.toBitmap(newFieldData));
+            updateAssetThumbnailAndUpdateInRemote(detail.getAssetId(), thumbnail, defaultFieldValue);
         }
     }
 

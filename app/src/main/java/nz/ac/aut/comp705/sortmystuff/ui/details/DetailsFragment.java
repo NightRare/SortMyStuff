@@ -128,6 +128,7 @@ public class DetailsFragment extends Fragment implements IDetailsView {
             case AppCode.INTENT_TAKE_PHOTO:
                 Uri photoUri = data.getData();
                 try {
+
                     Bitmap bm = MediaStore.Images.Media.getBitmap(
                             mActivity.getContentResolver(), photoUri);
                     mPresenter.updateAssetPhoto(mPhotoToBeReplaced, BitmapHelper.rescaleToImageDetailSize(bm));
