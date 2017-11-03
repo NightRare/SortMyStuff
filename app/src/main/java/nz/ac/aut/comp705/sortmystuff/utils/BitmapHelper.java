@@ -25,6 +25,7 @@ public class BitmapHelper {
     public static final Bitmap.CompressFormat compressFormat = Bitmap.CompressFormat.JPEG;
     public static final int compressQuality = 100;
     public static final String IMAGE_EXTENSION = ".jpg";
+    public static int ENCODE_FLAG = Base64.DEFAULT;
 
     public static byte[] toByteArray(Bitmap bitmap) {
         checkNotNull(bitmap);
@@ -33,12 +34,20 @@ public class BitmapHelper {
         return baos.toByteArray();
     }
 
+    public static byte[] toByteArray(String string) {
+        return Base64.decode(checkNotNull(string), ENCODE_FLAG);
+    }
+
     public static String toString(Bitmap bitmap) {
-        return Base64.encodeToString(toByteArray(bitmap), Base64.DEFAULT);
+        return Base64.encodeToString(toByteArray(bitmap), ENCODE_FLAG);
+    }
+
+    public static String toString(byte[] bytes) {
+        return Base64.encodeToString(bytes, ENCODE_FLAG);
     }
 
     public static Bitmap toBitmap(String string) {
-        byte[] encodeByte = Base64.decode(checkNotNull(string), Base64.DEFAULT);
+        byte[] encodeByte = Base64.decode(checkNotNull(string), ENCODE_FLAG);
         return toBitmap(encodeByte);
     }
 

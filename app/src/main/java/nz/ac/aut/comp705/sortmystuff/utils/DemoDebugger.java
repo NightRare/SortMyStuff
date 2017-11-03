@@ -19,7 +19,7 @@ public class DemoDebugger {
 
     public void setPhoto(String assetId, final Bitmap photo) {
         mDataManager.getDetails(assetId)
-                .subscribeOn(mSchedulerProvider.io())
+                .subscribeOn(mSchedulerProvider.newThread())
                 .flatMap(Observable::from)
                 .filter(d -> d.getLabel().equals(CategoryType.BasicDetail.PHOTO)
                         && d.getType().equals(DetailType.Image))
@@ -31,7 +31,7 @@ public class DemoDebugger {
 
     public void updateTextDetail(String assetId, String label, String field) {
         mDataManager.getDetails(assetId)
-                .subscribeOn(mSchedulerProvider.io())
+                .subscribeOn(mSchedulerProvider.newThread())
                 .flatMap(Observable::from)
                 .filter(d -> d.getLabel().equals(label)
                         && (d.getField().getClass().equals(String.class)))

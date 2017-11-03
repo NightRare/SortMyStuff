@@ -1,5 +1,10 @@
 package nz.ac.aut.comp705.sortmystuff.data.remote;
 
+import android.support.annotation.NonNull;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.database.ChildEventListener;
@@ -26,9 +31,12 @@ import nz.ac.aut.comp705.sortmystuff.data.models.FDetail;
 import nz.ac.aut.comp705.sortmystuff.di.qualifiers.AppResDatabaseRef;
 import nz.ac.aut.comp705.sortmystuff.di.qualifiers.RegularScheduler;
 import nz.ac.aut.comp705.sortmystuff.di.qualifiers.UserDatabaseRef;
+import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
 import nz.ac.aut.comp705.sortmystuff.utils.Log;
 import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
+import rx.Emitter;
 import rx.Observable;
+import rx.functions.Action1;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static nz.ac.aut.comp705.sortmystuff.data.models.FDetail.DETAIL_FIELD;
@@ -38,6 +46,8 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     public static final String DB_ASSETS = "assets";
     public static final String DB_DETAILS = "details";
     public static final String DB_CATEGORIES = "categories";
+    public static final String ST_DETAIL_IMAGES = "detail_images";
+    public static final Long MAX_BYTES_LENGTH = 10L * 1024L * 1024L;  // 10 mb
 
     @Inject
     public FirebaseHelper(LocalResourceLoader resLoader, @UserDatabaseRef DatabaseReference userDB,
@@ -46,7 +56,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
         mResLoader = checkNotNull(resLoader);
         mUserDB = checkNotNull(userDB);
         mAppResDB = checkNotNull(appResDB);
-        mStroage = checkNotNull(storageReference);
+        mUserST = checkNotNull(storageReference);
         mSchedulerProvider = checkNotNull(schedulerProvider);
     }
 
@@ -54,7 +64,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     public Observable<List<FAsset>> retrieveAllAssets() {
         return RxFirebaseDatabase
                 .observeSingleValueEvent(mUserDB.child(DB_ASSETS))
-                .map(dataSnapshot -> dataToList(dataSnapshot, FAsset.class));
+                .map(dataSnapshot -> jsonDataToList(dataSnapshot, FAsset.class));
     }
 
     @Override
@@ -62,7 +72,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
         checkNotNull(assetId, "The assetId cannot be null.");
         return RxFirebaseDatabase
                 .observeSingleValueEvent(mUserDB.child(DB_ASSETS).child(checkNotNull(assetId)))
-                .map(dataSnapshot -> dataToObject(dataSnapshot, FAsset.class))
+                .map(dataSnapshot -> jsonDataToObject(dataSnapshot, FAsset.class))
                 .onErrorReturn(throwable -> {
                     Log.e(FirebaseHelper.class.getName(), throwable.getMessage(), throwable);
                     return null;
@@ -73,7 +83,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     public Observable<List<FDetail>> retrieveAllDetails() {
         return RxFirebaseDatabase
                 .observeSingleValueEvent(mUserDB.child(DB_DETAILS))
-                .map(dataSnapshot -> dataToList(dataSnapshot, FDetail.class));
+                .map(dataSnapshot -> jsonDataToList(dataSnapshot, FDetail.class));
     }
 
     @Override
@@ -93,15 +103,14 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     @Override
     public Observable<FDetail> retrieveDetail(String detailId) {
         checkNotNull(detailId, "The detailId cannot be null.");
-        return RxFirebaseDatabase
-                .observeSingleValueEvent(mUserDB.child(DB_DETAILS).child(detailId))
-                .map(dataSnapshot -> dataToObject(dataSnapshot, FDetail.class));
+
+        return assembleDetail(detailId);
     }
 
     @Override
     public Observable<List<FCategory>> retrieveCategories() {
         return RxFirebaseDatabase.observeSingleValueEvent(mAppResDB.child(DB_CATEGORIES))
-                .map(dataSnapshot -> dataToList(dataSnapshot, FCategory.class));
+                .map(dataSnapshot -> jsonDataToList(dataSnapshot, FCategory.class));
     }
 
     @Override
@@ -124,12 +133,20 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
                     // should not update an existing record
                     if (detailFromFirebase != null) throw new IllegalStateException();
                 })
+                .doOnNext(isNewDetail -> mUserDB.child(DB_DETAILS).child(detail.getId()).setValue(detail.toMap()))
                 .subscribe(
                         //onNext
-                        isEmpty -> mUserDB.child(DB_DETAILS).child(detail.getId()).setValue(detail.toMap())
-                                .addOnSuccessListener(callback::onSuccess)
-                                .addOnFailureListener(callback::onFailure)
-                                .addOnCompleteListener(callback::onComplete),
+                        isNewDetail -> {
+                            if (detail.getType().equals(DetailType.Image) && !detail.isDefaultFieldValue()) {
+                                mUserST.child(ST_DETAIL_IMAGES).child(detail.getId())
+                                        .putBytes(BitmapHelper.toByteArray(detail.getFieldData()))
+                                        .addOnSuccessListener(taskSnapshot -> callback.onSuccess(null))
+                                        .addOnFailureListener(callback::onFailure)
+                                        .addOnCompleteListener(callback::onComplete);
+                            } else {
+                                callback.onSuccess(null);
+                            }
+                        },
                         //onError
                         throwable -> {
                             callback.onFailure(throwable);
@@ -160,10 +177,27 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
         OnUpdatedCallback callback = onUpdatedCallback == null ? mDoNothingCallback : onUpdatedCallback;
 
         if (updatingField) {
-            mUserDB.child(DB_DETAILS).child(detail.getId()).setValue(detail.toMap())
-                    .addOnSuccessListener(callback::onSuccess)
-                    .addOnFailureListener(callback::onFailure)
-                    .addOnCompleteListener(callback::onComplete);
+            Task<Void> uploadTask = mUserDB.child(DB_DETAILS).child(detail.getId()).setValue(detail.toMap())
+                    .addOnFailureListener(callback::onFailure);
+
+            if (detail.getType().equals(DetailType.Image)) {
+
+                // if set back to default photo
+                if (detail.isDefaultFieldValue()) {
+                    mUserST.child(ST_DETAIL_IMAGES).child(detail.getId()).delete();
+                } else {
+                    mUserST.child(ST_DETAIL_IMAGES).child(detail.getId())
+                            .putBytes(BitmapHelper.toByteArray(detail.getFieldData()))
+                            .addOnSuccessListener(taskSnapshot -> callback.onSuccess(null))
+                            .addOnFailureListener(callback::onFailure)
+                            .addOnCompleteListener(callback::onComplete);
+                }
+
+            } else {
+                uploadTask.addOnSuccessListener(callback::onSuccess)
+                        .addOnCompleteListener(callback::onComplete);
+            }
+
             return;
         }
 
@@ -217,6 +251,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     @Override
     public void removeCurrentUserData() {
         mUserDB.removeValue();
+        mUserST.delete();
     }
 
 
@@ -232,7 +267,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
      * @param <E>          the type of the objects
      * @return the object or {@code null} if dataSnapshot or its value is {@code null}
      */
-    private <E> E dataToObject(DataSnapshot dataSnapshot, Class<E> type) {
+    private <E> E jsonDataToObject(DataSnapshot dataSnapshot, Class<E> type) {
         if (dataSnapshot == null) return null;
         Map<String, Object> members = (Map) dataSnapshot.getValue();
         if (members == null) return null;
@@ -272,12 +307,76 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
      * @param <E>          the type of the objects
      * @return a list containing objects transformed from dataSnapshot
      */
-    private <E> List<E> dataToList(DataSnapshot dataSnapshot, Class<E> type) {
+    private <E> List<E> jsonDataToList(DataSnapshot dataSnapshot, Class<E> type) {
         List<E> objects = new ArrayList<>();
         for (DataSnapshot objectData : dataSnapshot.getChildren()) {
-            objects.add((E) dataToObject(objectData, type));
+            objects.add((E) jsonDataToObject(objectData, type));
         }
         return objects;
+    }
+
+    private Observable<byte[]> getImageFile(String detailId) {
+//        StorageReference sref = mUserST.child(ST_DETAIL_IMAGES).child(detailId);
+
+        return Observable.create(new Action1<Emitter<byte[]>>() {
+            @Override
+            public void call(Emitter<byte[]> emitter) {
+                StorageReference sref = mUserST.child(ST_DETAIL_IMAGES).child(detailId);
+                sref.getBytes(MAX_BYTES_LENGTH)
+                        .addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                            @Override
+                            public void onSuccess(byte[] bytes) {
+                                emitter.onNext(bytes);
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                emitter.onNext(null);
+                            }
+                        })
+                        .addOnCompleteListener(new OnCompleteListener<byte[]>() {
+                            @Override
+                            public void onComplete(@NonNull Task<byte[]> task) {
+                                emitter.onCompleted();
+                            }
+                        });
+            }
+        }, Emitter.BackpressureMode.BUFFER);
+
+//        sref.getBytes(MAX_BYTES_LENGTH)
+//                .add
+//        return RxFirebaseStorage.getBytes(sref, MAX_BYTES_LENGTH)
+//                .first()
+//                .doOnNext(bytes -> {
+//
+//                    if (bytes != null) {
+//                        int l = 1;
+//                    }
+//                })
+//                .onErrorReturn(throwable -> null);
+    }
+
+    private Observable<FDetail> assembleDetail(String detailId) {
+        Observable<byte[]> getImageObservable = getImageFile(detailId);
+        Observable<FDetail> getDetailObservable = RxFirebaseDatabase
+                .observeSingleValueEvent(mUserDB.child(DB_DETAILS).child(detailId))
+                .map(dataSnapshot -> jsonDataToObject(dataSnapshot, FDetail.class));
+
+        return Observable.zip(getImageObservable, getDetailObservable, (bytes, detail) -> {
+            if (detail == null) return null;
+            if (detail.getType().equals(DetailType.Image)) {
+
+                if (bytes == null) {
+                    detail.setFieldData(mResLoader.getDefaultPhotoDataString(), true);
+                } else {
+                    detail.setFieldData(BitmapHelper.toString(bytes), false);
+                }
+            }
+
+            // only Image detail needs to be zipped
+            return detail;
+        });
     }
 
     private <T> void reloadDataChangeListener(Class<T> type) {
@@ -298,22 +397,22 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     ChildEventListener mAssetChildEventListener = new ChildEventListener() {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-            mOnAssetsDataChangeCallback.onDataAdded(dataToObject(dataSnapshot, FAsset.class));
+            mOnAssetsDataChangeCallback.onDataAdded(jsonDataToObject(dataSnapshot, FAsset.class));
         }
 
         @Override
         public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-            mOnAssetsDataChangeCallback.onDataChanged(dataToObject(dataSnapshot, FAsset.class));
+            mOnAssetsDataChangeCallback.onDataChanged(jsonDataToObject(dataSnapshot, FAsset.class));
         }
 
         @Override
         public void onChildRemoved(DataSnapshot dataSnapshot) {
-            mOnAssetsDataChangeCallback.onDataRemoved(dataToObject(dataSnapshot, FAsset.class));
+            mOnAssetsDataChangeCallback.onDataRemoved(jsonDataToObject(dataSnapshot, FAsset.class));
         }
 
         @Override
         public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-            mOnAssetsDataChangeCallback.onDataMoved(dataToObject(dataSnapshot, FAsset.class));
+            mOnAssetsDataChangeCallback.onDataMoved(jsonDataToObject(dataSnapshot, FAsset.class));
         }
 
         @Override
@@ -325,22 +424,22 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     ChildEventListener mDetailChildListener = new ChildEventListener() {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-            mOnDetailsDataChangeCallback.onDataAdded(dataToObject(dataSnapshot, FDetail.class));
+            mOnDetailsDataChangeCallback.onDataAdded(jsonDataToObject(dataSnapshot, FDetail.class));
         }
 
         @Override
         public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-            mOnDetailsDataChangeCallback.onDataChanged(dataToObject(dataSnapshot, FDetail.class));
+            mOnDetailsDataChangeCallback.onDataChanged(jsonDataToObject(dataSnapshot, FDetail.class));
         }
 
         @Override
         public void onChildRemoved(DataSnapshot dataSnapshot) {
-            mOnDetailsDataChangeCallback.onDataRemoved(dataToObject(dataSnapshot, FDetail.class));
+            mOnDetailsDataChangeCallback.onDataRemoved(jsonDataToObject(dataSnapshot, FDetail.class));
         }
 
         @Override
         public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-            mOnDetailsDataChangeCallback.onDataMoved(dataToObject(dataSnapshot, FDetail.class));
+            mOnDetailsDataChangeCallback.onDataMoved(jsonDataToObject(dataSnapshot, FDetail.class));
         }
 
         @Override
@@ -365,7 +464,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
 
     private DatabaseReference mUserDB;
     private DatabaseReference mAppResDB;
-    private StorageReference mStroage;
+    private StorageReference mUserST;
     private LocalResourceLoader mResLoader;
     private ISchedulerProvider mSchedulerProvider;
     private OnDataChangeCallback<FAsset> mOnAssetsDataChangeCallback;

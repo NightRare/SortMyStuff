@@ -105,10 +105,11 @@ public class FCategory implements ICategory {
         checkNotNull(assetId);
 
         List<FDetail> clone = new ArrayList<>();
-        for (FDetail d : details) {
-            FDetail fDetail = FDetail.createDetail(assetId, d.getType(), d.getLabel(), d.getFieldData());
-            if (fDetail != null)
-                clone.add(fDetail);
+        for (FDetail templateDetail : details) {
+            FDetail detail = FDetail.createDetail(assetId, templateDetail.getType(), templateDetail.getLabel(), templateDetail.getFieldData());
+            detail.setPosition(templateDetail.getPosition());
+            if (detail != null)
+                clone.add(detail);
         }
         return clone;
     }

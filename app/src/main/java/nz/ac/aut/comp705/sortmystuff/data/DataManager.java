@@ -2,6 +2,7 @@ package nz.ac.aut.comp705.sortmystuff.data;
 
 import android.graphics.Bitmap;
 import android.os.SystemClock;
+import android.util.ArrayMap;
 
 import com.google.android.gms.tasks.Task;
 import com.google.common.base.Preconditions;
@@ -477,7 +478,7 @@ public class DataManager implements IDataManager, IDebugHelper {
     //region PRIVATE STUFF
 
     private synchronized void cacheCategories() {
-        mCachedCategories = new HashMap<>();
+        mCachedCategories = new ArrayMap<>();
 
         mRemoteRepo.retrieveCategories()
                 .subscribeOn(mSchedulerProvider.computation())
@@ -593,6 +594,7 @@ public class DataManager implements IDataManager, IDebugHelper {
             updateCacheData.execute(false);
         }
     }
+
 
     private void updateAssetModifyTimestamp(String assetId, long modifyTimestamp) {
         LoggedAction updateModifyTimestamp = executedFromLog ->
@@ -859,72 +861,74 @@ public class DataManager implements IDataManager, IDebugHelper {
 
     private void prepareDemoData() {
 
+        long idlingMillis = 3000;
+
         Map<String, Bitmap> photos = mResLoader.getDemoPhotos();
 
         DemoDebugger dd = new DemoDebugger(this, mSchedulerProvider);
 
         String studyRoomId = createAsset("Study Room", ROOT_ASSET_ID, CategoryType.Places);
-        SystemClock.sleep(1000);
-
-        dd.setPhoto(studyRoomId, photos.get("StudyRoom.jpg"));
-        SystemClock.sleep(1000);
+        SystemClock.sleep(idlingMillis);
 
         String office = createAsset("Office", ROOT_ASSET_ID, CategoryType.Places);
-        SystemClock.sleep(1000);
-
-        dd.setPhoto(office, photos.get("Office.jpg"));
-        SystemClock.sleep(1000);
+        SystemClock.sleep(idlingMillis);
 
         String bedroomId = createAsset("Bedroom", ROOT_ASSET_ID, CategoryType.Places);
-        SystemClock.sleep(1000);
-
-        dd.setPhoto(bedroomId, photos.get("Bedroom.jpg"));
-        SystemClock.sleep(1000);
+        SystemClock.sleep(idlingMillis);
 
         String bookshelfPhilosophyId = createAsset("Bookshelf Philosophy", studyRoomId, CategoryType.Miscellaneous);
-        SystemClock.sleep(1000);
-
-        dd.setPhoto(bookshelfPhilosophyId, photos.get("BookshelfPhilosophy.jpg"));
-        SystemClock.sleep(1000);
+        SystemClock.sleep(idlingMillis);
 
         String bookshelfLiteratureId = createAsset("Bookshelf Literature", studyRoomId, CategoryType.Miscellaneous);
-        SystemClock.sleep(1000);
-
-        dd.setPhoto(bookshelfLiteratureId, photos.get("BookshelfLiterature.jpg"));
-        SystemClock.sleep(1000);
+        SystemClock.sleep(idlingMillis);
 
         String kindleId = createAsset("Kindle", bedroomId, CategoryType.Appliances);
-        SystemClock.sleep(1000);
-
-        dd.setPhoto(kindleId, photos.get("Kindle.jpg"));
-        SystemClock.sleep(1000);
-
-        dd.updateTextDetail(kindleId, "Purchase Date", "14/01/2016");
-        SystemClock.sleep(1000);
-
-        dd.updateTextDetail(kindleId, "Warranty Expiry", "14/01/2019");
-        SystemClock.sleep(1000);
-
-        dd.updateTextDetail(kindleId, "Model Number", "B0186FET66");
-        SystemClock.sleep(1000);
-
-        dd.updateTextDetail(kindleId, "Serial Number", "9Q8EWR7923");
-        SystemClock.sleep(1000);
+        SystemClock.sleep(idlingMillis);
 
         String theEssentialHusserlId = createAsset("The Essential Husserl", bookshelfPhilosophyId, CategoryType.Books);
-        SystemClock.sleep(1000);
-
-        dd.setPhoto(theEssentialHusserlId, photos.get("TheEssentialHusserl.jpg"));
-        SystemClock.sleep(1000);
+        SystemClock.sleep(idlingMillis);
 
         String theRepublicId = createAsset("The Republic", bookshelfPhilosophyId, CategoryType.Books);
-        SystemClock.sleep(1000);
-
-        dd.setPhoto(theRepublicId, photos.get("TheRepublic.jpg"));
-        SystemClock.sleep(1000);
+        SystemClock.sleep(idlingMillis);
 
         String beingAndTimeId = createAsset("Being and Time", bookshelfPhilosophyId, CategoryType.Books);
-        SystemClock.sleep(1000);
+        SystemClock.sleep(idlingMillis);
+
+        dd.setPhoto(studyRoomId, photos.get("StudyRoom.jpg"));
+        SystemClock.sleep(idlingMillis);
+
+        dd.setPhoto(office, photos.get("Office.jpg"));
+        SystemClock.sleep(idlingMillis);
+
+        dd.setPhoto(bedroomId, photos.get("Bedroom.jpg"));
+        SystemClock.sleep(idlingMillis);
+
+        dd.setPhoto(bookshelfPhilosophyId, photos.get("BookshelfPhilosophy.jpg"));
+        SystemClock.sleep(idlingMillis);
+
+        dd.setPhoto(bookshelfLiteratureId, photos.get("BookshelfLiterature.jpg"));
+        SystemClock.sleep(idlingMillis);
+
+        dd.setPhoto(kindleId, photos.get("Kindle.jpg"));
+        SystemClock.sleep(idlingMillis);
+
+        dd.updateTextDetail(kindleId, "Purchase Date", "14/01/2016");
+        SystemClock.sleep(idlingMillis);
+
+        dd.updateTextDetail(kindleId, "Warranty Expiry", "14/01/2019");
+        SystemClock.sleep(idlingMillis);
+
+        dd.updateTextDetail(kindleId, "Model Number", "B0186FET66");
+        SystemClock.sleep(idlingMillis);
+
+        dd.updateTextDetail(kindleId, "Serial Number", "9Q8EWR7923");
+        SystemClock.sleep(idlingMillis);
+
+        dd.setPhoto(theEssentialHusserlId, photos.get("TheEssentialHusserl.jpg"));
+        SystemClock.sleep(idlingMillis);
+
+        dd.setPhoto(theRepublicId, photos.get("TheRepublic.jpg"));
+        SystemClock.sleep(idlingMillis);
 
         dd.setPhoto(beingAndTimeId, photos.get("BeingAndTime.jpg"));
     }

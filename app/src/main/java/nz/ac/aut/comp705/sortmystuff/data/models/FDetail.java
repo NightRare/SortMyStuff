@@ -69,10 +69,6 @@ public class FDetail<T> implements IDetail<T>, Comparable {
 
     //region STATIC FACTORIES
 
-    public FDetail() {
-        // Default constructor required for calls to DataSnapshot.getValue(Post.class)
-    }
-
     @Exclude
     public static FDetail createDetail(String assetId, DetailType type, String label, String fieldData) {
         checkIllegalAssetId(assetId);
@@ -163,7 +159,7 @@ public class FDetail<T> implements IDetail<T>, Comparable {
         map.put(DETAIL_DEFAULTFIELDVALUE, defaultFieldValue);
 
         String field = fieldData;
-        if (type.equals(DetailType.Image) && isDefaultFieldValue()) {
+        if (type.equals(DetailType.Image)) {
             // do not convert default photo data
             field = null;
         }
@@ -394,11 +390,6 @@ public class FDetail<T> implements IDetail<T>, Comparable {
         checkNotNull(assetId);
         if (assetId.isEmpty())
             throw new IllegalArgumentException("cannot be empty");
-    }
-
-    @Exclude
-    private void updateTimeStamp() {
-        modifyTimestamp = System.currentTimeMillis();
     }
 
     //endregion
