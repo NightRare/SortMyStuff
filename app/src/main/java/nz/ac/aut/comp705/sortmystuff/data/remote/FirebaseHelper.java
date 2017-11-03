@@ -12,6 +12,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.kelvinapps.rxfirebase.RxFirebaseDatabase;
 
 import java.util.ArrayList;
@@ -120,7 +121,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
         mUserDB.child(DB_ASSETS).child(checkNotNull(asset).getId()).setValue(asset.toMap())
                 .addOnSuccessListener(callback::onSuccess)
                 .addOnFailureListener(callback::onFailure)
-                .addOnCompleteListener(callback::onComplete);
+                .addOnCompleteListener(task -> callback.onComplete());
     }
 
     @Override
@@ -133,26 +134,50 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
                     // should not update an existing record
                     if (detailFromFirebase != null) throw new IllegalStateException();
                 })
-                .doOnNext(isNewDetail -> mUserDB.child(DB_DETAILS).child(detail.getId()).setValue(detail.toMap()))
-                .subscribe(
-                        //onNext
-                        isNewDetail -> {
-                            if (detail.getType().equals(DetailType.Image) && !detail.isDefaultFieldValue()) {
-                                mUserST.child(ST_DETAIL_IMAGES).child(detail.getId())
-                                        .putBytes(BitmapHelper.toByteArray(detail.getFieldData()))
-                                        .addOnSuccessListener(taskSnapshot -> callback.onSuccess(null))
-                                        .addOnFailureListener(callback::onFailure)
-                                        .addOnCompleteListener(callback::onComplete);
-                            } else {
-                                callback.onSuccess(null);
-                            }
-                        },
-                        //onError
-                        throwable -> {
-                            callback.onFailure(throwable);
-                            callback.onComplete(null);
-                        }
-                );
+                .flatMap(isNewDetail -> {
+                    return Observable.create((Action1<Emitter<Boolean>>) emitter -> {
+                        OnSuccessListener<Void> onNext = aVoid -> {
+                            Boolean requireImageLoading = detail.getType().equals(DetailType.Image)
+                                    && !detail.isDefaultFieldValue();
+                            emitter.onNext(requireImageLoading);
+                        };
+
+                        OnFailureListener onError = emitter::onError;
+                        OnCompleteListener<Void> onCompleted = task -> {
+                            emitter.onCompleted();
+                        };
+
+                        mUserDB.child(DB_DETAILS).child(detail.getId()).setValue(detail.toMap()).addOnSuccessListener(onNext)
+                                .addOnFailureListener(onError)
+                                .addOnCompleteListener(onCompleted);
+                    }, Emitter.BackpressureMode.BUFFER);
+                })
+                .flatMap(requireImageLoading -> {
+                    if (requireImageLoading) {
+                        return Observable.create((Action1<Emitter<Void>>) emitter -> {
+                            OnSuccessListener<UploadTask.TaskSnapshot> onNext = taskSnapshot -> {
+                                emitter.onNext(null);
+                            };
+
+                            OnFailureListener onError = emitter::onError;
+                            OnCompleteListener<UploadTask.TaskSnapshot> onCompleted = taskSnapshot -> {
+                                emitter.onCompleted();
+                            };
+
+                            mUserST.child(ST_DETAIL_IMAGES).child(detail.getId())
+                                    .putBytes(BitmapHelper.toByteArray(detail.getFieldData()))
+                                    .addOnSuccessListener(onNext)
+                                    .addOnFailureListener(onError)
+                                    .addOnCompleteListener(onCompleted);
+                        }, Emitter.BackpressureMode.BUFFER);
+                    }
+
+                    return Observable.just(null);
+                })
+                .doOnNext(callback::onSuccess)
+                .doOnError(callback::onFailure)
+                .doOnCompleted(callback::onComplete)
+                .subscribe();
     }
 
     @Override
@@ -169,7 +194,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
                 .setValue(value)
                 .addOnSuccessListener(callback::onSuccess)
                 .addOnFailureListener(callback::onFailure)
-                .addOnCompleteListener(callback::onComplete);
+                .addOnCompleteListener(task -> callback.onComplete());
     }
 
     @Override
@@ -184,18 +209,21 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
 
                 // if set back to default photo
                 if (detail.isDefaultFieldValue()) {
-                    mUserST.child(ST_DETAIL_IMAGES).child(detail.getId()).delete();
+                    mUserST.child(ST_DETAIL_IMAGES).child(detail.getId()).delete()
+                            .addOnSuccessListener(taskSnapshot -> callback.onSuccess(null))
+                            .addOnFailureListener(callback::onFailure)
+                            .addOnCompleteListener(task -> callback.onComplete());
                 } else {
                     mUserST.child(ST_DETAIL_IMAGES).child(detail.getId())
                             .putBytes(BitmapHelper.toByteArray(detail.getFieldData()))
                             .addOnSuccessListener(taskSnapshot -> callback.onSuccess(null))
                             .addOnFailureListener(callback::onFailure)
-                            .addOnCompleteListener(callback::onComplete);
+                            .addOnCompleteListener(task -> callback.onComplete());
                 }
 
             } else {
                 uploadTask.addOnSuccessListener(callback::onSuccess)
-                        .addOnCompleteListener(callback::onComplete);
+                        .addOnCompleteListener(task -> callback.onComplete());
             }
 
             return;
@@ -214,7 +242,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
         }
         Tasks.whenAll(tasks)
                 .addOnSuccessListener(callback::onSuccess)
-                .addOnCompleteListener(callback::onComplete);
+                .addOnCompleteListener(task -> callback.onComplete());
     }
 
     @Override
@@ -316,8 +344,6 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     }
 
     private Observable<byte[]> getImageFile(String detailId) {
-//        StorageReference sref = mUserST.child(ST_DETAIL_IMAGES).child(detailId);
-
         return Observable.create(new Action1<Emitter<byte[]>>() {
             @Override
             public void call(Emitter<byte[]> emitter) {
@@ -343,18 +369,6 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
                         });
             }
         }, Emitter.BackpressureMode.BUFFER);
-
-//        sref.getBytes(MAX_BYTES_LENGTH)
-//                .add
-//        return RxFirebaseStorage.getBytes(sref, MAX_BYTES_LENGTH)
-//                .first()
-//                .doOnNext(bytes -> {
-//
-//                    if (bytes != null) {
-//                        int l = 1;
-//                    }
-//                })
-//                .onErrorReturn(throwable -> null);
     }
 
     private Observable<FDetail> assembleDetail(String detailId) {
@@ -458,7 +472,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
         }
 
         @Override
-        public void onComplete(Task task) {
+        public void onComplete() {
         }
     };
 

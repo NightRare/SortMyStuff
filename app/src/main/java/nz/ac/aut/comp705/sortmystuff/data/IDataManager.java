@@ -133,6 +133,8 @@ public interface IDataManager {
      */
     String createAsset(String name, String containerId, CategoryType categoryType);
 
+    Observable<String> createAssetSafely(String name, String containerId, CategoryType categoryType);
+
     //endregion
 
     //region UPDATE DATA METHODS

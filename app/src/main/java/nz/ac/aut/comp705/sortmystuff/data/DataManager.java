@@ -4,7 +4,6 @@ import android.graphics.Bitmap;
 import android.os.SystemClock;
 import android.util.ArrayMap;
 
-import com.google.android.gms.tasks.Task;
 import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
@@ -32,7 +31,9 @@ import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
 import nz.ac.aut.comp705.sortmystuff.utils.DemoDebugger;
 import nz.ac.aut.comp705.sortmystuff.utils.Log;
 import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
+import rx.Emitter;
 import rx.Observable;
+import rx.functions.Action1;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -262,6 +263,30 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
 
         return asset.getId();
+    }
+
+    @Override
+    public Observable<String> createAssetSafely(String name, String containerId, CategoryType categoryType) {
+        checkNotNull(name);
+        checkNotNull(containerId);
+        Preconditions.checkArgument(!name.replaceAll(" ", "").isEmpty(), "The name cannot be empty");
+        Preconditions.checkArgument(name.length() <= AppConstraints.ASSET_NAME_CAP, "The length of the name should be shorter than "
+                + AppConstraints.ASSET_NAME_CAP + " characters");
+
+        FAsset asset = FAsset.create(name, containerId, categoryType);
+
+        if (mDirtyCachedCategories) {
+            return mRemoteRepo.retrieveCategories()
+                    .subscribeOn(mSchedulerProvider.io())
+                    .flatMap(Observable::from)
+                    .filter(category -> category.getName().equals(categoryType.toString()))
+                    .first()
+                    .map(category -> category.generateDetails(asset.getId()))
+                    .flatMap(details -> createAssetProcessSafely(asset, details));
+        } else {
+            List<FDetail> details = mCachedCategories.get(categoryType).generateDetails(asset.getId());
+            return createAssetProcessSafely(asset, details);
+        }
     }
 
     //endregion
@@ -561,6 +586,153 @@ public class DataManager implements IDataManager, IDebugHelper {
         return root;
     }
 
+    private Observable<String> createAssetProcessSafely(FAsset asset, List<FDetail> details) {
+
+        Observable<String> outputObservable = null;
+        Emitter.BackpressureMode backpressureMode = Emitter.BackpressureMode.BUFFER;
+
+        // POST all the details
+        if (!details.isEmpty()) {
+            for (int i = 0; i < details.size(); i++) {
+                final int index = i;
+                asset.addDetailId(details.get(i).getId());
+                Action1<Emitter<String>> emitDetailId = new Action1<Emitter<String>>() {
+                    @Override
+                    public void call(Emitter<String> stringEmitter) {
+                        IDataRepository.OnUpdatedCallback onAddDetail = new IDataRepository.OnUpdatedCallback() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                stringEmitter.onNext(details.get(index).getId());
+                            }
+
+                            @Override
+                            public void onFailure(Throwable e) {
+                                stringEmitter.onError(e);
+                            }
+
+                            @Override
+                            public void onComplete() {
+                                stringEmitter.onCompleted();
+                            }
+                        };
+
+                        mRemoteRepo.addDetail(details.get(index), onAddDetail);
+                    }
+                };
+
+                if (outputObservable == null) {
+                    outputObservable = Observable.create(emitDetailId, backpressureMode);
+                } else {
+                    outputObservable = outputObservable.flatMap(detailId ->
+                            Observable.create(emitDetailId, backpressureMode));
+                }
+            }
+        }
+
+        // POST asset
+        Action1<Emitter<String>> emitAssetId = new Action1<Emitter<String>>() {
+            @Override
+            public void call(Emitter<String> stringEmitter) {
+                IDataRepository.OnUpdatedCallback onAddDetail = new IDataRepository.OnUpdatedCallback() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        stringEmitter.onNext(asset.getId());
+                    }
+
+                    @Override
+                    public void onFailure(Throwable e) {
+                        stringEmitter.onError(e);
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        stringEmitter.onCompleted();
+                    }
+                };
+
+                mRemoteRepo.addOrUpdateAsset(asset, onAddDetail);
+            }
+        };
+
+        if (outputObservable == null) {
+            outputObservable = Observable.create(emitAssetId, backpressureMode);
+        } else {
+            outputObservable = outputObservable
+                    .flatMap(detailId -> Observable.create(emitAssetId, backpressureMode));
+        }
+
+        // PUT container asset
+        if (mDirtyCachedAssets) {
+            outputObservable = outputObservable
+                    .flatMap(assetId -> mRemoteRepo.retrieveAsset(asset.getContainerId()))
+                    .flatMap(container -> {
+                        if (container == null)
+                            throw new IllegalStateException();
+                        container.addContentId(asset.getId());
+
+                        return Observable.create((Action1<Emitter<String>>) emitter -> {
+                            IDataRepository.OnUpdatedCallback onAddContainer = new IDataRepository.OnUpdatedCallback() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                    mActionsQueue.add(executedFromLog -> {
+                                        FAsset cachedContainer = mCachedAssets.get(asset.getContainerId());
+                                        if (cachedContainer == null) return;
+
+                                        cachedContainer.addContentId(asset.getId());
+                                        mCachedAssets.put(asset.getId(), asset);
+                                    });
+                                    emitter.onNext(container.getId());
+                                }
+
+                                @Override
+                                public void onFailure(Throwable e) {
+                                    emitter.onError(e);
+                                }
+
+                                @Override
+                                public void onComplete() {
+                                    emitter.onCompleted();
+                                }
+                            };
+
+                            mRemoteRepo.addOrUpdateAsset(container, onAddContainer);
+                        }, backpressureMode);
+                    });
+        } else {
+            FAsset container = mCachedAssets.get(asset.getContainerId());
+            outputObservable = outputObservable
+                    .flatMap(assetId -> {
+                        if (container == null)
+                            throw new IllegalStateException();
+                        container.addContentId(asset.getId());
+
+                        return Observable.create((Action1<Emitter<String>>) emitter -> {
+                            IDataRepository.OnUpdatedCallback onAddContainer = new IDataRepository.OnUpdatedCallback() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                    mCachedAssets.put(asset.getId(), asset);
+                                    emitter.onNext(container.getId());
+                                }
+
+                                @Override
+                                public void onFailure(Throwable e) {
+                                    emitter.onError(e);
+                                }
+
+                                @Override
+                                public void onComplete() {
+                                    emitter.onCompleted();
+                                }
+                            };
+
+                            mRemoteRepo.addOrUpdateAsset(container, onAddContainer);
+                        }, backpressureMode);
+                    });
+        }
+
+        return outputObservable.map(containerId -> asset.getId());
+    }
+
     private void createAssetProcess(FAsset asset, List<FDetail> details) {
 
         for (FDetail d : details) {
@@ -594,7 +766,6 @@ public class DataManager implements IDataManager, IDebugHelper {
             updateCacheData.execute(false);
         }
     }
-
 
     private void updateAssetModifyTimestamp(String assetId, long modifyTimestamp) {
         LoggedAction updateModifyTimestamp = executedFromLog ->
@@ -867,70 +1038,86 @@ public class DataManager implements IDataManager, IDebugHelper {
 
         DemoDebugger dd = new DemoDebugger(this, mSchedulerProvider);
 
-        String studyRoomId = createAsset("Study Room", ROOT_ASSET_ID, CategoryType.Places);
-        SystemClock.sleep(idlingMillis);
+        // Map<assetName, assetId>
+        Map<String, String> demoAssets = new ArrayMap<>();
 
-        String office = createAsset("Office", ROOT_ASSET_ID, CategoryType.Places);
-        SystemClock.sleep(idlingMillis);
+        createAssetSafely("Study Room", ROOT_ASSET_ID, CategoryType.Places)
+                .subscribeOn(mSchedulerProvider.io())
+                .flatMap(id -> {
+                    demoAssets.put("Study Room", id);
+                    return createAssetSafely("Office", ROOT_ASSET_ID, CategoryType.Places);
+                })
+                .flatMap(id -> {
+                    demoAssets.put("Office", id);
+                    return createAssetSafely("Bedroom", ROOT_ASSET_ID, CategoryType.Places);
+                })
+                .flatMap(id -> {
+                    demoAssets.put("Bedroom", id);
+                    return createAssetSafely("Bookshelf Philosophy", demoAssets.get("Study Room"), CategoryType.Miscellaneous);
+                })
+                .flatMap(id -> {
+                    demoAssets.put("Bookshelf Philosophy", id);
+                    return createAssetSafely("Bookshelf Literature", demoAssets.get("Study Room"), CategoryType.Miscellaneous);
+                })
+                .flatMap(id -> {
+                    demoAssets.put("Bookshelf Literature", id);
+                    return createAssetSafely("Kindle", demoAssets.get("Bedroom"), CategoryType.Appliances);
+                })
+                .flatMap(id -> {
+                    demoAssets.put("Kindle", id);
+                    return createAssetSafely("The Essential Husserl", demoAssets.get("Bookshelf Philosophy"), CategoryType.Books);
+                })
+                .flatMap(id -> {
+                    demoAssets.put("The Essential Husserl", id);
+                    return createAssetSafely("The Republic", demoAssets.get("Bookshelf Philosophy"), CategoryType.Books);
+                })
+                .flatMap(id -> {
+                    demoAssets.put("The Republic", id);
+                    return createAssetSafely("Being and Time", demoAssets.get("Bookshelf Philosophy"), CategoryType.Books);
+                })
+                .doOnNext(id -> {
+                    demoAssets.put("Being and Time", id);
+                })
+                .doOnNext(id -> {
+                    dd.setPhoto(demoAssets.get("Study Room"), photos.get("StudyRoom.jpg"));
+                    SystemClock.sleep(idlingMillis);
 
-        String bedroomId = createAsset("Bedroom", ROOT_ASSET_ID, CategoryType.Places);
-        SystemClock.sleep(idlingMillis);
+                    dd.setPhoto(demoAssets.get("Office"), photos.get("Office.jpg"));
+                    SystemClock.sleep(idlingMillis);
 
-        String bookshelfPhilosophyId = createAsset("Bookshelf Philosophy", studyRoomId, CategoryType.Miscellaneous);
-        SystemClock.sleep(idlingMillis);
+                    dd.setPhoto(demoAssets.get("Bedroom"), photos.get("Bedroom.jpg"));
+                    SystemClock.sleep(idlingMillis);
 
-        String bookshelfLiteratureId = createAsset("Bookshelf Literature", studyRoomId, CategoryType.Miscellaneous);
-        SystemClock.sleep(idlingMillis);
+                    dd.setPhoto(demoAssets.get("Bookshelf Philosophy"), photos.get("BookshelfPhilosophy.jpg"));
+                    SystemClock.sleep(idlingMillis);
 
-        String kindleId = createAsset("Kindle", bedroomId, CategoryType.Appliances);
-        SystemClock.sleep(idlingMillis);
+                    dd.setPhoto(demoAssets.get("Bookshelf Literature"), photos.get("BookshelfLiterature.jpg"));
+                    SystemClock.sleep(idlingMillis);
 
-        String theEssentialHusserlId = createAsset("The Essential Husserl", bookshelfPhilosophyId, CategoryType.Books);
-        SystemClock.sleep(idlingMillis);
+                    dd.setPhoto(demoAssets.get("Kindle"), photos.get("Kindle.jpg"));
+                    SystemClock.sleep(idlingMillis);
 
-        String theRepublicId = createAsset("The Republic", bookshelfPhilosophyId, CategoryType.Books);
-        SystemClock.sleep(idlingMillis);
+                    dd.updateTextDetail(demoAssets.get("Kindle"), "Purchase Date", "14/01/2016");
+                    SystemClock.sleep(idlingMillis);
 
-        String beingAndTimeId = createAsset("Being and Time", bookshelfPhilosophyId, CategoryType.Books);
-        SystemClock.sleep(idlingMillis);
+                    dd.updateTextDetail(demoAssets.get("Kindle"), "Warranty Expiry", "14/01/2019");
+                    SystemClock.sleep(idlingMillis);
 
-        dd.setPhoto(studyRoomId, photos.get("StudyRoom.jpg"));
-        SystemClock.sleep(idlingMillis);
+                    dd.updateTextDetail(demoAssets.get("Kindle"), "Model Number", "B0186FET66");
+                    SystemClock.sleep(idlingMillis);
 
-        dd.setPhoto(office, photos.get("Office.jpg"));
-        SystemClock.sleep(idlingMillis);
+                    dd.updateTextDetail(demoAssets.get("Kindle"), "Serial Number", "9Q8EWR7923");
+                    SystemClock.sleep(idlingMillis);
 
-        dd.setPhoto(bedroomId, photos.get("Bedroom.jpg"));
-        SystemClock.sleep(idlingMillis);
+                    dd.setPhoto(demoAssets.get("The Essential Husserl"), photos.get("TheEssentialHusserl.jpg"));
+                    SystemClock.sleep(idlingMillis);
 
-        dd.setPhoto(bookshelfPhilosophyId, photos.get("BookshelfPhilosophy.jpg"));
-        SystemClock.sleep(idlingMillis);
+                    dd.setPhoto(demoAssets.get("The Republic"), photos.get("TheRepublic.jpg"));
+                    SystemClock.sleep(idlingMillis);
 
-        dd.setPhoto(bookshelfLiteratureId, photos.get("BookshelfLiterature.jpg"));
-        SystemClock.sleep(idlingMillis);
-
-        dd.setPhoto(kindleId, photos.get("Kindle.jpg"));
-        SystemClock.sleep(idlingMillis);
-
-        dd.updateTextDetail(kindleId, "Purchase Date", "14/01/2016");
-        SystemClock.sleep(idlingMillis);
-
-        dd.updateTextDetail(kindleId, "Warranty Expiry", "14/01/2019");
-        SystemClock.sleep(idlingMillis);
-
-        dd.updateTextDetail(kindleId, "Model Number", "B0186FET66");
-        SystemClock.sleep(idlingMillis);
-
-        dd.updateTextDetail(kindleId, "Serial Number", "9Q8EWR7923");
-        SystemClock.sleep(idlingMillis);
-
-        dd.setPhoto(theEssentialHusserlId, photos.get("TheEssentialHusserl.jpg"));
-        SystemClock.sleep(idlingMillis);
-
-        dd.setPhoto(theRepublicId, photos.get("TheRepublic.jpg"));
-        SystemClock.sleep(idlingMillis);
-
-        dd.setPhoto(beingAndTimeId, photos.get("BeingAndTime.jpg"));
+                    dd.setPhoto(demoAssets.get("Being and Time"), photos.get("BeingAndTime.jpg"));
+                })
+                .subscribe();
     }
 
     private IDataRepository mRemoteRepo;
@@ -961,7 +1148,7 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
 
         @Override
-        public void onComplete(Task task) {
+        public void onComplete() {
         }
     };
     private IDataRepository.OnUpdatedCallback mOnDetailUpdated = new IDataRepository.OnUpdatedCallback() {
@@ -976,7 +1163,7 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
 
         @Override
-        public void onComplete(Task task) {
+        public void onComplete() {
         }
     };
 

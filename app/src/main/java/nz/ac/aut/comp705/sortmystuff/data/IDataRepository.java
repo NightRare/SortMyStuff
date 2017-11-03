@@ -1,7 +1,5 @@
 package nz.ac.aut.comp705.sortmystuff.data;
 
-import com.google.android.gms.tasks.Task;
-
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.models.FAsset;
@@ -179,6 +177,6 @@ public interface IDataRepository {
 
         void onFailure(Throwable e);
 
-        void onComplete(Task task);
+        void onComplete();
     }
 }
