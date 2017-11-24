@@ -1,6 +1,6 @@
 package nz.ac.aut.comp705.sortmystuff.utils;
 
-public class AppConstraints {
+public class AppConfigs {
 
     //********************************************
     // ASSET

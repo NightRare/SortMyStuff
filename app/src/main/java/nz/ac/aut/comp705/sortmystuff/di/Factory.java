@@ -12,6 +12,7 @@ import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.IDataRepository;
 import nz.ac.aut.comp705.sortmystuff.data.IDebugHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
+import nz.ac.aut.comp705.sortmystuff.Features;
 import nz.ac.aut.comp705.sortmystuff.di.qualifiers.ImmediateScheduler;
 import nz.ac.aut.comp705.sortmystuff.di.qualifiers.RegularScheduler;
 import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
@@ -26,21 +27,32 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Factory implements IFactory {
 
-    public Factory(Application app, FirebaseUser user) {
+    public Factory(
+            Application app,
+            FirebaseUser user,
+            Features featToggle) {
+
         mApp = checkNotNull(app);
         mCurrentUser = checkNotNull(user);
+        mFeatToggle = checkNotNull(featToggle);
 
-        mFactoryModule = new FactoryModule(mApp, mCurrentUser.getUid());
+        mFactoryModule = new FactoryModule(mApp, mCurrentUser.getUid(), mFeatToggle);
         mFactoryComponent = DaggerFactoryComponent.builder().factoryModule(mFactoryModule).build();
         mFactoryComponent.inject(this);
     }
 
-    public Factory(Application app, FirebaseUser user, GoogleApiClient googleApiClient) {
+    public Factory(
+            Application app,
+            FirebaseUser user,
+            GoogleApiClient googleApiClient,
+            Features featToggle) {
+
         mApp = checkNotNull(app);
         mCurrentUser = checkNotNull(user);
         mGoogleApiClient = checkNotNull(googleApiClient);
+        mFeatToggle = checkNotNull(featToggle);
 
-        mFactoryModule = new FactoryModule(mApp, mCurrentUser.getUid());
+        mFactoryModule = new FactoryModule(mApp, mCurrentUser.getUid(), mFeatToggle);
         mFactoryComponent = DaggerFactoryComponent.builder().factoryModule(mFactoryModule).build();
         mFactoryComponent.inject(this);
     }
@@ -145,6 +157,7 @@ public class Factory implements IFactory {
     private FactoryModule mFactoryModule;
     private FirebaseUser mCurrentUser;
     private GoogleApiClient mGoogleApiClient;
+    private Features mFeatToggle;
 
     private Factory() {
     }

@@ -24,10 +24,11 @@ import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.FAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.FCategory;
 import nz.ac.aut.comp705.sortmystuff.data.models.FDetail;
+import nz.ac.aut.comp705.sortmystuff.Features;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
 import nz.ac.aut.comp705.sortmystuff.di.qualifiers.RegularScheduler;
-import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
+import nz.ac.aut.comp705.sortmystuff.utils.AppConfigs;
 import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
 import nz.ac.aut.comp705.sortmystuff.utils.DemoDebugger;
 import nz.ac.aut.comp705.sortmystuff.utils.Log;
@@ -56,12 +57,15 @@ import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.ROOT_ASSET_ID;
 public class DataManager implements IDataManager, IDebugHelper {
 
     @Inject
-    public DataManager(IDataRepository remoteRepo, LocalResourceLoader resLoader,
-                       @RegularScheduler ISchedulerProvider schedulerProvider) {
+    public DataManager(
+            IDataRepository remoteRepo,
+            LocalResourceLoader resLoader,
+            @RegularScheduler ISchedulerProvider schedulerProvider,
+            Features featToggle) {
         mRemoteRepo = checkNotNull(remoteRepo);
         mResLoader = checkNotNull(resLoader);
         mSchedulerProvider = checkNotNull(schedulerProvider);
-
+        mFeatToggle = checkNotNull(featToggle);
 
         synchronized (this) {
             mDirtyCachedAssets = true;
@@ -245,8 +249,8 @@ public class DataManager implements IDataManager, IDebugHelper {
         checkNotNull(name);
         checkNotNull(containerId);
         Preconditions.checkArgument(!name.replaceAll(" ", "").isEmpty(), "The name cannot be empty");
-        Preconditions.checkArgument(name.length() <= AppConstraints.ASSET_NAME_CAP, "The length of the name should be shorter than "
-                + AppConstraints.ASSET_NAME_CAP + " characters");
+        Preconditions.checkArgument(name.length() <= AppConfigs.ASSET_NAME_CAP, "The length of the name should be shorter than "
+                + AppConfigs.ASSET_NAME_CAP + " characters");
 
         FAsset asset = FAsset.create(name, containerId, categoryType);
 
@@ -276,8 +280,8 @@ public class DataManager implements IDataManager, IDebugHelper {
         checkNotNull(photo);
         checkNotNull(details);
         Preconditions.checkArgument(!name.replaceAll(" ", "").isEmpty(), "The name cannot be empty");
-        Preconditions.checkArgument(name.length() <= AppConstraints.ASSET_NAME_CAP, "The length of the name should be shorter than "
-                + AppConstraints.ASSET_NAME_CAP + " characters");
+        Preconditions.checkArgument(name.length() <= AppConfigs.ASSET_NAME_CAP, "The length of the name should be shorter than "
+                + AppConfigs.ASSET_NAME_CAP + " characters");
 
         FAsset asset = FAsset.create(name, containerId, categoryType);
 
@@ -309,8 +313,8 @@ public class DataManager implements IDataManager, IDebugHelper {
         checkNotNull(name);
         checkNotNull(containerId);
         Preconditions.checkArgument(!name.replaceAll(" ", "").isEmpty(), "The name cannot be empty");
-        Preconditions.checkArgument(name.length() <= AppConstraints.ASSET_NAME_CAP, "The length of the name should be shorter than "
-                + AppConstraints.ASSET_NAME_CAP + " characters");
+        Preconditions.checkArgument(name.length() <= AppConfigs.ASSET_NAME_CAP, "The length of the name should be shorter than "
+                + AppConfigs.ASSET_NAME_CAP + " characters");
 
         FAsset asset = FAsset.create(name, containerId, categoryType);
 
@@ -337,7 +341,7 @@ public class DataManager implements IDataManager, IDebugHelper {
         checkNotNull(assetId);
         checkNotNull(newName);
         Preconditions.checkArgument(!newName.replaceAll(" ", "").isEmpty());
-        Preconditions.checkArgument(newName.length() < AppConstraints.ASSET_NAME_CAP);
+        Preconditions.checkArgument(newName.length() < AppConfigs.ASSET_NAME_CAP);
 
         long modifyTimestamp = System.currentTimeMillis();
         LoggedAction updateAsset = executedFromLog -> {
@@ -524,9 +528,12 @@ public class DataManager implements IDataManager, IDebugHelper {
 
     @Override
     public Observable<String> getNewAssetName(Bitmap photo) {
-        // TODO: detect name based on photo
-
-        return getNewAssetName();
+        if(mFeatToggle.PhotoDetection) {
+            // TODO: detect name based on photo
+            return getNewAssetName();
+        }else {
+            return getNewAssetName();
+        }
     }
 
     @Override
@@ -564,6 +571,20 @@ public class DataManager implements IDataManager, IDebugHelper {
             createRootAsset();
         }
         reCacheFromRemoteDataSource();
+    }
+
+    //endregion
+
+    //region ISortMyStuffAppComponent METHODS
+
+    @Override
+    public void setFeatureToggle(Features featureToggle) {
+        mFeatToggle = checkNotNull(featureToggle);
+    }
+
+    @Override
+    public Features getFeatureToggle(Features featureToggle) {
+        return mFeatToggle;
     }
 
     //endregion
@@ -640,7 +661,7 @@ public class DataManager implements IDataManager, IDebugHelper {
 
         // Releases one cache from the cachedDetails map if the size of the cache is bigger than the limit.
         // The cache algorithm now is LRU (Latest Recently Used).
-        if (mCachedDetails.size() >= AppConstraints.CACHED_DETAILS_LIST_NUM) {
+        if (mCachedDetails.size() >= AppConfigs.CACHED_DETAILS_LIST_NUM) {
             mCachedDetails.remove(mCachedDetailsKeyList.get(0));
         }
 
@@ -1085,14 +1106,14 @@ public class DataManager implements IDataManager, IDebugHelper {
         checkNotNull(detailId);
         if (newLabel != null) {
             checkArgument(!newLabel.replaceAll(" ", "").isEmpty(), "The new label cannot be empty.");
-            checkArgument(newLabel.length() <= AppConstraints.DETAIL_LABEL_CAP,
-                    "Please keep the length of the text within " + AppConstraints.DETAIL_LABEL_CAP + " characters");
+            checkArgument(newLabel.length() <= AppConfigs.DETAIL_LABEL_CAP,
+                    "Please keep the length of the text within " + AppConfigs.DETAIL_LABEL_CAP + " characters");
         }
         if (newField != null) {
             checkArgument(type.getFieldClass().equals(newField.getClass()), "Incorrect type of newField.");
             if (type.equals(DetailType.Text) || type.equals(DetailType.Date)) {
-                checkArgument(((String) newField).length() <= AppConstraints.TEXTDETAIL_FIELD_CAP,
-                        "Please keep the length of the text within " + AppConstraints.TEXTDETAIL_FIELD_CAP + " characters");
+                checkArgument(((String) newField).length() <= AppConfigs.TEXTDETAIL_FIELD_CAP,
+                        "Please keep the length of the text within " + AppConfigs.TEXTDETAIL_FIELD_CAP + " characters");
             }
         }
     }
@@ -1317,6 +1338,7 @@ public class DataManager implements IDataManager, IDebugHelper {
     private IDataRepository mRemoteRepo;
     private ISchedulerProvider mSchedulerProvider;
     private LocalResourceLoader mResLoader;
+    private Features mFeatToggle;
 
     private List<LoggedAction> mActionsQueue;
 

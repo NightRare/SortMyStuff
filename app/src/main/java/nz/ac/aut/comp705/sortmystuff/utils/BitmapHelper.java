@@ -15,10 +15,10 @@ import java.util.concurrent.ExecutionException;
 import rx.Observable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.ASSET_THUMBNAIL_LENGTH;
-import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.ASSET_THUMBNAIL_WIDTH;
-import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.DETAIL_IMAGE_LENGTH;
-import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.DETAIL_IMAGE_WIDTH;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppConfigs.ASSET_THUMBNAIL_LENGTH;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppConfigs.ASSET_THUMBNAIL_WIDTH;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppConfigs.DETAIL_IMAGE_LENGTH;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppConfigs.DETAIL_IMAGE_WIDTH;
 
 public class BitmapHelper {
 

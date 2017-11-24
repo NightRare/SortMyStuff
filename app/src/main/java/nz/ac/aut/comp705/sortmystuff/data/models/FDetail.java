@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
+import nz.ac.aut.comp705.sortmystuff.utils.AppConfigs;
 import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -381,7 +381,7 @@ public class FDetail<T> implements IDetail<T>, Comparable {
         checkNotNull(label);
         if (label.isEmpty())
             throw new IllegalArgumentException("cannot be empty");
-        if (label.length() > AppConstraints.DETAIL_LABEL_CAP)
+        if (label.length() > AppConfigs.DETAIL_LABEL_CAP)
             throw new IllegalArgumentException("string length exceeds cap");
     }
 

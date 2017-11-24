@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
+import nz.ac.aut.comp705.sortmystuff.utils.AppConfigs;
 import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -480,9 +480,9 @@ public final class FAsset implements IAsset {
         checkNotNull(name);
         if (name.isEmpty())
             throw new IllegalArgumentException("The name cannot be empty");
-        if (name.length() > AppConstraints.ASSET_NAME_CAP)
+        if (name.length() > AppConfigs.ASSET_NAME_CAP)
             throw new IllegalArgumentException("The length of the name should be shorter than "
-                    + AppConstraints.ASSET_NAME_CAP);
+                    + AppConfigs.ASSET_NAME_CAP);
     }
 
     @Exclude

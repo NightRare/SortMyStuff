@@ -9,6 +9,7 @@ import com.google.firebase.storage.StorageReference;
 
 import dagger.Module;
 import dagger.Provides;
+import nz.ac.aut.comp705.sortmystuff.Features;
 import nz.ac.aut.comp705.sortmystuff.di.qualifiers.AppResDatabaseRef;
 import nz.ac.aut.comp705.sortmystuff.di.qualifiers.UserDatabaseRef;
 
@@ -22,10 +23,15 @@ public class FactoryModule {
 
     private final Application mApp;
     private String mUserId;
+    private Features mFeatToggle;
 
-    public FactoryModule (Application app, String userId) {
+    public FactoryModule (
+            Application app,
+            String userId,
+            Features featToggle) {
         mApp = app;
         mUserId = userId;
+        mFeatToggle = featToggle;
     }
 
     public void setUserId(String userId) {
@@ -52,5 +58,10 @@ public class FactoryModule {
     @Provides
     public StorageReference storageReference() {
         return FirebaseStorage.getInstance().getReference().child(USER_DATA).child(mUserId);
+    }
+
+    @Provides
+    public Features featureToggle() {
+        return mFeatToggle;
     }
 }

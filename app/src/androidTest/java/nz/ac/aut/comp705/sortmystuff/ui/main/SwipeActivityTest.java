@@ -48,7 +48,7 @@ import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.di.IFactory;
-import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
+import nz.ac.aut.comp705.sortmystuff.utils.AppConfigs;
 import rx.Observable;
 import rx.schedulers.Schedulers;
 
@@ -195,7 +195,7 @@ public class SwipeActivityTest {
         onView(withId(R.id.assets_list)).check(matches(isDisplayed()));
 
         String longAssetName = "";
-        for (int i = 0; i <= AppConstraints.ASSET_NAME_CAP; i++) {
+        for (int i = 0; i <= AppConfigs.ASSET_NAME_CAP; i++) {
             longAssetName += "a";
         }
         addAsset(longAssetName);
@@ -789,7 +789,7 @@ public class SwipeActivityTest {
         swipeToDetailsPage();
 
         String longField = "";
-        for (int i = 0; i <= AppConstraints.TEXTDETAIL_FIELD_CAP; i++) {
+        for (int i = 0; i <= AppConfigs.TEXTDETAIL_FIELD_CAP; i++) {
             longField += "l";
         }
 

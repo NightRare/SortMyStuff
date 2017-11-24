@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 
 import java.util.List;
 
+import nz.ac.aut.comp705.sortmystuff.ISortMyStuffAppComponent;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.FAsset;
@@ -19,7 +20,7 @@ import rx.Observable;
  * @author Yuan
  */
 
-public interface IDataManager {
+public interface IDataManager extends ISortMyStuffAppComponent{
 
     //region READ DATA METHODS
 
