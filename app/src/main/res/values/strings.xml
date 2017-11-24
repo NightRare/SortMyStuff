@@ -27,5 +27,7 @@
     <string name="delete_asset_confirm_button">Confirm</string>
 
     <string name="nav_drawer_menu_sign_out">Sign Out</string>
+    <string name="add_asset_name_hint">Asset name</string>
+    <string name="add_asset_photo_description">Asset photo</string>
 
 </resources>

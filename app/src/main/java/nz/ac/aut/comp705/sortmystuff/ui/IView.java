@@ -16,4 +16,8 @@ public interface IView<T extends IPresenter> {
      * @param presenter the presenter
      */
     void setPresenter(T presenter);
+
+    void showMessage(String message);
+
+    void setLoadingIndicator(boolean active);
 }

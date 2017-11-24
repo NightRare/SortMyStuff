@@ -73,10 +73,6 @@ public class PathBarAdapter extends
             super(itemView);
             nameView = (TextView) itemView.findViewById(R.id.pathbar_asset_name);
         }
-
-        public TextView getNameView() {
-            return nameView;
-        }
     }
 
     //endregion

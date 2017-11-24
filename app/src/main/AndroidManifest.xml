@@ -19,14 +19,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:replace="android:theme">
-
         <activity
             android:name=".ui.login.LoginActivity"
             android:configChanges="orientation"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoTitleBar" >
+            android:theme="@style/AppTheme.NoTitleBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -51,8 +51,12 @@
                 android:resource="@xml/searchable" />
         </activity>
 
-        <activity android:name="com.desmond.squarecamera.CameraActivity" />
+        <activity android:name=".ui.adding.AddingAssetActivity"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar"/>
 
+        <activity android:name="com.desmond.squarecamera.CameraActivity" />
     </application>
 
 </manifest>

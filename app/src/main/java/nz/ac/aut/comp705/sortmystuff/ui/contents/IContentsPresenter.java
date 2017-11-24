@@ -5,6 +5,7 @@ import java.util.List;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.ui.IPresenter;
+import nz.ac.aut.comp705.sortmystuff.utils.AppStrings;
 
 /**
  * The Presenter interface for "Contents View" (a.k.a. Index Page) where the contained assets of the
@@ -23,7 +24,7 @@ public interface IContentsPresenter extends IPresenter {
     /**
      * Loads the contents (contained assets) of the current asset as in the specified interface mode.
      *
-     * @param mode the code of the mode, refer to {@link nz.ac.aut.comp705.sortmystuff.utils.AppCode}
+     * @param mode the code of the mode, refer to {@link AppStrings}
      */
     void loadCurrentContentsWithMode(int mode);
 

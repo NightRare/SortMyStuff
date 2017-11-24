@@ -10,7 +10,6 @@
     tools:context="nz.ac.aut.comp705.sortmystuff.ui.main.SwipeActivity"
     tools:openDrawer="start">
 
-
     <LinearLayout
         android:id="@+id/viewpager_organiser"
         android:layout_width="match_parent"
@@ -26,7 +25,7 @@
         <android.support.v7.widget.Toolbar
             android:id="@+id/main_toolbar"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="@dimen/appbar_height"
             android:background="?attr/colorPrimary"
             app:layout_scrollFlags="scroll|enterAlways"
             app:popupTheme="@style/AppTheme.PopupOverlay">

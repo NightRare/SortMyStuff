@@ -27,7 +27,7 @@ public class SearchPresenter implements ISearchPresenter{
      * When the corresponding mActivity is on created, this method will be invoked.
      */
     @Override
-    public void subscribe() {
+    public void start() {
         loadResult("");
     }
 

@@ -38,7 +38,7 @@ import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
 import nz.ac.aut.comp705.sortmystuff.ui.contents.ScrollChildSwipeRefreshLayout;
 import nz.ac.aut.comp705.sortmystuff.ui.main.SwipeActivity;
-import nz.ac.aut.comp705.sortmystuff.utils.AppCode;
+import nz.ac.aut.comp705.sortmystuff.utils.AppStrings;
 import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
 
 import static android.app.Activity.RESULT_OK;
@@ -72,7 +72,7 @@ public class DetailsFragment extends Fragment implements IDetailsView {
     @Override
     public void onResume() {
         super.onResume();
-        mPresenter.subscribe();
+        mPresenter.start();
     }
 
     @Override
@@ -125,7 +125,7 @@ public class DetailsFragment extends Fragment implements IDetailsView {
         if (resultCode != RESULT_OK) return;
 
         switch (requestCode) {
-            case AppCode.INTENT_TAKE_PHOTO:
+            case AppStrings.INTENT_TAKE_PHOTO:
                 Uri photoUri = data.getData();
                 try {
 
@@ -184,7 +184,7 @@ public class DetailsFragment extends Fragment implements IDetailsView {
 
     @Override
     public void showMessage(String message) {
-        Toast.makeText(mActivity, message, Toast.LENGTH_SHORT);
+        Toast.makeText(mActivity, message, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -225,7 +225,7 @@ public class DetailsFragment extends Fragment implements IDetailsView {
     private void launchCamera() {
         if (mPhotoToBeReplaced == null) return;
         Intent intent = new Intent(getContext(), CameraActivity.class);
-        startActivityForResult(intent, AppCode.INTENT_TAKE_PHOTO);
+        startActivityForResult(intent, AppStrings.INTENT_TAKE_PHOTO);
     }
 
     /**
@@ -269,7 +269,8 @@ public class DetailsFragment extends Fragment implements IDetailsView {
     private class DetailsViewListeners implements IDetailsView.ViewListeners {
         @Override
         public void onItemClick(View view, IDetail item) {
-            if (!item.getType().equals(DetailType.Text))
+            if (!item.getType().equals(DetailType.Text) &&
+                    !item.getType().equals(DetailType.Date))
                 return;
 
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(view.getContext());

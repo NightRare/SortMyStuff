@@ -50,11 +50,7 @@ public interface IContentsView extends IView<IContentsPresenter> {
      */
     void showDeleteDialog(boolean deletingCurrentAsset);
 
-    void showMessage(String message);
-
     void showLoadingContentsError(Throwable exception);
-
-    void setLoadingIndicator(boolean active);
 
     interface ViewListeners {
 

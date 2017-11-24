@@ -16,7 +16,7 @@ import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
 import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.ROOT_ASSET_ID;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.ROOT_ASSET_ID;
 
 /**
  * Represents an asset instance in the app.

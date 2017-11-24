@@ -13,7 +13,7 @@ public interface IPresenter {
     /**
      * When the corresponding activity is on created or on resume, this method will be invoked.
      */
-    void subscribe();
+    void start();
 
     /**
      * When the corresponding activity is on pause, this method will be invoked.

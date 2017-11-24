@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.adding.AddingAssetActivity"
+    android:orientation="vertical">
+
+    <android.support.design.widget.AppBarLayout
+        android:id="@+id/aa_appbar_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/aa_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/appbar_height"
+            android:background="?attr/colorPrimary"
+            app:layout_scrollFlags="scroll|enterAlways">
+
+        </android.support.v7.widget.Toolbar>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <include
+        android:id="@+id/aa_form_layout"
+        layout="@layout/adding_asset_form"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/aa_appbar_layout"
+        android:layout_above="@+id/aa_action_buttons_layout"/>
+
+    <LinearLayout
+        android:id="@id/aa_action_buttons_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/aa_cancel_button"
+            style="@style/action_button_style"
+            android:text="@string/cancel_button"
+            android:background="@color/light_grey"/>
+
+        <Button
+            android:id="@+id/aa_confirm_button"
+            style="@style/action_button_style"
+            android:text="@string/add_asset_confirm_button"
+            android:textColor="@color/white"
+            android:background="@color/colorAccent" />
+
+    </LinearLayout>
+</RelativeLayout>

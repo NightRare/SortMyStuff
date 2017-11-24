@@ -28,15 +28,7 @@ public interface IDetailsView extends IView<IDetailsPresenter> {
 
     void turnToCamera(IDetail<Bitmap> photo);
 
-    /**
-     * Shows message on screen
-     * @param message
-     */
-    void showMessage(String message);
-
     void showLoadingDetailsError(Throwable exception);
-
-    void setLoadingIndicator(boolean active);
 
     /**
      * Checks if the view is ready.

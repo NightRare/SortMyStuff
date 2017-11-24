@@ -11,8 +11,8 @@ import rx.Subscription;
 import rx.subscriptions.CompositeSubscription;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.CONTENTS_DEFAULT_MODE;
-import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.ROOT_ASSET_ID;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.CONTENTS_DEFAULT_MODE;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.ROOT_ASSET_ID;
 
 /**
  * The implementation class of {@link IContentsPresenter}.
@@ -40,7 +40,7 @@ public class ContentsPresenter implements IContentsPresenter {
     //region IContentsPresenter METHODS
 
     @Override
-    public void subscribe() {
+    public void start() {
         loadCurrentContents();
     }
 

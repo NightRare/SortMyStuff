@@ -35,12 +35,12 @@ import nz.ac.aut.comp705.sortmystuff.ui.contents.IContentsView;
 import nz.ac.aut.comp705.sortmystuff.ui.details.IDetailsView;
 import nz.ac.aut.comp705.sortmystuff.ui.login.LoginActivity;
 import nz.ac.aut.comp705.sortmystuff.ui.search.SearchActivity;
-import nz.ac.aut.comp705.sortmystuff.utils.AppConstraints;
 import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
 import nz.ac.aut.comp705.sortmystuff.utils.Log;
 import rx.functions.Action1;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.ROOT_ASSET_ID;
 
 public class SwipeActivity extends AppCompatActivity {
 
@@ -68,7 +68,7 @@ public class SwipeActivity extends AppCompatActivity {
         }
 
         // Load previously saved state, if available
-        String currentAssetId = AppConstraints.ROOT_ASSET_ID;
+        String currentAssetId = ROOT_ASSET_ID;
         if (savedInstanceState != null) {
             String intendedAssetId = savedInstanceState.getString(CURRENT_ASSET_ID);
             currentAssetId = intendedAssetId == null ? currentAssetId : intendedAssetId;
@@ -212,7 +212,7 @@ public class SwipeActivity extends AppCompatActivity {
 
     private void refreshDetails(String assetId) {
         mSwipeAdapter.getDetailsPresenter().setCurrentAsset(assetId);
-        mSwipeAdapter.getDetailsPresenter().subscribe();
+        mSwipeAdapter.getDetailsPresenter().start();
     }
 
     private void registerDrawerMenuListener(NavigationView navigationView) {

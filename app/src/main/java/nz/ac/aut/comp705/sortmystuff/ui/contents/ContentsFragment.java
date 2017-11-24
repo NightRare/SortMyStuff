@@ -2,6 +2,7 @@ package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -10,15 +11,12 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -30,13 +28,15 @@ import java.util.List;
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
+import nz.ac.aut.comp705.sortmystuff.ui.adding.AddingAssetActivity;
 import nz.ac.aut.comp705.sortmystuff.ui.main.SwipeActivity;
+import nz.ac.aut.comp705.sortmystuff.utils.AppStrings;
 import nz.ac.aut.comp705.sortmystuff.utils.Log;
 
-import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.CONTENTS_DEFAULT_MODE;
-import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.CONTENTS_MOVING_MODE;
-import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.CONTENTS_SELECTION_MODE;
-import static nz.ac.aut.comp705.sortmystuff.utils.AppCode.INTENT_ASSET_ID;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.CONTENTS_DEFAULT_MODE;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.CONTENTS_MOVING_MODE;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.CONTENTS_SELECTION_MODE;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.INTENT_ASSET_ID;
 
 public class ContentsFragment extends Fragment implements IContentsView {
 
@@ -102,16 +102,16 @@ public class ContentsFragment extends Fragment implements IContentsView {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        // subscribe the presenter
+        // start the presenter
         checkIntendedAsset();
-        mPresenter.subscribe();
+        mPresenter.start();
     }
 
     @Override
     public void onResume() {
         super.onResume();
         checkIntendedAsset();
-        mPresenter.subscribe();
+        mPresenter.start();
     }
 
     @Override
@@ -384,27 +384,32 @@ public class ContentsFragment extends Fragment implements IContentsView {
 
         @Override
         public void onAddAssetFabClick() {
-            AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-            builder.setTitle(R.string.add_asset_dialog_title);
 
-            View addAssetLayout = mActivity.getLayoutInflater().inflate(R.layout.contents_add_asset, null);
-            builder.setView(addAssetLayout);
+            Intent searchIntent = new Intent(getContext(), AddingAssetActivity.class);
+            searchIntent.putExtra(AppStrings.INTENT_CONTAINER_ID, mPresenter.getCurrentAssetId());
+            startActivity(searchIntent);
 
-            Spinner spinner = initCategorySpinner(addAssetLayout);
-
-            EditText input = (EditText) addAssetLayout.findViewById(R.id.asset_name_input);
-            input.setInputType(InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
-            input.setSingleLine();
-
-            builder.setPositiveButton(R.string.add_asset_confirm_button, (dialog, which) ->
-                    onAddAssetConfirmClick(input.getText().toString(), (CategoryType) spinner.getSelectedItem()));
-
-            builder.setNegativeButton(R.string.cancel_button, (dialog, id) -> dialog.cancel());
-
-            builder.show()
-                    // auto pop up the keyboard
-                    .getWindow()
-                    .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);;
+//            AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+//            builder.setTitle(R.string.add_asset_dialog_title);
+//
+//            View addAssetLayout = mActivity.getLayoutInflater().inflate(R.layout.contents_add_asset, null);
+//            builder.setView(addAssetLayout);
+//
+//            Spinner spinner = initCategorySpinner(addAssetLayout);
+//
+//            EditText input = (EditText) addAssetLayout.findViewById(R.id.asset_name_input);
+//            input.setInputType(InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+//            input.setSingleLine();
+//
+//            builder.setPositiveButton(R.string.add_asset_confirm_button, (dialog, which) ->
+//                    onAddAssetConfirmClick(input.getText().toString(), (CategoryType) spinner.getSelectedItem()));
+//
+//            builder.setNegativeButton(R.string.cancel_button, (dialog, id) -> dialog.cancel());
+//
+//            builder.show()
+//                    // auto pop up the keyboard
+//                    .getWindow()
+//                    .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
         }
 
         @Override

@@ -12,7 +12,7 @@ import rx.subscriptions.CompositeSubscription;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.ROOT_ASSET_ID;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.ROOT_ASSET_ID;
 
 public class DetailsPresenter implements IDetailsPresenter {
 
@@ -33,7 +33,7 @@ public class DetailsPresenter implements IDetailsPresenter {
      * {@inheritDoc}
      */
     @Override
-    public void subscribe() {
+    public void start() {
         loadDetails();
     }
 

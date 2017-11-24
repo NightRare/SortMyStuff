@@ -5,6 +5,7 @@ import android.os.SystemClock;
 import android.util.ArrayMap;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,7 +43,9 @@ import static nz.ac.aut.comp705.sortmystuff.data.models.FAsset.ASSET_CONTENTIDS;
 import static nz.ac.aut.comp705.sortmystuff.data.models.FAsset.ASSET_MODIFYTIMESTAMP;
 import static nz.ac.aut.comp705.sortmystuff.data.models.FAsset.ASSET_RECYCLED;
 import static nz.ac.aut.comp705.sortmystuff.data.models.FAsset.ASSET_THUMBNAIL;
-import static nz.ac.aut.comp705.sortmystuff.utils.AppConstraints.ROOT_ASSET_ID;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.ASSET_DEFAULT_NAME;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.ASSET_PLACEHOLDER_ID;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.ROOT_ASSET_ID;
 
 /**
  * Implementation class of IDataManager
@@ -58,6 +61,7 @@ public class DataManager implements IDataManager, IDebugHelper {
         mRemoteRepo = checkNotNull(remoteRepo);
         mResLoader = checkNotNull(resLoader);
         mSchedulerProvider = checkNotNull(schedulerProvider);
+
 
         synchronized (this) {
             mDirtyCachedAssets = true;
@@ -260,6 +264,41 @@ public class DataManager implements IDataManager, IDebugHelper {
         } else {
             List<FDetail> details = mCachedCategories.get(categoryType).generateDetails(asset.getId());
             createAssetProcess(asset, details);
+        }
+
+        return asset.getId();
+    }
+
+    @Override
+    public String createAsset(String name, String containerId, CategoryType categoryType, Bitmap photo, List<IDetail> details) {
+        checkNotNull(name);
+        checkNotNull(containerId);
+        checkNotNull(photo);
+        checkNotNull(details);
+        Preconditions.checkArgument(!name.replaceAll(" ", "").isEmpty(), "The name cannot be empty");
+        Preconditions.checkArgument(name.length() <= AppConstraints.ASSET_NAME_CAP, "The length of the name should be shorter than "
+                + AppConstraints.ASSET_NAME_CAP + " characters");
+
+        FAsset asset = FAsset.create(name, containerId, categoryType);
+
+        if (mDirtyCachedCategories) {
+            mRemoteRepo.retrieveCategories()
+                    .subscribeOn(mSchedulerProvider.io())
+                    .flatMap(Observable::from)
+                    .filter(category -> category.getName().equals(categoryType.toString()))
+                    .first()
+                    .map(category -> category.generateDetails(asset.getId()))
+                    .subscribe(
+                            //onNext
+                            fDetails -> {
+                                createAssetProcessNewDetails(fDetails, details, photo, asset);
+                                createAssetProcess(asset, fDetails);
+                            }
+                    );
+        } else {
+            List<FDetail> newDetails = mCachedCategories.get(categoryType).generateDetails(asset.getId());
+            createAssetProcessNewDetails(newDetails, details, photo, asset);
+            createAssetProcess(asset, newDetails);
         }
 
         return asset.getId();
@@ -476,6 +515,40 @@ public class DataManager implements IDataManager, IDebugHelper {
     //endregion
 
     //region OTHER METHODS
+
+    @Override
+    public Observable<String> getNewAssetName() {
+        return generateNewAssetName(ASSET_DEFAULT_NAME);
+
+    }
+
+    @Override
+    public Observable<String> getNewAssetName(Bitmap photo) {
+        // TODO: detect name based on photo
+
+        return getNewAssetName();
+    }
+
+    @Override
+    public Observable<List<IDetail>> getDetailsFromCategory(CategoryType categoryType) {
+        checkNotNull(categoryType);
+
+        if (mDirtyCachedCategories) {
+            return mRemoteRepo.retrieveCategories()
+                    .subscribeOn(mSchedulerProvider.io())
+                    .flatMap(Observable::from)
+                    .toMap(FCategory::getName)
+                    .map(categories -> categories.get(categoryType.toString())
+                            .generateDetails(ASSET_PLACEHOLDER_ID))
+                    .flatMap(Observable::from)
+                    .map(fDetail -> (IDetail) fDetail)
+                    .toSortedList();
+        }
+
+        return Observable.from(mCachedCategories.get(categoryType).generateDetails(ASSET_PLACEHOLDER_ID))
+                .map(fDetail -> (IDetail) fDetail)
+                .toSortedList();
+    }
 
     @Override
     public void reCacheFromRemoteDataSource() {
@@ -731,6 +804,36 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
 
         return outputObservable.map(containerId -> asset.getId());
+    }
+
+    private void createAssetProcessNewDetails(
+            List<FDetail> newDetails,
+            List<IDetail> sourceDetails,
+            Bitmap photo,
+            FAsset newAsset) {
+
+        Map<String, IDetail> sourceMap = Maps.uniqueIndex(sourceDetails, IDetail::getLabel);
+
+        for (FDetail nd : newDetails) {
+            if (nd.getLabel().equals(CategoryType.BasicDetail.PHOTO)) {
+                boolean isDefaultValue = photo.sameAs(mResLoader.getDefaultPhoto());
+                nd.setFieldData(
+                        isDefaultValue ? mResLoader.getDefaultPhotoDataString()
+                                : BitmapHelper.toString(photo),
+                        isDefaultValue);
+
+                if (!isDefaultValue) {
+                    newAsset.setThumbnail(BitmapHelper.toThumbnail(photo), false);
+                }
+            }
+            IDetail correspondingDetail = sourceMap.get(nd.getLabel());
+            if (correspondingDetail == null ||
+                    !nd.getType().getFieldClass().equals(String.class))
+                continue;
+
+            nd.setFieldData((String) correspondingDetail.getField(),
+                    correspondingDetail.isDefaultFieldValue());
+        }
     }
 
     private void createAssetProcess(FAsset asset, List<FDetail> details) {
@@ -1030,6 +1133,66 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
     }
 
+    private synchronized Observable<String> generateNewAssetName(String prefix) {
+        Observable<FAsset> assetStreams;
+
+        if (mDirtyCachedAssets || mCachedAssets == null) {
+            assetStreams = mRemoteRepo.retrieveAllAssets()
+                    .flatMap(Observable::from);
+        } else {
+            assetStreams = Observable.from(mCachedAssets.values());
+        }
+
+        return assetStreams
+                .map(FAsset::getName)
+                .filter(assetName -> assetName.contains(prefix))
+                .map(assetName -> getPostfixNum(assetName, prefix))
+                .filter(num -> num != -1)
+                .toSortedList()
+                .map(prefixes -> {
+                    Integer postfix = 0;
+                    for (Integer num : prefixes) {
+                        if (num.equals(postfix)) {
+                            postfix++;
+                        } else if (num > postfix) {
+                            break;
+                        }
+                    }
+                    return postfix;
+                })
+                .map(postfix -> prefix + " " + postfix);
+    }
+
+    /**
+     * Get the postfix of a name.
+     * For instance, names are like "New asset {num}", then "New asset" should be
+     * the prefix and {num} is the postfix. If there's no {num} then -1 will be returned.
+     * If name equals prefix, then 0 will be returned.
+     *
+     * @param name
+     * @param prefix
+     * @return
+     */
+    private int getPostfixNum(String name, String prefix) {
+        String trimmedName = name.trim();
+
+        if (trimmedName.equals(prefix))
+            return 0;
+
+        try {
+            String head = trimmedName.substring(0, prefix.length());
+            if (!head.equals(prefix))
+                return -1;
+
+            // prefix.length() + 1 for the following space
+            String tail = trimmedName.substring(prefix.length() + 1);
+
+            return Integer.parseInt(tail);
+        } catch (IndexOutOfBoundsException | NumberFormatException e) {
+            return -1;
+        }
+    }
+
     private void prepareDemoData() {
 
         long idlingMillis = 3000;
@@ -1120,6 +1283,37 @@ public class DataManager implements IDataManager, IDebugHelper {
                 .subscribe();
     }
 
+    private IDataRepository.OnUpdatedCallback mOnAssetUpdated = new IDataRepository.OnUpdatedCallback() {
+        @Override
+        public void onSuccess(Void aVoid) {
+        }
+
+        @Override
+        public void onFailure(Throwable e) {
+            cacheAssets();
+        }
+
+        @Override
+        public void onComplete() {
+        }
+    };
+
+    private IDataRepository.OnUpdatedCallback mOnDetailUpdated = new IDataRepository.OnUpdatedCallback() {
+        @Override
+        public void onSuccess(Void aVoid) {
+        }
+
+        @Override
+        public void onFailure(Throwable e) {
+            mDirtyCachedDetails = true;
+            initCachedDetails();
+        }
+
+        @Override
+        public void onComplete() {
+        }
+    };
+
     private IDataRepository mRemoteRepo;
     private ISchedulerProvider mSchedulerProvider;
     private LocalResourceLoader mResLoader;
@@ -1137,35 +1331,6 @@ public class DataManager implements IDataManager, IDebugHelper {
     private boolean mDirtyCachedAssets;
     private boolean mDirtyCachedDetails;
     private boolean mDirtyCachedCategories;
-    private IDataRepository.OnUpdatedCallback mOnAssetUpdated = new IDataRepository.OnUpdatedCallback() {
-        @Override
-        public void onSuccess(Void aVoid) {
-        }
-
-        @Override
-        public void onFailure(Throwable e) {
-            cacheAssets();
-        }
-
-        @Override
-        public void onComplete() {
-        }
-    };
-    private IDataRepository.OnUpdatedCallback mOnDetailUpdated = new IDataRepository.OnUpdatedCallback() {
-        @Override
-        public void onSuccess(Void aVoid) {
-        }
-
-        @Override
-        public void onFailure(Throwable e) {
-            mDirtyCachedDetails = true;
-            initCachedDetails();
-        }
-
-        @Override
-        public void onComplete() {
-        }
-    };
 
     //endregion
 }

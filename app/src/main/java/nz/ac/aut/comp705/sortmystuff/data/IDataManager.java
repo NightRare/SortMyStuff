@@ -1,5 +1,7 @@
 package nz.ac.aut.comp705.sortmystuff.data;
 
+import android.graphics.Bitmap;
+
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
@@ -133,6 +135,13 @@ public interface IDataManager {
      */
     String createAsset(String name, String containerId, CategoryType categoryType);
 
+    String createAsset(
+            String name,
+            String containerId,
+            CategoryType categoryType,
+            Bitmap photo,
+            List<IDetail> details);
+
     Observable<String> createAssetSafely(String name, String containerId, CategoryType categoryType);
 
     //endregion
@@ -203,6 +212,12 @@ public interface IDataManager {
     //endregion
 
     //region OTHER METHODS
+
+    Observable<String> getNewAssetName();
+
+    Observable<String> getNewAssetName(Bitmap photo);
+
+    Observable<List<IDetail>> getDetailsFromCategory(CategoryType category);
 
     /**
      * Re-cache the data from remote data source.

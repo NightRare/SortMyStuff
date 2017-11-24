@@ -6,9 +6,7 @@ public class AppConstraints {
     // ASSET
     //********************************************
 
-    public final static int ASSET_NAME_CAP = 40;
-
-    public final static String ROOT_ASSET_ID = "RootAssetId";
+    public final static int ASSET_NAME_CAP = 100;
 
     public final static int ASSET_THUMBNAIL_WIDTH = 150;
 
@@ -18,9 +16,9 @@ public class AppConstraints {
     // DETAIL
     //********************************************
 
-    public final static int CATEGORY_NAME_CAP = 40;
+    public final static int CATEGORY_NAME_CAP = 100;
 
-    public final static int DETAIL_LABEL_CAP = 40;
+    public final static int DETAIL_LABEL_CAP = 100;
 
     public final static int TEXTDETAIL_FIELD_CAP = 400;
 

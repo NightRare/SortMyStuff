@@ -20,7 +20,7 @@ import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.di.IFactory;
 import nz.ac.aut.comp705.sortmystuff.ui.main.SwipeActivity;
-import nz.ac.aut.comp705.sortmystuff.utils.AppCode;
+import nz.ac.aut.comp705.sortmystuff.utils.AppStrings;
 
 public class SearchActivity extends AppCompatActivity implements ISearchView {
 
@@ -41,7 +41,7 @@ public class SearchActivity extends AppCompatActivity implements ISearchView {
 
         IFactory factory = ((SortMyStuffApp) getApplication()).getFactory();
         mPresenter = new SearchPresenter(factory.getDataManager(), this, factory.getSchedulerProvider());
-        mPresenter.subscribe();
+        mPresenter.start();
     }
 
     @Override
@@ -62,7 +62,7 @@ public class SearchActivity extends AppCompatActivity implements ISearchView {
     @Override
     protected void onResume() {
         super.onResume();
-        mPresenter.subscribe();
+        mPresenter.start();
     }
 
 
@@ -92,7 +92,7 @@ public class SearchActivity extends AppCompatActivity implements ISearchView {
     public void turnToAssetPage(String assetId) {
         Intent goToAsset = new Intent(this, SwipeActivity.class);
         goToAsset.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        goToAsset.putExtra(AppCode.INTENT_ASSET_ID, assetId);
+        goToAsset.putExtra(AppStrings.INTENT_ASSET_ID, assetId);
         startActivity(goToAsset);
         finish();
     }

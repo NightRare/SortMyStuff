@@ -63,7 +63,7 @@
                 android:id="@+id/pathbar_pathview"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_toRightOf="@id/pathbar_root"
+                android:layout_toEndOf="@id/pathbar_root"
                 android:orientation="horizontal">
 
 

@@ -21,9 +21,5 @@ public interface ISearchView extends IView<ISearchPresenter> {
      */
     void turnToAssetPage(String assetId);
 
-    void showMessage(String message);
-
     void showSearchError(Throwable exception);
-
-    void setLoadingIndicator(boolean active);
 }
