@@ -62,11 +62,8 @@ public class AddingAssetActivity extends BaseActivity implements IAddingAssetVie
         mDetailsAdapter = new DetailListAdapter(this, new ArrayList<>(), mViewListeners);
         mCameraInitialLaunch = true;
 
-        String currentAssetId = ROOT_ASSET_ID;
-        if (savedInstanceState != null) {
-            String containerId = getIntent().getStringExtra(AppStrings.INTENT_CONTAINER_ID);
-            currentAssetId = containerId == null ? currentAssetId : containerId;
-        }
+        String containerId = getIntent().getStringExtra(AppStrings.INTENT_CONTAINER_ID);
+        String currentAssetId = containerId == null ? ROOT_ASSET_ID : containerId;
 
         mPhotoView = (ImageView) findViewById(R.id.aa_asset_photo);
         mPhotoView.setOnClickListener(v -> mViewListeners.onClickPhoto(v));
