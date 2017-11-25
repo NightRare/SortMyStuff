@@ -128,7 +128,7 @@ public class SearchActivityTest {
     @Test
     public void search_multipleResults() {
         search(TWO_RESULT_SEARCH_PREFIX);
-        //there should be two items in result list: Apple and Apricot
+        //there should be two items in resultRaw list: Apple and Apricot
 
         onView(withChild(withText(TWO_RESULT_SEARCH_ITEM_1))).check(matches(isDisplayed()));
         onView(withChild(withText(TWO_RESULT_SEARCH_ITEM_2))).check(matches(isDisplayed()));
@@ -137,7 +137,7 @@ public class SearchActivityTest {
     @Test
     public void search_noResult() {
         search(NO_RESULT_SEARCH_KEYWORD);
-        //No results shown, result list should be empty
+        //No results shown, resultRaw list should be empty
         onView(withId(R.id.result_list)).check(matches(withListSize(0)));
     }
 

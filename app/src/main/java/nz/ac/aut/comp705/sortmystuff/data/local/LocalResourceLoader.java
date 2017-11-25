@@ -5,12 +5,19 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,11 +45,13 @@ public class LocalResourceLoader {
     private static final String TAG_DEFAULT_TEXT = "TAG_DEFAULT_TEXT";
     private static final String TAG_CATEGORIES_JSON = "TAG_CATEGORIES_JSON";
     private static final String TAG_DEMO_PHOTOS = "TAG_DEMO_PHOTOS";
+    private static final String TAG_CLOUDSIGHT_APIKEY = "TAG_CLOUDSIGHT_APIKEY";
 
     public final static String IMAGE_DETAIL_FORMAT = ".jpg";
     public final static String DEFAULT_PHOTO_FILENAME = "default_square" + IMAGE_DETAIL_FORMAT;
     public final static String DEFAULT_PHOTO_PATH = "images" + File.separator + DEFAULT_PHOTO_FILENAME;
     public final static String CATEGORIES_FILE_NAME = "categories.json";
+    public final static String API_SERVICES_FILE_NAME = "api-services.json";
 
     public final static String DEMO_PHOTO_DIR = "images" + File.separator + "demo";
 
@@ -64,6 +73,7 @@ public class LocalResourceLoader {
      *
      * @return the categories definition json file.
      */
+    @Deprecated
     public String getCategoriesJson() {
         return (String) mResources.get(TAG_CATEGORIES_JSON);
     }
@@ -100,6 +110,10 @@ public class LocalResourceLoader {
         return m;
     }
 
+    public String getCloudSightApiKey() {
+        return (String) mResources.get(TAG_CLOUDSIGHT_APIKEY);
+    }
+
     /**
      * Reloads all the resources from the local.
      */
@@ -112,24 +126,48 @@ public class LocalResourceLoader {
     private void loadResources() {
         mResources = new HashMap<>();
         InputStream is = null;
+        Gson gson = new GsonBuilder().create();
+
         // default photo of assets
         try {
+            // prepare "api-services.json"
+            is = mAssetManager.open(API_SERVICES_FILE_NAME);
+            String jsonString = isToString(is);
+            JsonObject apiServices = gson.fromJson(jsonString, JsonElement.class).getAsJsonObject();
+            is.close();
+
             // default photo
             is = mAssetManager.open(DEFAULT_PHOTO_PATH);
             Bitmap defaultPhoto = BitmapFactory.decodeStream(is);
             mResources.put(TAG_DEFAULT_PHOTO, defaultPhoto);
             mResources.put(TAG_DEFAULT_PHOTO_DATASTRING, BitmapHelper.toString(defaultPhoto));
+            is.close();
 
+            // default thumbnail
             Bitmap thumbnail = BitmapHelper.toThumbnail(defaultPhoto);
             mResources.put(TAG_DEFAULT_THUMBNAIL, thumbnail);
             mResources.put(TAG_DEFAULT_THUMBNAIL_DATASTRING, BitmapHelper.toString(thumbnail));
 
+            // default text string
             mResources.put(TAG_DEFAULT_TEXT, "");
 
+            // categories file
             is = mAssetManager.open(CATEGORIES_FILE_NAME);
             mResources.put(TAG_CATEGORIES_JSON, IOUtils.toString(is, Charsets.UTF_8));
+            is.close();
 
+            // demo photos
             mResources.put(TAG_DEMO_PHOTOS, loadPhotosInDir(DEMO_PHOTO_DIR));
+
+            // CloudSight Api Key
+            String cloudSightKey = apiServices
+                    .get("cloud_sight")
+                    .getAsJsonObject()
+                    .get("api_key")
+                    .getAsString();
+
+            mResources.put(TAG_CLOUDSIGHT_APIKEY, cloudSightKey);
+
         } catch (IOException e) {
             Log.e(Log.ASSETMANAGER_READ_FAILED, "Load application assets failed", e);
         } finally {
@@ -164,6 +202,20 @@ public class LocalResourceLoader {
             }
         }
         return dict;
+    }
+
+    private String isToString(InputStream is) {
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        StringBuilder total = new StringBuilder();
+        String line;
+        try {
+            while ((line = br.readLine()) != null) {
+                total.append(line).append('\n');
+            }
+        } catch (IOException e) {
+            return null;
+        }
+        return total.toString();
     }
 
     private Map<String, Object> mResources;

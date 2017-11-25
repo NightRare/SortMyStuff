@@ -6,6 +6,8 @@ import nz.ac.aut.comp705.sortmystuff.data.DataManager;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.IDataRepository;
 import nz.ac.aut.comp705.sortmystuff.data.remote.FirebaseHelper;
+import nz.ac.aut.comp705.sortmystuff.data.remote.IImageDetectionHelper;
+import nz.ac.aut.comp705.sortmystuff.data.remote.ImageDetectionHelper;
 import nz.ac.aut.comp705.sortmystuff.di.qualifiers.ImmediateScheduler;
 import nz.ac.aut.comp705.sortmystuff.di.qualifiers.RegularScheduler;
 import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
@@ -28,4 +30,7 @@ public abstract class FactoryBindingModule {
 
     @Binds
     public abstract IDataManager bindDataManager(DataManager dataManager);
+
+    @Binds
+    public abstract IImageDetectionHelper bindImageDetectionHelper(ImageDetectionHelper imageDetectionHelper);
 }

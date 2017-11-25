@@ -32,7 +32,8 @@
             android:layout_marginTop="10dp"
             android:hint="@string/add_asset_name_hint"
             android:minHeight="50dp"
-            android:selectAllOnFocus="true" />
+            android:selectAllOnFocus="true"
+            android:singleLine="true"/>
 
         <Spinner
             android:id="@+id/aa_category_spinner"

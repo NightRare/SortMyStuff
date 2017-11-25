@@ -41,7 +41,6 @@ public class AddingAssetPresenter implements IAddingAssetPresenter {
         mView.showAssetName("");
         mView.showSpinner();
 
-        Subscription subscription;
         mSubscriptions.clear();
         mSubscriptions.add(
                 mDataManager.getDetailsFromCategory(CategoryType.Miscellaneous)
@@ -49,20 +48,33 @@ public class AddingAssetPresenter implements IAddingAssetPresenter {
                         .observeOn(mSchedulerProvider.ui())
                         .subscribe(details -> mView.showDetails(details)));
 
-        if (!defaultPhoto) {
+        updateAssetName(photo);
+    }
+
+    @Override
+    public void updateAssetName(@Nullable Bitmap photo) {
+        Subscription subscription;
+
+        if (photo != null) {
             subscription = mDataManager.getNewAssetName(photo)
-                    .subscribeOn(mSchedulerProvider.computation())
+                    .subscribeOn(mSchedulerProvider.newThread())
                     .observeOn(mSchedulerProvider.ui())
                     .subscribe(
                             //onNext
-                            newName -> mView.showAssetName(newName),
+                            newName -> {
+                                if (newName == null) {
+                                    mView.showMessage("Name detection failed.");
+                                } else {
+                                    mView.showAssetName(newName);
+                                }
+                            },
                             //onError
                             throwable -> {
                             } //do nothing
                     );
         } else {
             subscription = mDataManager.getNewAssetName()
-                    .subscribeOn(mSchedulerProvider.computation())
+                    .subscribeOn(mSchedulerProvider.newThread())
                     .observeOn(mSchedulerProvider.ui())
                     .subscribe(
                             //onNext
@@ -79,7 +91,6 @@ public class AddingAssetPresenter implements IAddingAssetPresenter {
 
     @Override
     public void selectCategory(CategoryType category) {
-        mSubscriptions.clear();
         mSubscriptions.add(
                 mDataManager.getDetailsFromCategory(category)
                         .subscribeOn(mSchedulerProvider.io())

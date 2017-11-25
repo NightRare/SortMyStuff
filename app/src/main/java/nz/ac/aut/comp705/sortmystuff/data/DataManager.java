@@ -18,15 +18,16 @@ import java.util.WeakHashMap;
 
 import javax.inject.Inject;
 
+import nz.ac.aut.comp705.sortmystuff.Features;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.FAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.FCategory;
 import nz.ac.aut.comp705.sortmystuff.data.models.FDetail;
-import nz.ac.aut.comp705.sortmystuff.Features;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
+import nz.ac.aut.comp705.sortmystuff.data.remote.IImageDetectionHelper;
 import nz.ac.aut.comp705.sortmystuff.di.qualifiers.RegularScheduler;
 import nz.ac.aut.comp705.sortmystuff.utils.AppConfigs;
 import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
@@ -61,11 +62,13 @@ public class DataManager implements IDataManager, IDebugHelper {
             IDataRepository remoteRepo,
             LocalResourceLoader resLoader,
             @RegularScheduler ISchedulerProvider schedulerProvider,
-            Features featToggle) {
+            Features featToggle,
+            IImageDetectionHelper imageDetectionHelper) {
         mRemoteRepo = checkNotNull(remoteRepo);
         mResLoader = checkNotNull(resLoader);
         mSchedulerProvider = checkNotNull(schedulerProvider);
         mFeatToggle = checkNotNull(featToggle);
+        mImageDetectionHelper = checkNotNull(imageDetectionHelper);
 
         synchronized (this) {
             mDirtyCachedAssets = true;
@@ -528,9 +531,17 @@ public class DataManager implements IDataManager, IDebugHelper {
 
     @Override
     public Observable<String> getNewAssetName(Bitmap photo) {
-        if(mFeatToggle.PhotoDetection) {
-            // TODO: detect name based on photo
-            return getNewAssetName();
+        if(mFeatToggle.PhotoDetection && !mResLoader.getDefaultPhoto().sameAs(photo)) {
+            return mImageDetectionHelper
+                    .result(BitmapHelper.toCloudSightString(photo))
+                    .map(result -> result == null ? null : result.name())
+                    .map(name -> {
+                        if(name == null) return null;
+                        if(name.length() > AppConfigs.ASSET_NAME_CAP) {
+                            return name.substring(0, AppConfigs.ASSET_NAME_CAP);
+                        }
+                        return name;
+                    });
         }else {
             return getNewAssetName();
         }
@@ -1337,6 +1348,7 @@ public class DataManager implements IDataManager, IDebugHelper {
 
     private IDataRepository mRemoteRepo;
     private ISchedulerProvider mSchedulerProvider;
+    private IImageDetectionHelper mImageDetectionHelper;
     private LocalResourceLoader mResLoader;
     private Features mFeatToggle;
 

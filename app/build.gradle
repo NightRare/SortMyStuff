@@ -56,6 +56,12 @@ dependencies {
     // if you use the support libraries
     annotationProcessor "com.google.dagger:dagger-android-processor:$daggerVersion"
     provided 'org.glassfish:javax.annotation:10.0-b28'
+    // volley
+    compile 'com.android.volley:volley:1.0.0'
+    // retrofit
+    compile 'com.squareup.retrofit2:retrofit:2.1.0'
+    compile 'com.squareup.retrofit2:converter-gson:2.1.0'
+
     // Testing
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'

@@ -13,6 +13,8 @@ public interface IAddingAssetPresenter extends IPresenter{
 
     void addingAsset(@Nullable Bitmap photo);
 
+    void updateAssetName(@Nullable Bitmap photo);
+
     void selectCategory(CategoryType category);
 
     void createAsset(

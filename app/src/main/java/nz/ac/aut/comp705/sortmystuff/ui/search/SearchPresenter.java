@@ -37,7 +37,7 @@ public class SearchPresenter implements ISearchPresenter{
     }
 
     /**
-     * Load the result of the query into the mActivity
+     * Load the resultRaw of the query into the mActivity
      * @param query
      */
     @Override

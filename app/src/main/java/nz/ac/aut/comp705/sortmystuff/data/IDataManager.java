@@ -90,10 +90,10 @@ public interface IDataManager extends ISortMyStuffAppComponent{
      * For example, let the structure be Root -> A -> B -> C -> D,
      * if query the parent Assets of D the items in list would be
      * [Root, A, B, C].
-     * If rootToChildren is false, then the result will be [C, B, A, Root]
+     * If rootToChildren is false, then the resultRaw will be [C, B, A, Root]
      *
      * @param assetId        the id of the asset whose parent assets are queried
-     * @param rootToChildren true if the result of the order is root to children
+     * @param rootToChildren true if the resultRaw of the order is root to children
      * @return the Observable emitting one list of Assets; or which emits {@code null} if the
      * assetId cannot be found
      * @throws NullPointerException if assetId is {@code null}

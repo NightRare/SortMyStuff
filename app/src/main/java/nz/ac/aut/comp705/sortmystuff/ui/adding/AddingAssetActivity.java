@@ -126,6 +126,7 @@ public class AddingAssetActivity extends BaseActivity implements IAddingAssetVie
                         mCameraInitialLaunch = false;
                         mPresenter.addingAsset(image);
                     } else if (image != null) {
+                        mPresenter.updateAssetName(image);
                         mPhoto = image;
                         mPhotoView.setImageBitmap(image);
                     }

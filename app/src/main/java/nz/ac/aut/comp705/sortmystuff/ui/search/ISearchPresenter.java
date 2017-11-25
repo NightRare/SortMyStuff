@@ -5,7 +5,7 @@ import nz.ac.aut.comp705.sortmystuff.ui.IPresenter;
 public interface ISearchPresenter extends IPresenter {
 
     /**
-     * Load the result of the query into the activity
+     * Load the resultRaw of the query into the activity
      * @param query the query
      */
     void loadResult(String query);

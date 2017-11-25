@@ -24,6 +24,7 @@ public class BitmapHelper {
 
     public static final Bitmap.CompressFormat compressFormat = Bitmap.CompressFormat.JPEG;
     public static final int compressQuality = 100;
+    public static final String IMAGE_FORMAT = "jpeg";
     public static final String IMAGE_EXTENSION = ".jpg";
     public static int ENCODE_FLAG = Base64.DEFAULT;
 
@@ -32,6 +33,12 @@ public class BitmapHelper {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(compressFormat, compressQuality, baos);
         return baos.toByteArray();
+    }
+
+    public static String toCloudSightString(Bitmap bitmap) {
+        Bitmap image = Bitmap.createScaledBitmap(checkNotNull(bitmap),
+                300, 300, false);
+        return Base64.encodeToString(toByteArray(image), Base64.NO_WRAP);
     }
 
     public static byte[] toByteArray(String string) {
