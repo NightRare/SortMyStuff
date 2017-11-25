@@ -59,6 +59,11 @@
             android:theme="@style/AppTheme.NoActionBar"/>
 
         <activity android:name="com.desmond.squarecamera.CameraActivity" />
+
+        <service android:name=".services.NameDetectionService"
+            android:exported="false"
+            android:enabled="true"/>
+
     </application>
 
 </manifest>

@@ -33,12 +33,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import nz.ac.aut.comp705.sortmystuff.Features;
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
 import nz.ac.aut.comp705.sortmystuff.di.IFactory;
+import nz.ac.aut.comp705.sortmystuff.services.NameDetectionService;
 import nz.ac.aut.comp705.sortmystuff.ui.BaseActivity;
 import nz.ac.aut.comp705.sortmystuff.utils.AppStrings;
 import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
@@ -94,12 +96,15 @@ public class AddingAssetActivity extends BaseActivity implements IAddingAssetVie
         cancelBtn.setOnClickListener(v -> goBack());
 
         IFactory factory = ((SortMyStuffApp) getApplication()).getFactory();
+        mFeatToggle = factory.getFeatureToggle();
+
         mPresenter = new AddingAssetPresenter(
                 factory.getDataManager(),
                 this,
                 factory.getSchedulerProvider(),
                 factory.getLocalResourceLoader(),
-                currentAssetId);
+                currentAssetId,
+                mFeatToggle);
 
         mPresenter.start();
     }
@@ -149,8 +154,7 @@ public class AddingAssetActivity extends BaseActivity implements IAddingAssetVie
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId())
-        {
+        switch (item.getItemId()) {
             case android.R.id.home:
                 goBack();
         }
@@ -203,6 +207,15 @@ public class AddingAssetActivity extends BaseActivity implements IAddingAssetVie
 
     @Override
     public void goBack() {
+        String assetCreated = mPresenter.getCreatedAssetId();
+        if (assetCreated != null &&
+                mFeatToggle.PhotoDetection &&
+                mFeatToggle.DelayPhotoDetection) {
+            Intent detectName = new Intent(this, NameDetectionService.class);
+            detectName.putExtra(AppStrings.INTENT_NAME_DETECTION_ASSET_ID, assetCreated);
+            startService(detectName);
+        }
+
         this.finish();
     }
 
@@ -409,6 +422,8 @@ public class AddingAssetActivity extends BaseActivity implements IAddingAssetVie
     private static final int REQUEST_CAMERA_PERMISSION = 1;
 
     private IAddingAssetPresenter mPresenter;
+    private Features mFeatToggle;
+
     private AddingAssetViewListener mViewListeners = new AddingAssetViewListener();
     private boolean mCameraInitialLaunch;
 

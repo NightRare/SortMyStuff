@@ -1,6 +1,7 @@
 package nz.ac.aut.comp705.sortmystuff;
 
 import android.app.Application;
+import android.content.Intent;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.firebase.auth.FirebaseUser;
@@ -9,13 +10,16 @@ import com.squareup.leakcanary.LeakCanary;
 
 import nz.ac.aut.comp705.sortmystuff.di.Factory;
 import nz.ac.aut.comp705.sortmystuff.di.IFactory;
+import nz.ac.aut.comp705.sortmystuff.services.NameDetectionService;
 
 public class SortMyStuffApp extends Application {
 
     private IFactory factory;
+    private Features featureToggle;
 
     private final String[] enabledFeatures = new String[] {
-            "PhotoDetection"
+            "PhotoDetection",
+            "DelayPhotoDetection"
     };
 
     @Override
@@ -26,6 +30,8 @@ public class SortMyStuffApp extends Application {
 
         // enable local data persistent to deal with offline situation
         FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+
+        featureToggle = Features.make(enabledFeatures);
     }
 
     public IFactory getFactory() {
@@ -34,7 +40,8 @@ public class SortMyStuffApp extends Application {
 
     public void initialiseFactory(FirebaseUser user) {
         if (factory == null) {
-            factory = new Factory(this, user, Features.make(enabledFeatures));
+            factory = new Factory(this, user, featureToggle);
+//            initialiseNameDetectionService();
         } else {
             factory.setUser(user);
         }
@@ -42,9 +49,16 @@ public class SortMyStuffApp extends Application {
 
     public void initialiseFactory(FirebaseUser user, GoogleApiClient googleApiClient) {
         if (factory == null) {
-            factory = new Factory(this, user, googleApiClient, Features.make(enabledFeatures));
+            factory = new Factory(this, user, googleApiClient, featureToggle);
+//            initialiseNameDetectionService();
         } else {
             factory.setUser(user, googleApiClient);
+        }
+    }
+
+    private void initialiseNameDetectionService() {
+        if(featureToggle.PhotoDetection && featureToggle.DelayPhotoDetection) {
+            startService(new Intent(this, NameDetectionService.class));
         }
     }
 

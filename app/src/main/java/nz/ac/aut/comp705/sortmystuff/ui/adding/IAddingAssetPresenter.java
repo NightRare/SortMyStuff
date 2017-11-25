@@ -23,5 +23,8 @@ public interface IAddingAssetPresenter extends IPresenter{
             Bitmap photo,
             List<IDetail> details);
 
+    @Nullable
+    String getCreatedAssetId();
+
     void resetPhoto();
 }

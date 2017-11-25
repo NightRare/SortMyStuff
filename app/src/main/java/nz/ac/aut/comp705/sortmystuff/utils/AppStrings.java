@@ -18,6 +18,8 @@ public class AppStrings {
 
     public static final String INTENT_CONTAINER_ID = "INTENT_CONTAINER_ID";
 
+    public static final String INTENT_NAME_DETECTION_ASSET_ID = "INTENT_NAME_DETECTION_ASSET_ID";
+
 
     public static final int CONTENTS_DEFAULT_MODE = 1001;
 

@@ -5,6 +5,7 @@ import android.support.annotation.Nullable;
 
 import java.util.List;
 
+import nz.ac.aut.comp705.sortmystuff.Features;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
@@ -17,17 +18,20 @@ import static dagger.internal.Preconditions.checkNotNull;
 
 public class AddingAssetPresenter implements IAddingAssetPresenter {
 
+
     public AddingAssetPresenter(
             IDataManager dataManager,
             IAddingAssetView view,
             ISchedulerProvider schedulerProvider,
             LocalResourceLoader localResourceLoader,
-            String containerId) {
+            String containerId,
+            Features featToggle) {
         mDataManager = checkNotNull(dataManager);
         mView = checkNotNull(view);
         mSchedulerProvider = checkNotNull(schedulerProvider);
         mResLoader = checkNotNull(localResourceLoader);
         mContainerId = checkNotNull(containerId);
+        mFeatToggle = checkNotNull(featToggle);
 
         mSubscriptions = new CompositeSubscription();
         mView.setPresenter(this);
@@ -35,8 +39,8 @@ public class AddingAssetPresenter implements IAddingAssetPresenter {
 
     @Override
     public void addingAsset(@Nullable Bitmap photo) {
-        boolean defaultPhoto = photo == null;
-        Bitmap image = defaultPhoto ? mResLoader.getDefaultPhoto() : photo;
+        mNewlyCreatedAssetId = null;
+        Bitmap image = photo == null ? mResLoader.getDefaultPhoto() : photo;
         mView.showAssetPhoto(image);
         mView.showAssetName("");
         mView.showSpinner();
@@ -55,7 +59,9 @@ public class AddingAssetPresenter implements IAddingAssetPresenter {
     public void updateAssetName(@Nullable Bitmap photo) {
         Subscription subscription;
 
-        if (photo != null) {
+        if (photo != null &&
+                mFeatToggle.PhotoDetection &&
+                !mFeatToggle.DelayPhotoDetection) {
             subscription = mDataManager.getNewAssetName(photo)
                     .subscribeOn(mSchedulerProvider.newThread())
                     .observeOn(mSchedulerProvider.ui())
@@ -104,8 +110,13 @@ public class AddingAssetPresenter implements IAddingAssetPresenter {
             CategoryType category,
             Bitmap photo,
             List<IDetail> details) {
-        mDataManager.createAsset(name, mContainerId, category, photo, details);
+        mNewlyCreatedAssetId = mDataManager.createAsset(name, mContainerId, category, photo, details);
         mView.goBack();
+    }
+
+    @Override
+    public String getCreatedAssetId() {
+        return mNewlyCreatedAssetId;
     }
 
     @Override
@@ -131,6 +142,10 @@ public class AddingAssetPresenter implements IAddingAssetPresenter {
     private ISchedulerProvider mSchedulerProvider;
     private CompositeSubscription mSubscriptions;
     private String mContainerId;
+    private Features mFeatToggle;
+
+    @Nullable
+    private String mNewlyCreatedAssetId;
 
     //endregion
 }

@@ -11,13 +11,16 @@ import java.util.Map;
 public class Features {
 
     public final boolean PhotoDetection;
+    public final boolean DelayPhotoDetection;
 
     public Features() {
         PhotoDetection = false;
+        DelayPhotoDetection = false;
     }
 
     private Features(Map<String, Boolean> fields) {
         PhotoDetection = fields.get("PhotoDetection");
+        DelayPhotoDetection = fields.get("DelayPhotoDetection");
     }
 
     public static Features make(String... enabledFeatures) {

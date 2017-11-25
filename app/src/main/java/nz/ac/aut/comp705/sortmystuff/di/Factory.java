@@ -8,11 +8,11 @@ import com.google.firebase.auth.FirebaseUser;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import nz.ac.aut.comp705.sortmystuff.Features;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.IDataRepository;
 import nz.ac.aut.comp705.sortmystuff.data.IDebugHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
-import nz.ac.aut.comp705.sortmystuff.Features;
 import nz.ac.aut.comp705.sortmystuff.di.qualifiers.ImmediateScheduler;
 import nz.ac.aut.comp705.sortmystuff.di.qualifiers.RegularScheduler;
 import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
@@ -25,7 +25,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Yuan
  */
 
-public class Factory implements IFactory {
+public class Factory implements IFactory{
 
     public Factory(
             Application app,
@@ -124,6 +124,17 @@ public class Factory implements IFactory {
     @Override
     public GoogleApiClient getGoogleApiClient() {
         return mGoogleApiClient;
+    }
+
+    @Override
+    public void setFeatureToggle(Features featureToggle) {
+        mFeatToggle = checkNotNull(featureToggle);
+        mDataManager.setFeatureToggle(featureToggle);
+    }
+
+    @Override
+    public Features getFeatureToggle() {
+        return mFeatToggle;
     }
 
     //region INJECTION

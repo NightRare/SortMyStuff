@@ -93,7 +93,7 @@ public class ImageDetectionHelper implements IImageDetectionHelper {
                     imageData)
                     .enqueue(callback);
 
-        }, Emitter.BackpressureMode.LATEST)
+        }, Emitter.BackpressureMode.BUFFER)
                 .map(cloudSightResult -> (ICloudSightResult) cloudSightResult);
     }
 
@@ -116,7 +116,6 @@ public class ImageDetectionHelper implements IImageDetectionHelper {
             return;
         }
 
-        long delayMillis = maxTry == MAX_TRY ? 5000 : 3000;
         new Handler().postDelayed(() -> {
             mClient.getResult(result.token, mAuthValue)
                     .enqueue(new Callback<CloudSightResult>() {
@@ -130,7 +129,9 @@ public class ImageDetectionHelper implements IImageDetectionHelper {
                             callback.onFailure(call, t);
                         }
                     });
-        }, delayMillis);
+            // cloud sight only allows a max request rate of 20/min
+            // so 3000 ms is the most frequent request rate for 1 api key
+        }, 3000);
     }
 
     private CloudSightClient mClient;

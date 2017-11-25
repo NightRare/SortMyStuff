@@ -4,5 +4,5 @@ public interface ISortMyStuffAppComponent {
 
     void setFeatureToggle(Features featureToggle);
 
-    Features getFeatureToggle(Features featureToggle);
+    Features getFeatureToggle();
 }

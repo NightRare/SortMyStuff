@@ -20,7 +20,7 @@ import rx.Observable;
  * @author Yuan
  */
 
-public interface IDataManager extends ISortMyStuffAppComponent{
+public interface IDataManager extends ISortMyStuffAppComponent {
 
     //region READ DATA METHODS
 
@@ -59,6 +59,8 @@ public interface IDataManager extends ISortMyStuffAppComponent{
      * @throws NullPointerException if any argument is {@code null}
      */
     Observable<List<IDetail>> getDetails(String assetId);
+
+    Observable<IDetail<Bitmap>> getPhotoDetail(String assetId);
 
     /**
      * Get an asset according to the id.
@@ -107,7 +109,7 @@ public interface IDataManager extends ISortMyStuffAppComponent{
     /**
      * Create an asset as a content of the given container.
      * The default details of the asset are generated according to "Miscellaneous" category.
-     *
+     * <p>
      * It will only create the asset only if the containerId exists and the container is not recycled,
      * otherwise nothing will be performed.
      *
@@ -122,7 +124,7 @@ public interface IDataManager extends ISortMyStuffAppComponent{
     /**
      * Create an asset as a content of the given container.
      * The default details of the asset are generated according to the given category.
-     *
+     * <p>
      * It will only create the asset only if the containerId exists and the container is not recycled,
      * otherwise nothing will be performed.
      *
@@ -144,6 +146,13 @@ public interface IDataManager extends ISortMyStuffAppComponent{
             List<IDetail> details);
 
     Observable<String> createAssetSafely(String name, String containerId, CategoryType categoryType);
+
+    Observable<String> createAssetSafely(
+            String name,
+            String containerId,
+            CategoryType categoryType,
+            Bitmap photo,
+            List<IDetail> details);
 
     //endregion
 

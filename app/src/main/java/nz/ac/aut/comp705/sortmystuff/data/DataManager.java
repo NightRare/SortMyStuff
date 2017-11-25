@@ -142,10 +142,9 @@ public class DataManager implements IDataManager, IDebugHelper {
 
     @Override
     public Observable<List<IDetail>> getDetails(String assetId) {
-        checkNotNull(assetId);
 
         // if get the Details of the Root asset, always return empty list
-        if (assetId.equals(ROOT_ASSET_ID)) {
+        if (checkNotNull(assetId).equals(ROOT_ASSET_ID)) {
             return Observable.just(new ArrayList<>());
         }
 
@@ -157,6 +156,25 @@ public class DataManager implements IDataManager, IDebugHelper {
                 })
                 .map(detail -> (IDetail) detail)
                 .toList()
+                .onErrorReturn(throwable -> null);
+    }
+
+    @Override
+    public Observable<IDetail<Bitmap>> getPhotoDetail(String assetId) {
+        if (checkNotNull(assetId).equals(ROOT_ASSET_ID)) {
+            return Observable.just(null);
+        }
+
+        return loadAndCacheDetails(assetId)
+                .flatMap(details -> {
+                    if (details == null)
+                        throw new NoSuchElementException();
+                    return Observable.from(details);
+                })
+                .filter(detail -> detail.getLabel().equals(CategoryType.BasicDetail.PHOTO) &&
+                        detail.getType().equals(DetailType.Image))
+                .first()
+                .map(detail -> (IDetail<Bitmap>) detail)
                 .onErrorReturn(throwable -> null);
     }
 
@@ -332,6 +350,39 @@ public class DataManager implements IDataManager, IDebugHelper {
         } else {
             List<FDetail> details = mCachedCategories.get(categoryType).generateDetails(asset.getId());
             return createAssetProcessSafely(asset, details);
+        }
+    }
+
+    @Override
+    public Observable<String> createAssetSafely(String name, String containerId, CategoryType categoryType, Bitmap photo, List<IDetail> details) {
+        checkNotNull(name);
+        checkNotNull(containerId);
+        checkNotNull(photo);
+        checkNotNull(details);
+        Preconditions.checkArgument(!name.replaceAll(" ", "").isEmpty(), "The name cannot be empty");
+        Preconditions.checkArgument(name.length() <= AppConfigs.ASSET_NAME_CAP, "The length of the name should be shorter than "
+                + AppConfigs.ASSET_NAME_CAP + " characters");
+
+        FAsset asset = FAsset.create(name, containerId, categoryType);
+
+        if (mDirtyCachedCategories) {
+            return mRemoteRepo.retrieveCategories()
+                    .subscribeOn(mSchedulerProvider.io())
+                    .flatMap(Observable::from)
+                    .filter(category -> category.getName().equals(categoryType.toString()))
+                    .first()
+                    .map(category -> category.generateDetails(asset.getId()))
+                    .flatMap(
+                            //onNext
+                            fDetails -> {
+                                createAssetProcessNewDetails(fDetails, details, photo, asset);
+                                return createAssetProcessSafely(asset, fDetails);
+                            }
+                    );
+        } else {
+            List<FDetail> newDetails = mCachedCategories.get(categoryType).generateDetails(asset.getId());
+            createAssetProcessNewDetails(newDetails, details, photo, asset);
+            return createAssetProcessSafely(asset, newDetails);
         }
     }
 
@@ -531,18 +582,18 @@ public class DataManager implements IDataManager, IDebugHelper {
 
     @Override
     public Observable<String> getNewAssetName(Bitmap photo) {
-        if(mFeatToggle.PhotoDetection && !mResLoader.getDefaultPhoto().sameAs(photo)) {
+        if (mFeatToggle.PhotoDetection && !mResLoader.getDefaultPhoto().sameAs(photo)) {
             return mImageDetectionHelper
                     .result(BitmapHelper.toCloudSightString(photo))
                     .map(result -> result == null ? null : result.name())
                     .map(name -> {
-                        if(name == null) return null;
-                        if(name.length() > AppConfigs.ASSET_NAME_CAP) {
+                        if (name == null) return null;
+                        if (name.length() > AppConfigs.ASSET_NAME_CAP) {
                             return name.substring(0, AppConfigs.ASSET_NAME_CAP);
                         }
                         return name;
                     });
-        }else {
+        } else {
             return getNewAssetName();
         }
     }
@@ -594,7 +645,7 @@ public class DataManager implements IDataManager, IDebugHelper {
     }
 
     @Override
-    public Features getFeatureToggle(Features featureToggle) {
+    public Features getFeatureToggle() {
         return mFeatToggle;
     }
 
@@ -670,19 +721,25 @@ public class DataManager implements IDataManager, IDebugHelper {
             return Observable.just(mCachedDetails.get(assetId));
         }
 
-        // Releases one cache from the cachedDetails map if the size of the cache is bigger than the limit.
-        // The cache algorithm now is LRU (Latest Recently Used).
-        if (mCachedDetails.size() >= AppConfigs.CACHED_DETAILS_LIST_NUM) {
-            mCachedDetails.remove(mCachedDetailsKeyList.get(0));
-        }
-
         return mRemoteRepo.retrieveDetails(assetId)
                 .doOnNext(details -> {
                     if (details != null) {
-                        mCachedDetails.put(assetId, details);
-                        mCachedDetailsKeyList.add(assetId);
+                        addToCachedDetails(assetId, details);
                     }
                 });
+    }
+
+    private void addToCachedDetails(String assetId, List<FDetail> details) {
+
+        // Releases one cache from the cachedDetails map if the size of the cache is bigger than the limit.
+        // The cache algorithm now is LRU (Latest Recently Used).
+        if (mCachedDetails.size() >= AppConfigs.CACHED_DETAILS_LIST_NUM
+                && mCachedDetailsKeyList.size() > 0) {
+            mCachedDetails.remove(mCachedDetailsKeyList.remove(0));
+        }
+
+        mCachedDetails.put(assetId, details);
+        mCachedDetailsKeyList.add(assetId);
     }
 
     private FAsset createRootAsset() {
@@ -882,6 +939,7 @@ public class DataManager implements IDataManager, IDebugHelper {
 
             container.addContentId(asset.getId());
             mCachedAssets.put(asset.getId(), asset);
+            addToCachedDetails(asset.getId(), details);
 
             if (!executedFromLog)
                 mRemoteRepo.addOrUpdateAsset(container, mOnAssetUpdated);
