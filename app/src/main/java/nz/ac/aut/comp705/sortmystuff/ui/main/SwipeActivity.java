@@ -46,7 +46,6 @@ import nz.ac.aut.comp705.sortmystuff.ui.contents.IContentsView;
 import nz.ac.aut.comp705.sortmystuff.ui.details.IDetailsView;
 import nz.ac.aut.comp705.sortmystuff.ui.login.LoginActivity;
 import nz.ac.aut.comp705.sortmystuff.ui.search.SearchActivity;
-import nz.ac.aut.comp705.sortmystuff.utils.AppStrings;
 import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
 import nz.ac.aut.comp705.sortmystuff.utils.Log;
 import rx.functions.Action1;
@@ -80,7 +79,7 @@ public class SwipeActivity extends BaseActivity {
         Menu menu = navigationView.getMenu();
         mPRServiceItem = menu.findItem(R.id.nav_drawer_menu_prservice);
 
-        setPhotoRecognitionServiceStatus(PRSStatus.Disabled);
+        setPhotoRecognitionServiceStatus(PRSStatus.Ready);
 
         if (navigationView != null) {
             registerDrawerMenuListener(navigationView);
@@ -167,12 +166,13 @@ public class SwipeActivity extends BaseActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        if (requestCode == AppStrings.REQUEST_NEW_ASSET && resultCode == RESULT_OK) {
-            if (data.hasExtra(AppStrings.INTENT_ASSET_ID)) {
-                startPhotoRecognition();
-            }
-        }
+        // temporarily disable launching pr service automatically
+//        if (requestCode == AppStrings.REQUEST_NEW_ASSET && resultCode == RESULT_OK) {
+//            if (data.hasExtra(AppStrings.INTENT_ASSET_ID)) {
+//
+//                startPhotoRecognition(true);
+//            }
+//        }
         super.onActivityResult(requestCode, resultCode, data);
     }
 
@@ -250,6 +250,11 @@ public class SwipeActivity extends BaseActivity {
                 mPRServiceItem.setIcon(R.drawable.ic_prservice_offline);
                 mPRServiceItem.setTitle(R.string.nav_drawer_menu_prservice_offline);
                 break;
+            case Ready:
+                stopAnimatePRServiceIcon();
+                mPRServiceItem.setIcon(R.drawable.ic_prservice_ready);
+                mPRServiceItem.setTitle(R.string.nav_drawer_menu_prservice_ready);
+                break;
             case InProgress:
                 mPRServiceItem.setIcon(R.drawable.ic_prservice_inprogress);
                 mPRServiceItem.setTitle(R.string.nav_drawer_menu_prservice_inprogress);
@@ -265,7 +270,7 @@ public class SwipeActivity extends BaseActivity {
 
     //region PRIVATE STUFF
 
-    private void startPhotoRecognition() {
+    private void startPhotoRecognition(boolean delayStart) {
         if (mPRServiceBinder == null) {
             setPhotoRecognitionServiceStatus(PRSStatus.Disabled);
             return;
@@ -274,11 +279,13 @@ public class SwipeActivity extends BaseActivity {
         if (mPRServiceBinder.isRunning())
             return;
 
-        if (mPRServiceBinder.isPending())
-            mPRServiceBinder.resetPendingTimer(DELAYED_PHOTO_RECOGNITION_MILLIS);
+        if (mPRServiceBinder.isPending()) {
+            mPRServiceBinder.resetPendingTimer(delayStart ? DELAYED_PHOTO_RECOGNITION_MILLIS : 0);
+            return;
+        }
 
         setPhotoRecognitionServiceStatus(PRSStatus.InProgress);
-        mPRServiceBinder.startTask(DELAYED_PHOTO_RECOGNITION_MILLIS)
+        mPRServiceBinder.startTask(delayStart ? DELAYED_PHOTO_RECOGNITION_MILLIS : 0)
                 .subscribe(
                         // onNext
                         list -> setPhotoRecognitionServiceStatus(PRSStatus.Completed),
@@ -304,7 +311,7 @@ public class SwipeActivity extends BaseActivity {
                             if (mPRServiceBinder != null &&
                                     !mPRServiceBinder.isRunning() &&
                                     !mPRServiceBinder.isPending())
-                                startPhotoRecognition();
+                                startPhotoRecognition(false);
                         default:
                             break;
                     }

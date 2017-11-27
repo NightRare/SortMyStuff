@@ -19,6 +19,9 @@ import rx.Observable;
 import rx.functions.Action1;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppConfigs.PHOTO_RECOGNITION_GET_RESULT_INITIAL_WAIT;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppConfigs.PHOTO_RECOGNITION_GET_RESULT_INTERVAL;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppConfigs.PHOTO_RECOGNITION_GET_RESULT_MAX_TRY;
 
 public class ImageDetectionHelper implements IImageDetectionHelper {
 
@@ -116,7 +119,12 @@ public class ImageDetectionHelper implements IImageDetectionHelper {
             return;
         }
 
+        long delay = maxTry == PHOTO_RECOGNITION_GET_RESULT_MAX_TRY ?
+                PHOTO_RECOGNITION_GET_RESULT_INITIAL_WAIT : PHOTO_RECOGNITION_GET_RESULT_INTERVAL;
+
         new Handler().postDelayed(() -> {
+
+
             mClient.getResult(result.token, mAuthValue)
                     .enqueue(new Callback<CloudSightResult>() {
                         @Override
@@ -131,7 +139,7 @@ public class ImageDetectionHelper implements IImageDetectionHelper {
                     });
             // cloud sight only allows a max request rate of 20/min
             // so 3000 ms is the most frequent request rate for 1 api key
-        }, 3000);
+        }, delay);
     }
 
     private CloudSightClient mClient;

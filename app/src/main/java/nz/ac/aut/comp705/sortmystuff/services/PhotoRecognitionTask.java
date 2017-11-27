@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import nz.ac.aut.comp705.sortmystuff.data.IDataManager;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
+import nz.ac.aut.comp705.sortmystuff.utils.AppConfigs;
 import rx.Observable;
 import rx.Subscription;
 
@@ -100,7 +101,7 @@ public class PhotoRecognitionTask {
                     })
                     .serialize()
                     .onBackpressureBuffer()
-                    .zipWith(Observable.interval(10000, TimeUnit.MILLISECONDS),
+                    .zipWith(Observable.interval(AppConfigs.PHOTO_RECOGNITION_INTERVAL, TimeUnit.MILLISECONDS),
                             (taskUnit, delay) -> taskUnit)
                     .flatMap(this::updateName)
                     .onErrorResumeNext(throwable -> Observable.just(null))
