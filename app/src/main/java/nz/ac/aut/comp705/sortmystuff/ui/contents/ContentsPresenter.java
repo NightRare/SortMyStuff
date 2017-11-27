@@ -33,6 +33,7 @@ public class ContentsPresenter implements IContentsPresenter {
 
         mContentsDisplayMode = CONTENTS_DEFAULT_MODE;
         mSubscriptions = new CompositeSubscription();
+        mFirstLaunch = true;
 
         mView.setPresenter(this);
     }
@@ -51,7 +52,10 @@ public class ContentsPresenter implements IContentsPresenter {
 
     @Override
     public void loadCurrentContents() {
-        mView.setLoadingIndicator(true);
+        if(mFirstLaunch) {
+            mView.setLoadingIndicator(true);
+            mFirstLaunch = false;
+        }
 
         mSubscriptions.clear();
         Observable<IAsset> currentAssetObservable = mDataManager
@@ -201,6 +205,7 @@ public class ContentsPresenter implements IContentsPresenter {
     private ISchedulerProvider mImmediateSchedulerProvider;
     private CompositeSubscription mSubscriptions;
 
+    private boolean mFirstLaunch;
     //endregion
 
 }

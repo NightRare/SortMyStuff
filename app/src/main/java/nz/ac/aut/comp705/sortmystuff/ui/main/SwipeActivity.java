@@ -1,9 +1,14 @@
 package nz.ac.aut.comp705.sortmystuff.ui.main;
 
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.graphics.Point;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
@@ -71,6 +76,7 @@ public class SwipeActivity extends BaseActivity {
         // Set up the navigation drawer
         mDrawerLayout = (DrawerLayout) findViewById(R.id.main_layout);
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_drawer_view);
+        navigationView.setItemIconTintList(null);
         Menu menu = navigationView.getMenu();
         mPRServiceItem = menu.findItem(R.id.nav_drawer_menu_prservice);
 
@@ -237,17 +243,21 @@ public class SwipeActivity extends BaseActivity {
     }
 
     public void setPhotoRecognitionServiceStatus(PRSStatus status) {
+        int color = 0;
         switch (status) {
             case Disabled:
+                stopAnimatePRServiceIcon();
                 mPRServiceItem.setIcon(R.drawable.ic_prservice_offline);
                 mPRServiceItem.setTitle(R.string.nav_drawer_menu_prservice_offline);
                 break;
             case InProgress:
-                mPRServiceItem.setIcon(R.drawable.ic_prservice_offline);
+                mPRServiceItem.setIcon(R.drawable.ic_prservice_inprogress);
                 mPRServiceItem.setTitle(R.string.nav_drawer_menu_prservice_inprogress);
+                startAnimatePRServiceIcon(mPRServiceItem.getIcon());
                 break;
             case Completed:
-                mPRServiceItem.setIcon(R.drawable.ic_prservice_offline);
+                stopAnimatePRServiceIcon();
+                mPRServiceItem.setIcon(R.drawable.ic_prservice_completed);
                 mPRServiceItem.setTitle(R.string.nav_drawer_menu_prservice_completed);
                 break;
         }
@@ -361,8 +371,43 @@ public class SwipeActivity extends BaseActivity {
         Intent intent = new Intent(this, PhotoRecognitionService.class);
         startService(intent);
         bindService(intent, mPRServiceConnection, BIND_AUTO_CREATE);
+    }
 
+    private void stopAnimatePRServiceIcon() {
+        if (mPRServiceIconAnimator != null) {
+            mPRServiceIconAnimator.end();
+            mPRServiceIconAnimator = null;
+        }
+    }
 
+    private void startAnimatePRServiceIcon(final Drawable drawable) {
+        final int gray = getResources().getColor(R.color.light_grey);
+
+        mPRServiceIconAnimator = ObjectAnimator.ofFloat(0f, 1f);
+        mPRServiceIconAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                float mul = (Float) animation.getAnimatedValue();
+                int alphaColor = adjustAlpha(gray, mul);
+                drawable.setColorFilter(alphaColor, PorterDuff.Mode.SRC_ATOP);
+                if (mul == 0.0) {
+                    drawable.setColorFilter(null);
+                }
+            }
+        });
+
+        mPRServiceIconAnimator.setDuration(1000);
+        mPRServiceIconAnimator.setRepeatMode(ValueAnimator.REVERSE);
+        mPRServiceIconAnimator.setRepeatCount(-1);
+        mPRServiceIconAnimator.start();
+    }
+
+    public int adjustAlpha(int color, float factor) {
+        int alpha = Math.round(Color.alpha(color) * factor);
+        int red = Color.red(color);
+        int green = Color.green(color);
+        int blue = Color.blue(color);
+        return Color.argb(alpha, red, green, blue);
     }
 
     // Photo Recognition Service Status
@@ -382,6 +427,7 @@ public class SwipeActivity extends BaseActivity {
     private PhotoRecognitionService.ServiceBinder mPRServiceBinder;
     private ServiceConnection mPRServiceConnection;
     private MenuItem mPRServiceItem;
+    private ValueAnimator mPRServiceIconAnimator;
 
     private boolean isRootAsset;
     private IFactory mFactory;

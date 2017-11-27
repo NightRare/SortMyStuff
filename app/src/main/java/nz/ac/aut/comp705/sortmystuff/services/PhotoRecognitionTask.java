@@ -92,13 +92,15 @@ public class PhotoRecognitionTask {
                     .toList()
                     .flatMap(taskList -> {
                         synchronized (PhotoRecognitionTask.class) {
+                            if(taskList.isEmpty())
+                                throw new IllegalStateException();
                             mTotalTasks = taskList.size();
                         }
                         return Observable.from(taskList);
                     })
                     .serialize()
                     .onBackpressureBuffer()
-                    .zipWith(Observable.interval(5000, TimeUnit.MILLISECONDS),
+                    .zipWith(Observable.interval(10000, TimeUnit.MILLISECONDS),
                             (taskUnit, delay) -> taskUnit)
                     .flatMap(this::updateName)
                     .onErrorResumeNext(throwable -> Observable.just(null))

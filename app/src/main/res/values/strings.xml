@@ -30,7 +30,7 @@
     <string name="add_asset_name_hint">Asset name</string>
     <string name="add_asset_photo_description">Asset photo</string>
     <string name="nav_drawer_menu_prservice_offline">PR Service Offline</string>
-    <string name="nav_drawer_menu_prservice_inprogress">PR In Progress</string>
+    <string name="nav_drawer_menu_prservice_inprogress">Recognising photos</string>
     <string name="nav_drawer_menu_prservice_completed">PR Completed</string>
 
 </resources>
