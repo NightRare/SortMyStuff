@@ -10,7 +10,7 @@ import com.squareup.leakcanary.LeakCanary;
 
 import nz.ac.aut.comp705.sortmystuff.di.Factory;
 import nz.ac.aut.comp705.sortmystuff.di.IFactory;
-import nz.ac.aut.comp705.sortmystuff.services.NameDetectionService;
+import nz.ac.aut.comp705.sortmystuff.services.PhotoRecognitionService;
 
 public class SortMyStuffApp extends Application {
 
@@ -58,7 +58,7 @@ public class SortMyStuffApp extends Application {
 
     private void initialiseNameDetectionService() {
         if(featureToggle.PhotoDetection && featureToggle.DelayPhotoDetection) {
-            startService(new Intent(this, NameDetectionService.class));
+            startService(new Intent(this, PhotoRecognitionService.class));
         }
     }
 

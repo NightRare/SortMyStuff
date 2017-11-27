@@ -40,7 +40,6 @@ import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
 import nz.ac.aut.comp705.sortmystuff.di.IFactory;
-import nz.ac.aut.comp705.sortmystuff.services.NameDetectionService;
 import nz.ac.aut.comp705.sortmystuff.ui.BaseActivity;
 import nz.ac.aut.comp705.sortmystuff.utils.AppStrings;
 import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
@@ -114,7 +113,7 @@ public class AddingAssetActivity extends BaseActivity implements IAddingAssetVie
         super.onActivityResult(requestCode, resultCode, data);
 
         switch (requestCode) {
-            case AppStrings.INTENT_TAKE_PHOTO:
+            case AppStrings.REQUEST_TAKE_PHOTO:
                 try {
                     Bitmap image = null;
                     if (resultCode == RESULT_OK) {
@@ -208,15 +207,24 @@ public class AddingAssetActivity extends BaseActivity implements IAddingAssetVie
     @Override
     public void goBack() {
         String assetCreated = mPresenter.getCreatedAssetId();
-        if (assetCreated != null &&
-                mFeatToggle.PhotoDetection &&
-                mFeatToggle.DelayPhotoDetection) {
-            Intent detectName = new Intent(this, NameDetectionService.class);
-            detectName.putExtra(AppStrings.INTENT_NAME_DETECTION_ASSET_ID, assetCreated);
-            startService(detectName);
+//        if (assetCreated != null &&
+//                mFeatToggle.PhotoDetection &&
+//                mFeatToggle.DelayPhotoDetection) {
+//            Intent detectName = new Intent(this, PhotoRecognitionService.class);
+//            detectName.putExtra(AppStrings.INTENT_NAME_DETECTION_ASSET_ID, assetCreated);
+//            startService(detectName);
+//        }
+
+        if(assetCreated != null) {
+            Intent data = new Intent();
+            data.putExtra(AppStrings.INTENT_ASSET_ID, assetCreated);
+            setResult(RESULT_OK, data);
+        }
+        else {
+            setResult(RESULT_CANCELED);
         }
 
-        this.finish();
+        finish();
     }
 
     @Override
@@ -282,7 +290,7 @@ public class AddingAssetActivity extends BaseActivity implements IAddingAssetVie
 
     private void launchCamera() {
         Intent intent = new Intent(this, CameraActivity.class);
-        startActivityForResult(intent, AppStrings.INTENT_TAKE_PHOTO);
+        startActivityForResult(intent, AppStrings.REQUEST_TAKE_PHOTO);
     }
 
     private EditText createEditText(Context context, LinearLayout layout) {

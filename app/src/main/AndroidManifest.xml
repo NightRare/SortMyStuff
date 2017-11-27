@@ -60,7 +60,7 @@
 
         <activity android:name="com.desmond.squarecamera.CameraActivity" />
 
-        <service android:name=".services.NameDetectionService"
+        <service android:name=".services.PhotoRecognitionService"
             android:exported="false"
             android:enabled="true"/>
 

@@ -33,6 +33,7 @@ import nz.ac.aut.comp705.sortmystuff.utils.AppConfigs;
 import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
 import nz.ac.aut.comp705.sortmystuff.utils.DemoDebugger;
 import nz.ac.aut.comp705.sortmystuff.utils.Log;
+import nz.ac.aut.comp705.sortmystuff.utils.StringExtensions;
 import nz.ac.aut.comp705.sortmystuff.utils.schedulers.ISchedulerProvider;
 import rx.Emitter;
 import rx.Observable;
@@ -261,12 +262,12 @@ public class DataManager implements IDataManager, IDebugHelper {
     //region CREATE METHODS
 
     @Override
-    public String createAsset(String name, String containerId) {
+    public synchronized String createAsset(String name, String containerId) {
         return createAsset(name, containerId, CategoryType.Miscellaneous);
     }
 
     @Override
-    public String createAsset(String name, String containerId, CategoryType categoryType) {
+    public synchronized String createAsset(String name, String containerId, CategoryType categoryType) {
         checkNotNull(name);
         checkNotNull(containerId);
         Preconditions.checkArgument(!name.replaceAll(" ", "").isEmpty(), "The name cannot be empty");
@@ -295,7 +296,12 @@ public class DataManager implements IDataManager, IDebugHelper {
     }
 
     @Override
-    public String createAsset(String name, String containerId, CategoryType categoryType, Bitmap photo, List<IDetail> details) {
+    public synchronized String createAsset(
+            String name,
+            String containerId,
+            CategoryType categoryType,
+            Bitmap photo,
+            List<IDetail> details) {
         checkNotNull(name);
         checkNotNull(containerId);
         checkNotNull(photo);
@@ -330,7 +336,8 @@ public class DataManager implements IDataManager, IDebugHelper {
     }
 
     @Override
-    public Observable<String> createAssetSafely(String name, String containerId, CategoryType categoryType) {
+    public synchronized Observable<String> createAssetSafely(
+            String name, String containerId, CategoryType categoryType) {
         checkNotNull(name);
         checkNotNull(containerId);
         Preconditions.checkArgument(!name.replaceAll(" ", "").isEmpty(), "The name cannot be empty");
@@ -354,7 +361,12 @@ public class DataManager implements IDataManager, IDebugHelper {
     }
 
     @Override
-    public Observable<String> createAssetSafely(String name, String containerId, CategoryType categoryType, Bitmap photo, List<IDetail> details) {
+    public synchronized Observable<String> createAssetSafely(
+            String name,
+            String containerId,
+            CategoryType categoryType,
+            Bitmap photo,
+            List<IDetail> details) {
         checkNotNull(name);
         checkNotNull(containerId);
         checkNotNull(photo);
@@ -391,7 +403,7 @@ public class DataManager implements IDataManager, IDebugHelper {
     //region  UPDATE METHODS
 
     @Override
-    public void updateAssetName(String assetId, final String newName) {
+    public synchronized void updateAssetName(String assetId, final String newName) {
         checkNotNull(assetId);
         checkNotNull(newName);
         Preconditions.checkArgument(!newName.replaceAll(" ", "").isEmpty());
@@ -426,7 +438,7 @@ public class DataManager implements IDataManager, IDebugHelper {
     }
 
     @Override
-    public void moveAsset(String assetId, String newContainerId) {
+    public synchronized void moveAsset(String assetId, String newContainerId) {
         checkNotNull(assetId);
         checkNotNull(newContainerId);
 
@@ -488,7 +500,7 @@ public class DataManager implements IDataManager, IDebugHelper {
     }
 
     @Override
-    public void recycleAssetAndItsContents(String assetId) {
+    public synchronized void recycleAssetAndItsContents(String assetId) {
         checkNotNull(assetId);
 
         if (assetId.equals(ROOT_ASSET_ID)) return;
@@ -523,7 +535,7 @@ public class DataManager implements IDataManager, IDebugHelper {
     }
 
     @Override
-    public void resetImageDetail(String assetId, String detailId) {
+    public synchronized void resetImageDetail(String assetId, String detailId) {
         checkNotNull(assetId);
         checkNotNull(detailId);
 
@@ -531,7 +543,7 @@ public class DataManager implements IDataManager, IDebugHelper {
     }
 
     @Override
-    public <T> void updateDetail(String assetId, String detailId, DetailType type, String newLabel, T newField) {
+    public synchronized <T> void updateDetail(String assetId, String detailId, DetailType type, String newLabel, T newField) {
         checkUpdateDetailArguments(assetId, detailId, type, newLabel, newField);
         if (newLabel == null && newField == null) return;
 
@@ -576,8 +588,7 @@ public class DataManager implements IDataManager, IDebugHelper {
 
     @Override
     public Observable<String> getNewAssetName() {
-        return generateNewAssetName(ASSET_DEFAULT_NAME);
-
+        return generateNewAssetName(ASSET_DEFAULT_NAME, false);
     }
 
     @Override
@@ -591,8 +602,9 @@ public class DataManager implements IDataManager, IDebugHelper {
                         if (name.length() > AppConfigs.ASSET_NAME_CAP) {
                             return name.substring(0, AppConfigs.ASSET_NAME_CAP);
                         }
-                        return name;
-                    });
+                        return StringExtensions.capitalise(name);
+                    })
+                    .flatMap(name -> generateNewAssetName(name, false));
         } else {
             return getNewAssetName();
         }
@@ -620,14 +632,14 @@ public class DataManager implements IDataManager, IDebugHelper {
     }
 
     @Override
-    public void reCacheFromRemoteDataSource() {
+    public synchronized void reCacheFromRemoteDataSource() {
         cacheAssets();
         mDirtyCachedDetails = true;
         initCachedDetails();
     }
 
     @Override
-    public void removeCurrentUserData() {
+    public synchronized void removeCurrentUserData() {
         if (mRemoteRepo instanceof IDebugHelper) {
             ((IDebugHelper) mRemoteRepo).removeCurrentUserData();
             createRootAsset();
@@ -1223,7 +1235,7 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
     }
 
-    private synchronized Observable<String> generateNewAssetName(String prefix) {
+    private synchronized Observable<String> generateNewAssetName(String prefix, boolean displayZero) {
         Observable<FAsset> assetStreams;
 
         if (mDirtyCachedAssets || mCachedAssets == null) {
@@ -1250,7 +1262,10 @@ public class DataManager implements IDataManager, IDebugHelper {
                     }
                     return postfix;
                 })
-                .map(postfix -> prefix + " " + postfix);
+                .map(postfix -> {
+                    if(!displayZero && postfix == 0) return prefix;
+                    return prefix + " " + postfix;
+                });
     }
 
     /**

@@ -1,15 +1,17 @@
 package nz.ac.aut.comp705.sortmystuff.ui.main;
 
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Point;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Display;
 import android.view.Menu;
@@ -27,22 +29,28 @@ import com.google.firebase.auth.FirebaseUser;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import nz.ac.aut.comp705.sortmystuff.Features;
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.di.IFactory;
+import nz.ac.aut.comp705.sortmystuff.services.PRSStatus;
+import nz.ac.aut.comp705.sortmystuff.services.PhotoRecognitionService;
+import nz.ac.aut.comp705.sortmystuff.ui.BaseActivity;
 import nz.ac.aut.comp705.sortmystuff.ui.contents.IContentsView;
 import nz.ac.aut.comp705.sortmystuff.ui.details.IDetailsView;
 import nz.ac.aut.comp705.sortmystuff.ui.login.LoginActivity;
 import nz.ac.aut.comp705.sortmystuff.ui.search.SearchActivity;
+import nz.ac.aut.comp705.sortmystuff.utils.AppStrings;
 import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
 import nz.ac.aut.comp705.sortmystuff.utils.Log;
 import rx.functions.Action1;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppConfigs.DELAYED_PHOTO_RECOGNITION_MILLIS;
 import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.ROOT_ASSET_ID;
 
-public class SwipeActivity extends AppCompatActivity {
+public class SwipeActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +59,7 @@ public class SwipeActivity extends AppCompatActivity {
 
         isRootAsset = true;
         mFactory = ((SortMyStuffApp) getApplication()).getFactory();
+        mFeatToggle = mFactory.getFeatureToggle();
 
         // Set up the toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.main_toolbar);
@@ -62,6 +71,11 @@ public class SwipeActivity extends AppCompatActivity {
         // Set up the navigation drawer
         mDrawerLayout = (DrawerLayout) findViewById(R.id.main_layout);
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_drawer_view);
+        Menu menu = navigationView.getMenu();
+        mPRServiceItem = menu.findItem(R.id.nav_drawer_menu_prservice);
+
+        setPhotoRecognitionServiceStatus(PRSStatus.Disabled);
+
         if (navigationView != null) {
             registerDrawerMenuListener(navigationView);
             updateNavigationDrawerHeader(navigationView);
@@ -89,6 +103,9 @@ public class SwipeActivity extends AppCompatActivity {
         Display display = getWindowManager().getDefaultDisplay();
         mScreenSize = new Point();
         display.getSize(mScreenSize);
+
+        if (mFeatToggle.PhotoDetection && mFeatToggle.DelayPhotoDetection)
+            bindNameDetectionService();
     }
 
     @Override
@@ -140,6 +157,17 @@ public class SwipeActivity extends AppCompatActivity {
             default:
                 return false;
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (requestCode == AppStrings.REQUEST_NEW_ASSET && resultCode == RESULT_OK) {
+            if (data.hasExtra(AppStrings.INTENT_ASSET_ID)) {
+                startPhotoRecognition();
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     public void setContentsViewListeners(IContentsView.ViewListeners listener) {
@@ -208,7 +236,46 @@ public class SwipeActivity extends AppCompatActivity {
         userEmailView.setText(currentUser.getEmail());
     }
 
+    public void setPhotoRecognitionServiceStatus(PRSStatus status) {
+        switch (status) {
+            case Disabled:
+                mPRServiceItem.setIcon(R.drawable.ic_prservice_offline);
+                mPRServiceItem.setTitle(R.string.nav_drawer_menu_prservice_offline);
+                break;
+            case InProgress:
+                mPRServiceItem.setIcon(R.drawable.ic_prservice_offline);
+                mPRServiceItem.setTitle(R.string.nav_drawer_menu_prservice_inprogress);
+                break;
+            case Completed:
+                mPRServiceItem.setIcon(R.drawable.ic_prservice_offline);
+                mPRServiceItem.setTitle(R.string.nav_drawer_menu_prservice_completed);
+                break;
+        }
+    }
+
     //region PRIVATE STUFF
+
+    private void startPhotoRecognition() {
+        if (mPRServiceBinder == null) {
+            setPhotoRecognitionServiceStatus(PRSStatus.Disabled);
+            return;
+        }
+
+        if (mPRServiceBinder.isRunning())
+            return;
+
+        if (mPRServiceBinder.isPending())
+            mPRServiceBinder.resetPendingTimer(DELAYED_PHOTO_RECOGNITION_MILLIS);
+
+        setPhotoRecognitionServiceStatus(PRSStatus.InProgress);
+        mPRServiceBinder.startTask(DELAYED_PHOTO_RECOGNITION_MILLIS)
+                .subscribe(
+                        // onNext
+                        list -> setPhotoRecognitionServiceStatus(PRSStatus.Completed),
+                        // onError
+                        throwable -> setPhotoRecognitionServiceStatus(PRSStatus.Completed)
+                );
+    }
 
     private void refreshDetails(String assetId) {
         mSwipeAdapter.getDetailsPresenter().setCurrentAsset(assetId);
@@ -222,6 +289,12 @@ public class SwipeActivity extends AppCompatActivity {
                         case R.id.nav_drawer_menu_sign_out:
                             signOut();
                             break;
+
+                        case R.id.nav_drawer_menu_prservice:
+                            if (mPRServiceBinder != null &&
+                                    !mPRServiceBinder.isRunning() &&
+                                    !mPRServiceBinder.isPending())
+                                startPhotoRecognition();
                         default:
                             break;
                     }
@@ -249,7 +322,7 @@ public class SwipeActivity extends AppCompatActivity {
         GoogleApiClient gac = mFactory.getGoogleApiClient();
         if (gac != null) {
             // Google sign out
-            if(!gac.isConnected()) {
+            if (!gac.isConnected()) {
                 gac.registerConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
                     @Override
                     public void onConnected(@Nullable Bundle bundle) {
@@ -259,7 +332,6 @@ public class SwipeActivity extends AppCompatActivity {
 
                     @Override
                     public void onConnectionSuspended(int i) {
-
                     }
                 });
                 gac.connect();
@@ -273,6 +345,28 @@ public class SwipeActivity extends AppCompatActivity {
 
     }
 
+    private void bindNameDetectionService() {
+        mPRServiceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                mPRServiceBinder = (PhotoRecognitionService.ServiceBinder) service;
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+
+            }
+        };
+
+        Intent intent = new Intent(this, PhotoRecognitionService.class);
+        startService(intent);
+        bindService(intent, mPRServiceConnection, BIND_AUTO_CREATE);
+
+
+    }
+
+    // Photo Recognition Service Status
+
     private static final String TAG = "SwipeActivity";
     private static final String CURRENT_ASSET_ID = "CURRENT_ASSET_ID";
 
@@ -283,6 +377,11 @@ public class SwipeActivity extends AppCompatActivity {
     private DrawerLayout mDrawerLayout;
     private IContentsView.ViewListeners mContentsViewListeners;
     private IDetailsView.ViewListeners mDetailsViewListeners;
+    private Features mFeatToggle;
+
+    private PhotoRecognitionService.ServiceBinder mPRServiceBinder;
+    private ServiceConnection mPRServiceConnection;
+    private MenuItem mPRServiceItem;
 
     private boolean isRootAsset;
     private IFactory mFactory;

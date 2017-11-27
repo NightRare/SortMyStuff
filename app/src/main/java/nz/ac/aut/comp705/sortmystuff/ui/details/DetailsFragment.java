@@ -125,7 +125,7 @@ public class DetailsFragment extends Fragment implements IDetailsView {
         if (resultCode != RESULT_OK) return;
 
         switch (requestCode) {
-            case AppStrings.INTENT_TAKE_PHOTO:
+            case AppStrings.REQUEST_TAKE_PHOTO:
                 Uri photoUri = data.getData();
                 try {
 
@@ -225,7 +225,7 @@ public class DetailsFragment extends Fragment implements IDetailsView {
     private void launchCamera() {
         if (mPhotoToBeReplaced == null) return;
         Intent intent = new Intent(getContext(), CameraActivity.class);
-        startActivityForResult(intent, AppStrings.INTENT_TAKE_PHOTO);
+        startActivityForResult(intent, AppStrings.REQUEST_TAKE_PHOTO);
     }
 
     /**

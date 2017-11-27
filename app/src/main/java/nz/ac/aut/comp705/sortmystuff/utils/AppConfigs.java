@@ -3,6 +3,12 @@ package nz.ac.aut.comp705.sortmystuff.utils;
 public class AppConfigs {
 
     //********************************************
+    // App
+    //********************************************
+
+    public static final long DELAYED_PHOTO_RECOGNITION_MILLIS = 10000;
+
+    //********************************************
     // ASSET
     //********************************************
 
@@ -31,8 +37,4 @@ public class AppConfigs {
     //********************************************
 
     public final static int CACHED_DETAILS_LIST_NUM = 5;
-
-    //********************************************
-    // IDataRepostiory
-    //********************************************
 }

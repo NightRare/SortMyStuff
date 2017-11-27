@@ -15,10 +15,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -323,26 +321,6 @@ public class ContentsFragment extends Fragment implements IContentsView {
         mMove_btn.setOnClickListener(v -> mViewListeners.onSelectionModeMoveClick());
     }
 
-
-    private Spinner initCategorySpinner(View contextView) {
-        Spinner spinner = (Spinner) contextView.findViewById(R.id.category_spinner);
-
-        List<CategoryType> categories = new ArrayList();
-        for (CategoryType cy : CategoryType.values()) {
-            if (cy.equals(CategoryType.None))
-                continue;
-            categories.add(cy);
-        }
-        ArrayAdapter<CategoryType> adapter = new ArrayAdapter<>(mActivity,
-                android.R.layout.simple_spinner_item, categories);
-
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(adapter);
-        spinner.setSelection(adapter.getPosition(CategoryType.Miscellaneous));
-
-        return spinner;
-    }
-
     private class ContentsViewListeners implements IContentsView.ViewListeners {
 
         @Override
@@ -384,32 +362,9 @@ public class ContentsFragment extends Fragment implements IContentsView {
 
         @Override
         public void onAddAssetFabClick() {
-
-            Intent searchIntent = new Intent(getContext(), AddingAssetActivity.class);
-            searchIntent.putExtra(AppStrings.INTENT_CONTAINER_ID, mPresenter.getCurrentAssetId());
-            startActivity(searchIntent);
-
-//            AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-//            builder.setTitle(R.string.add_asset_dialog_title);
-//
-//            View addAssetLayout = mActivity.getLayoutInflater().inflate(R.layout.contents_add_asset, null);
-//            builder.setView(addAssetLayout);
-//
-//            Spinner spinner = initCategorySpinner(addAssetLayout);
-//
-//            EditText input = (EditText) addAssetLayout.findViewById(R.id.asset_name_input);
-//            input.setInputType(InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
-//            input.setSingleLine();
-//
-//            builder.setPositiveButton(R.string.add_asset_confirm_button, (dialog, which) ->
-//                    onAddAssetConfirmClick(input.getText().toString(), (CategoryType) spinner.getSelectedItem()));
-//
-//            builder.setNegativeButton(R.string.cancel_button, (dialog, id) -> dialog.cancel());
-//
-//            builder.show()
-//                    // auto pop up the keyboard
-//                    .getWindow()
-//                    .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+            Intent addAssetIntent = new Intent(mActivity, AddingAssetActivity.class);
+            addAssetIntent.putExtra(AppStrings.INTENT_CONTAINER_ID, mPresenter.getCurrentAssetId());
+            mActivity.startActivityForResult(addAssetIntent, AppStrings.REQUEST_NEW_ASSET);
         }
 
         @Override
