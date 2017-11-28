@@ -75,7 +75,10 @@ public class PhotoRecognitionService extends Service {
                     }
                 };
 
-                mTask = new PhotoRecognitionTask(mDataManager, listener);
+                mTask = new PhotoRecognitionTask(
+                        mDataManager,
+                        listener,
+                        mSchedulerProvider.computation());
                 mTask.start(delayedMillis);
             }, Emitter.BackpressureMode.BUFFER);
         }

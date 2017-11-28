@@ -72,11 +72,15 @@ public class DataManager implements IDataManager, IDebugHelper {
         mFeatToggle = checkNotNull(featToggle);
         mImageDetectionHelper = checkNotNull(imageDetectionHelper);
 
-        synchronized (this) {
-            mDirtyCachedAssets = true;
-            mDirtyCachedDetails = true;
-            mDirtyCachedCategories = true;
-        }
+        mDirtyCachedAssets = true;
+        mDirtyCachedDetails = true;
+        mDirtyCachedCategories = true;
+        mActionsQueue = Collections.synchronizedList(new ArrayList<>());
+        mCachedAssets = new HashMap<>();
+        mCachedRecycledAssets = new ArrayMap<>();
+        mCachedDetails = Collections.synchronizedMap(new WeakHashMap<>());
+        mCachedDetailsKeyList = Collections.synchronizedList(new LinkedList<>());
+        mCachedCategories = new ArrayMap<>();
 
         initCachedDetails();
 //        mRemoteRepo.setOnDataChangeCallback(new OnDetailsDataChangeListeners(), FDetail.class);
@@ -263,12 +267,12 @@ public class DataManager implements IDataManager, IDebugHelper {
     //region CREATE METHODS
 
     @Override
-    public synchronized String createAsset(String name, String containerId) {
+    public String createAsset(String name, String containerId) {
         return createAsset(name, containerId, CategoryType.Miscellaneous);
     }
 
     @Override
-    public synchronized String createAsset(String name, String containerId, CategoryType categoryType) {
+    public String createAsset(String name, String containerId, CategoryType categoryType) {
         checkNotNull(name);
         checkNotNull(containerId);
         Preconditions.checkArgument(!name.replaceAll(" ", "").isEmpty(), "The name cannot be empty");
@@ -297,7 +301,7 @@ public class DataManager implements IDataManager, IDebugHelper {
     }
 
     @Override
-    public synchronized String createAsset(
+    public String createAsset(
             String name,
             String containerId,
             CategoryType categoryType,
@@ -337,7 +341,7 @@ public class DataManager implements IDataManager, IDebugHelper {
     }
 
     @Override
-    public synchronized Observable<String> createAssetSafely(
+    public Observable<String> createAssetSafely(
             String name, String containerId, CategoryType categoryType) {
         checkNotNull(name);
         checkNotNull(containerId);
@@ -362,7 +366,7 @@ public class DataManager implements IDataManager, IDebugHelper {
     }
 
     @Override
-    public synchronized Observable<String> createAssetSafely(
+    public Observable<String> createAssetSafely(
             String name,
             String containerId,
             CategoryType categoryType,
@@ -404,7 +408,7 @@ public class DataManager implements IDataManager, IDebugHelper {
     //region  UPDATE METHODS
 
     @Override
-    public synchronized void updateAssetName(String assetId, final String newName) {
+    public void updateAssetName(String assetId, final String newName) {
         checkNotNull(assetId);
         checkNotNull(newName);
         Preconditions.checkArgument(!newName.replaceAll(" ", "").isEmpty());
@@ -439,7 +443,7 @@ public class DataManager implements IDataManager, IDebugHelper {
     }
 
     @Override
-    public synchronized void moveAsset(String assetId, String newContainerId) {
+    public void moveAsset(String assetId, String newContainerId) {
         checkNotNull(assetId);
         checkNotNull(newContainerId);
 
@@ -501,7 +505,7 @@ public class DataManager implements IDataManager, IDebugHelper {
     }
 
     @Override
-    public synchronized void recycleAssetAndItsContents(String assetId) {
+    public void recycleAssetAndItsContents(String assetId) {
         checkNotNull(assetId);
 
         if (assetId.equals(ROOT_ASSET_ID)) return;
@@ -536,7 +540,7 @@ public class DataManager implements IDataManager, IDebugHelper {
     }
 
     @Override
-    public synchronized void resetImageDetail(String assetId, String detailId) {
+    public void resetImageDetail(String assetId, String detailId) {
         checkNotNull(assetId);
         checkNotNull(detailId);
 
@@ -544,7 +548,7 @@ public class DataManager implements IDataManager, IDebugHelper {
     }
 
     @Override
-    public synchronized <T> void updateDetail(String assetId, String detailId, DetailType type, String newLabel, T newField) {
+    public <T> void updateDetail(String assetId, String detailId, DetailType type, String newLabel, T newField) {
         checkUpdateDetailArguments(assetId, detailId, type, newLabel, newField);
         if (newLabel == null && newField == null) return;
 
@@ -595,7 +599,7 @@ public class DataManager implements IDataManager, IDebugHelper {
     @Override
     public Observable<String> getNewAssetName(Bitmap photo) {
         if (mFeatToggle.PhotoDetection && !mResLoader.getDefaultPhoto().sameAs(photo)) {
-            if(mFeatToggle.DevelopmentMode) {
+            if (mFeatToggle.DevelopmentMode) {
                 return generateNewAssetName("Detected name", false)
                         .delay(10, TimeUnit.SECONDS);
             }
@@ -677,8 +681,6 @@ public class DataManager implements IDataManager, IDebugHelper {
     //region PRIVATE STUFF
 
     private synchronized void cacheCategories() {
-        mCachedCategories = new ArrayMap<>();
-
         mRemoteRepo.retrieveCategories()
                 .subscribeOn(mSchedulerProvider.computation())
                 .flatMap(Observable::from)
@@ -693,10 +695,6 @@ public class DataManager implements IDataManager, IDebugHelper {
 
     private synchronized void cacheAssets() {
         mDirtyCachedAssets = true;
-
-        mActionsQueue = new ArrayList<>();
-        mCachedAssets = new HashMap<>();
-        mCachedRecycledAssets = new HashMap<>();
 
         getRootAsset()
                 .subscribeOn(mSchedulerProvider.computation())
@@ -727,8 +725,8 @@ public class DataManager implements IDataManager, IDebugHelper {
     }
 
     private synchronized void initCachedDetails() {
-        mCachedDetails = new WeakHashMap<>();
-        mCachedDetailsKeyList = new LinkedList<>();
+        mCachedDetails.clear();
+        mCachedDetailsKeyList.clear();
         mDirtyCachedDetails = false;
     }
 
@@ -1253,13 +1251,13 @@ public class DataManager implements IDataManager, IDebugHelper {
 
         return assetStreams
                 .map(FAsset::getName)
-                .filter(assetName -> assetName.contains(prefix))
+                .filter(assetName -> assetName.startsWith(prefix))
                 .map(assetName -> getPostfixNum(assetName, prefix))
                 .filter(num -> num != -1)
                 .toSortedList()
-                .map(prefixes -> {
+                .map(postfixes -> {
                     Integer postfix = 0;
-                    for (Integer num : prefixes) {
+                    for (Integer num : postfixes) {
                         if (num.equals(postfix)) {
                             postfix++;
                         } else if (num > postfix) {
@@ -1269,7 +1267,7 @@ public class DataManager implements IDataManager, IDebugHelper {
                     return postfix;
                 })
                 .map(postfix -> {
-                    if(!displayZero && postfix == 0) return prefix;
+                    if (!displayZero && postfix == 0) return prefix;
                     return prefix + " " + postfix;
                 });
     }
@@ -1425,25 +1423,24 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
     };
 
-    private IDataRepository mRemoteRepo;
-    private ISchedulerProvider mSchedulerProvider;
-    private IImageDetectionHelper mImageDetectionHelper;
-    private LocalResourceLoader mResLoader;
-    private Features mFeatToggle;
+    private final IDataRepository mRemoteRepo;
+    private final ISchedulerProvider mSchedulerProvider;
+    private final IImageDetectionHelper mImageDetectionHelper;
+    private final LocalResourceLoader mResLoader;
+    private volatile Features mFeatToggle;
 
-    private List<LoggedAction> mActionsQueue;
+    private final List<LoggedAction> mActionsQueue;
 
-    private FAsset mCachedRootAsset;
-    private Map<String, FAsset> mCachedAssets;
-    private Map<String, List<FDetail>> mCachedDetails;
-    private Map<String, FAsset> mCachedRecycledAssets;
-    private List<String> mCachedDetailsKeyList;
-    private Map<CategoryType, FCategory> mCachedCategories;
+    private volatile FAsset mCachedRootAsset;
+    private final Map<String, FAsset> mCachedAssets;
+    private final Map<String, List<FDetail>> mCachedDetails;
+    private final Map<String, FAsset> mCachedRecycledAssets;
+    private final List<String> mCachedDetailsKeyList;
+    private final Map<CategoryType, FCategory> mCachedCategories;
 
-
-    private boolean mDirtyCachedAssets;
-    private boolean mDirtyCachedDetails;
-    private boolean mDirtyCachedCategories;
+    private volatile boolean mDirtyCachedAssets;
+    private volatile boolean mDirtyCachedDetails;
+    private volatile boolean mDirtyCachedCategories;
 
     //endregion
 }

@@ -1,7 +1,6 @@
 package nz.ac.aut.comp705.sortmystuff.services;
 
 import android.graphics.Bitmap;
-import android.os.Handler;
 import android.support.annotation.NonNull;
 
 import java.util.ArrayList;
@@ -14,6 +13,7 @@ import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
 import nz.ac.aut.comp705.sortmystuff.utils.AppConfigs;
 import rx.Observable;
+import rx.Scheduler;
 import rx.Subscription;
 
 import static nz.ac.aut.comp705.sortmystuff.utils.AssetNamingHelper.conformsToDefaultNamingScheme;
@@ -22,27 +22,28 @@ public class PhotoRecognitionTask {
 
     public PhotoRecognitionTask(
             @NonNull IDataManager dataManager,
-            @NonNull PhotoRecognitionListener photoRecognitionListener) {
+            @NonNull PhotoRecognitionListener photoRecognitionListener,
+            @NonNull Scheduler scheduler) {
         mDataManager = dataManager;
         mPhotoRecognitionListener = photoRecognitionListener;
         mProcessed = 0;
         mTotalTasks = 0;
         mStatus = Status.Ready;
-        mHandler = new Handler();
         mResultList = Collections.synchronizedList(new ArrayList<>());
+        mScheduler = scheduler;
     }
 
     /**
      * Each task can only be started once.
      *
-     * @param delayed
+     * @param delayMillis
      */
-    public void start(long delayed) {
+    public void start(long delayMillis) {
         synchronized (this) {
             if (mStatus != Status.Ready) return;
             mStatus = Status.Pending;
         }
-        mHandler.postDelayed(this::execute, delayed >= 0 ? delayed : 0);
+        execute(delayMillis >= 0 ? delayMillis : 0);
     }
 
     public void terminate() {
@@ -52,7 +53,6 @@ public class PhotoRecognitionTask {
             mProcessed = 0;
             mTotalTasks = 0;
         }
-        mHandler.removeCallbacksAndMessages(null);
         if (mSubscription != null) {
             mSubscription.unsubscribe();
         }
@@ -72,10 +72,12 @@ public class PhotoRecognitionTask {
 
     // region PRIVATE STUFF
 
-    private void execute() {
+    private void execute(long delayMillis) {
         mStatus = Status.Running;
 
         mSubscription = mDataManager.getAssets()
+                .delay(delayMillis, TimeUnit.MILLISECONDS)
+                .subscribeOn(mScheduler)
                 .flatMap(Observable::from)
                 // important to make sure that only one thread is accessing/mutating taskUnit
                 // as TaskUnit is not thread safe
@@ -304,7 +306,7 @@ public class PhotoRecognitionTask {
 
     private final IDataManager mDataManager;
     private final PhotoRecognitionListener mPhotoRecognitionListener;
-    private final Handler mHandler;
+    private final Scheduler mScheduler;
 
     private volatile Subscription mSubscription;
     private volatile Status mStatus;
