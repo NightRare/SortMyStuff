@@ -8,7 +8,8 @@ import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import rx.Observable;
 import rx.Subscription;
 
-import static nz.ac.aut.comp705.sortmystuff.utils.AppConfigs.ROOT_ASSET_ID;
+import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.ROOT_ASSET_ID;
+
 
 /**
  * Some experimental class.

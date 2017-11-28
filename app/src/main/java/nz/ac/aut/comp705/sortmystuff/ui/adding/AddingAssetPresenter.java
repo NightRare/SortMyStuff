@@ -57,39 +57,16 @@ public class AddingAssetPresenter implements IAddingAssetPresenter {
 
     @Override
     public void updateAssetName(@Nullable Bitmap photo) {
-        Subscription subscription;
-
-        if (photo != null &&
-                mFeatToggle.PhotoDetection &&
-                !mFeatToggle.DelayPhotoDetection) {
-            subscription = mDataManager.getNewAssetName(photo)
-                    .subscribeOn(mSchedulerProvider.newThread())
-                    .observeOn(mSchedulerProvider.ui())
-                    .subscribe(
-                            //onNext
-                            newName -> {
-                                if (newName == null) {
-                                    mView.showMessage("Name detection failed.");
-                                } else {
-                                    mView.showAssetName(newName);
-                                }
-                            },
-                            //onError
-                            throwable -> {
-                            } //do nothing
-                    );
-        } else {
-            subscription = mDataManager.getNewAssetName()
-                    .subscribeOn(mSchedulerProvider.newThread())
-                    .observeOn(mSchedulerProvider.ui())
-                    .subscribe(
-                            //onNext
-                            newName -> mView.showAssetName(newName),
-                            //onError
-                            throwable -> {
-                            } //do nothing
-                    );
-        }
+        Subscription subscription = mDataManager.getNewAssetName()
+                .subscribeOn(mSchedulerProvider.newThread())
+                .observeOn(mSchedulerProvider.ui())
+                .subscribe(
+                        //onNext
+                        newName -> mView.showAssetName(newName),
+                        //onError
+                        throwable -> {
+                        } //do nothing
+                );
 
         if (subscription != null)
             mSubscriptions.add(subscription);

@@ -280,12 +280,13 @@ public class SwipeActivity extends BaseActivity {
             return;
 
         if (mPRServiceBinder.isPending()) {
-            mPRServiceBinder.resetPendingTimer(delayStart ? DELAYED_PHOTO_RECOGNITION_MILLIS : 0);
-            return;
+            mPRServiceBinder.terminateTask();
         }
 
         setPhotoRecognitionServiceStatus(PRSStatus.InProgress);
+
         mPRServiceBinder.startTask(delayStart ? DELAYED_PHOTO_RECOGNITION_MILLIS : 0)
+                .observeOn(mFactory.getSchedulerProvider().ui())
                 .subscribe(
                         // onNext
                         list -> setPhotoRecognitionServiceStatus(PRSStatus.Completed),

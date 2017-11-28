@@ -48,16 +48,10 @@ public class PhotoRecognitionService extends Service {
         }
 
         public boolean isPending() {
-            return mTask != null && !mTask.isTerminated() && !mTask.isRunning();
+            return mTask != null && mTask.isPending();
         }
 
-        public void resetPendingTimer(long delayedMillis) {
-            if (isPending()) {
-                mTask.start(delayedMillis);
-            }
-        }
-
-        public synchronized Observable<List<IPhotoRecognitionResult>> startTask(long delayedMillis) {
+        public Observable<List<IPhotoRecognitionResult>> startTask(long delayedMillis) {
             if (isRunning() || isPending())
                 return Observable.error(new IllegalStateException("A task is already started"));
 
@@ -81,13 +75,12 @@ public class PhotoRecognitionService extends Service {
                     }
                 };
 
-
                 mTask = new PhotoRecognitionTask(mDataManager, listener);
-                mTask.start(delayedMillis > 0 ? delayedMillis : 0);
+                mTask.start(delayedMillis);
             }, Emitter.BackpressureMode.BUFFER);
         }
 
-        public synchronized void terminateTask() {
+        public void terminateTask() {
             killCurrentTask();
         }
     }
@@ -103,10 +96,10 @@ public class PhotoRecognitionService extends Service {
 
     private final ServiceBinder mBinder = new ServiceBinder();
 
-    private IDataManager mDataManager;
-    private ISchedulerProvider mSchedulerProvider;
+    private volatile IDataManager mDataManager;
+    private volatile ISchedulerProvider mSchedulerProvider;
 
-    private PhotoRecognitionTask mTask;
+    private volatile PhotoRecognitionTask mTask;
 
 
     //endregion

@@ -6,6 +6,8 @@ public interface IPhotoRecognitionResult {
 
     IAsset asset();
 
+    String originalName();
+
     String errorMessage();
 
     boolean failed();

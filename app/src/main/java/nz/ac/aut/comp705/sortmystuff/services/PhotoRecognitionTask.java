@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -26,210 +27,173 @@ public class PhotoRecognitionTask {
         mPhotoRecognitionListener = photoRecognitionListener;
         mProcessed = 0;
         mTotalTasks = 0;
-        mRunning = false;
+        mStatus = Status.Ready;
         mHandler = new Handler();
-        mTerminated = false;
-        mResultList = new ArrayList<>();
+        mResultList = Collections.synchronizedList(new ArrayList<>());
     }
 
+    /**
+     * Each task can only be started once.
+     *
+     * @param delayed
+     */
     public void start(long delayed) {
-        checkTaskAvailability();
-        stopPendingTask();
-        if (mRunning) return;
-        mHandler = new Handler();
+        synchronized (this) {
+            if (mStatus != Status.Ready) return;
+            mStatus = Status.Pending;
+        }
         mHandler.postDelayed(this::execute, delayed >= 0 ? delayed : 0);
     }
 
-    public void start() {
-        checkTaskAvailability();
-        stopPendingTask();
-        if (mRunning) return;
-        mHandler = new Handler();
-        mHandler.post(this::execute);
-    }
-
-    public void stopPendingTask() {
-        checkTaskAvailability();
-        if (mRunning) return;
-        mHandler.removeCallbacksAndMessages(null);
-    }
-
     public void terminate() {
-        if (mTerminated) return;
-        synchronized (PhotoRecognitionTask.class) {
-            if (mRunning || mSubscription != null) {
-                mTerminated = true;
-                mSubscription.unsubscribe();
-                mRunning = false;
-                mProcessed = 0;
-                mTotalTasks = 0;
-                mHandler.removeCallbacksAndMessages(null);
-            }
+        if (mStatus == Status.Terminated) return;
+        synchronized (this) {
+            mStatus = Status.Terminated;
+            mProcessed = 0;
+            mTotalTasks = 0;
+        }
+        mHandler.removeCallbacksAndMessages(null);
+        if (mSubscription != null) {
+            mSubscription.unsubscribe();
         }
     }
 
     public boolean isRunning() {
-        return mRunning;
+        return mStatus.equals(Status.Running);
+    }
+
+    public boolean isPending() {
+        return mStatus.equals(Status.Pending);
     }
 
     public boolean isTerminated() {
-        return mTerminated;
+        return mStatus.equals(Status.Terminated);
     }
 
     // region PRIVATE STUFF
 
     private void execute() {
-        synchronized (PhotoRecognitionTask.class) {
-            mRunning = true;
+        mStatus = Status.Running;
 
-            mSubscription = mDataManager.getAssets()
-                    .flatMap(Observable::from)
-                    .serialize()
-                    .onBackpressureBuffer()
-                    .filter(asset -> conformsToDefaultNamingScheme(asset.getName()))
-                    .map(TaskUnit::new)
-                    .flatMap(this::zipPhotoDetail)
-                    .filter(taskUnit -> !taskUnit.failed && !taskUnit.completed)
-                    .toList()
-                    .flatMap(taskList -> {
-                        synchronized (PhotoRecognitionTask.class) {
-                            if(taskList.isEmpty())
-                                throw new IllegalStateException();
-                            mTotalTasks = taskList.size();
-                        }
-                        return Observable.from(taskList);
-                    })
-                    .serialize()
-                    .onBackpressureBuffer()
-                    .zipWith(Observable.interval(AppConfigs.PHOTO_RECOGNITION_INTERVAL, TimeUnit.MILLISECONDS),
-                            (taskUnit, delay) -> taskUnit)
-                    .flatMap(this::updateName)
-                    .onErrorResumeNext(throwable -> Observable.just(null))
-                    .subscribe(
-                            //onNext
-                            this::enqueueResults,
-                            // onError
-                            throwable -> {
-                                mPhotoRecognitionListener.onFailed(throwable);
-                                terminate();
-                            }
-                    );
-        }
+        mSubscription = mDataManager.getAssets()
+                .flatMap(Observable::from)
+                // important to make sure that only one thread is accessing/mutating taskUnit
+                // as TaskUnit is not thread safe
+                .serialize()
+                .onBackpressureBuffer()
+                .filter(asset -> conformsToDefaultNamingScheme(asset.getName()))
+                .map(TaskUnit::new)
+                .flatMap(this::zipPhotoDetail)
+                .filter(taskUnit -> !taskUnit.failed && !taskUnit.completed)
+                .toList()
+                .flatMap(taskList -> {
+                    if (taskList.isEmpty())
+                        throw new IllegalStateException();
+                    mTotalTasks = taskList.size();
+                    return Observable.from(taskList);
+                })
+                .serialize()
+                .onBackpressureBuffer()
+                .zipWith(Observable.interval(AppConfigs.PHOTO_RECOGNITION_INTERVAL, TimeUnit.MILLISECONDS),
+                        (taskUnit, delay) -> taskUnit)
+                .flatMap(this::updateName)
+                .onErrorResumeNext(throwable -> Observable.just(null))
+                .subscribe(this::enqueueResults);
     }
 
     private void enqueueResults(TaskUnit taskUnit) {
-        synchronized (PhotoRecognitionTask.class) {
-            if(mTotalTasks == 0) {
-                mPhotoRecognitionListener.onSucceeded(mResultList);
-                terminate();
-                return;
-            }
-
-            int progress = ((int) ++mProcessed / mTotalTasks) * 100;
-            mPhotoRecognitionListener.onProgress(progress);
-
-            if(taskUnit != null) {
-                mResultList.add(taskUnit);
-            }
-
-            if(mProcessed >= mTotalTasks) {
-                mPhotoRecognitionListener.onSucceeded(mResultList);
-                terminate();
-            }
+        if (mTotalTasks == 0) {
+            mPhotoRecognitionListener.onSucceeded(mResultList);
+            terminate();
+            return;
         }
-    }
 
-    private void checkTaskAvailability() {
-        if (mTerminated) {
-            throw new IllegalStateException("Cannot operate a terminated task.");
+        int progress = ((int) ++mProcessed / mTotalTasks) * 100;
+        mPhotoRecognitionListener.onProgress(progress);
+
+        if (taskUnit != null) {
+            mResultList.add(taskUnit.asResult());
+        }
+
+        if (mProcessed == mTotalTasks) {
+            mPhotoRecognitionListener.onSucceeded(mResultList);
+            terminate();
         }
     }
 
     private Observable<TaskUnit> zipPhotoDetail(TaskUnit taskUnit) {
-        synchronized (PhotoRecognitionTask.class) {
-            if (taskUnit.completed)
-                return Observable.just(taskUnit);
+        if (taskUnit.completed)
+            return Observable.just(taskUnit);
 
-            return mDataManager.getPhotoDetail(taskUnit.asset.getId())
-                    .map(detail -> {
-                        synchronized (PhotoRecognitionTask.class) {
-                            if (detail == null ||
-                                    detail.getField() == null) {
-                                taskUnit.completed = true;
-                                taskUnit.failed = true;
-                                taskUnit.error = ErrorType.PhotoError;
-                                return taskUnit;
-                            }
+        return mDataManager.getPhotoDetail(taskUnit.asset.getId())
+                .map(detail -> {
+                    if (detail == null ||
+                            detail.getField() == null) {
+                        taskUnit.completed = true;
+                        taskUnit.failed = true;
+                        taskUnit.error = ErrorType.PhotoError;
+                        return taskUnit;
+                    }
 
-                            if (detail.isDefaultFieldValue()) {
-                                taskUnit.completed = true;
-                                taskUnit.failed = true;
-                                taskUnit.error = ErrorType.DefaultPhoto;
-                                return taskUnit;
-                            }
+                    if (detail.isDefaultFieldValue()) {
+                        taskUnit.completed = true;
+                        taskUnit.failed = true;
+                        taskUnit.error = ErrorType.DefaultPhoto;
+                        return taskUnit;
+                    }
 
-                            taskUnit.photoDetail = detail;
-                            return taskUnit;
-                        }
-                    })
-                    .onErrorReturn(throwable -> {
-                        synchronized (PhotoRecognitionTask.class) {
-                            taskUnit.completed = true;
-                            taskUnit.failed = true;
-                            taskUnit.error = ErrorType.Unexpected;
-                            taskUnit.throwable = throwable;
-                            return taskUnit;
-                        }
-                    });
-        }
+                    taskUnit.photoDetail = detail;
+                    return taskUnit;
+                })
+                .onErrorReturn(throwable -> {
+                    taskUnit.completed = true;
+                    taskUnit.failed = true;
+                    taskUnit.error = ErrorType.Unexpected;
+                    taskUnit.throwable = throwable;
+                    return taskUnit;
+                });
     }
 
     private Observable<TaskUnit> updateName(TaskUnit taskUnit) {
-        synchronized (PhotoRecognitionTask.class) {
-            if (taskUnit == null || taskUnit.completed)
-                return Observable.just(taskUnit);
+        if (taskUnit == null || taskUnit.completed)
+            return Observable.just(taskUnit);
 
-            if (taskUnit.photoDetail == null || taskUnit.photoDetail.isDefaultFieldValue()) {
-                taskUnit.completed = true;
-                taskUnit.failed = true;
-                taskUnit.error = taskUnit.photoDetail == null ?
-                        ErrorType.PhotoError : ErrorType.DefaultPhoto;
-                return Observable.just(taskUnit);
-            }
-
-            return mDataManager.getNewAssetName(taskUnit.photoDetail.getField())
-                    .map(newName -> {
-                        synchronized (PhotoRecognitionTask.class) {
-                            if (newName == null) {
-                                taskUnit.completed = true;
-                                taskUnit.failed = true;
-                                taskUnit.error = ErrorType.ServiceError;
-                                return taskUnit;
-                            }
-
-                            // if name is changed on other threads
-                            if (!taskUnit.asset.getName().equals(taskUnit.originalName)) {
-                                taskUnit.completed = true;
-                                taskUnit.failed = true;
-                                taskUnit.error = ErrorType.OriginalNameChanged;
-                                return taskUnit;
-                            }
-
-                            mDataManager.updateAssetName(taskUnit.asset.getId(), newName);
-                            taskUnit.completed = true;
-                            return taskUnit;
-                        }
-                    })
-                    .onErrorReturn(throwable -> {
-                        synchronized (PhotoRecognitionTask.class) {
-                            taskUnit.completed = true;
-                            taskUnit.failed = true;
-                            taskUnit.error = ErrorType.Unexpected;
-                            taskUnit.throwable = throwable;
-                            return taskUnit;
-                        }
-                    });
+        if (taskUnit.photoDetail == null || taskUnit.photoDetail.isDefaultFieldValue()) {
+            taskUnit.completed = true;
+            taskUnit.failed = true;
+            taskUnit.error = taskUnit.photoDetail == null ?
+                    ErrorType.PhotoError : ErrorType.DefaultPhoto;
+            return Observable.just(taskUnit);
         }
+
+        return mDataManager.getNewAssetName(taskUnit.photoDetail.getField())
+                .map(newName -> {
+                    if (newName == null) {
+                        taskUnit.completed = true;
+                        taskUnit.failed = true;
+                        taskUnit.error = ErrorType.ServiceError;
+                        return taskUnit;
+                    }
+
+                    // if name is changed on other threads
+                    if (!taskUnit.asset.getName().equals(taskUnit.originalName)) {
+                        taskUnit.completed = true;
+                        taskUnit.failed = true;
+                        taskUnit.error = ErrorType.OriginalNameChanged;
+                        return taskUnit;
+                    }
+
+                    mDataManager.updateAssetName(taskUnit.asset.getId(), newName);
+                    taskUnit.completed = true;
+                    return taskUnit;
+                })
+                .onErrorReturn(throwable -> {
+                    taskUnit.completed = true;
+                    taskUnit.failed = true;
+                    taskUnit.error = ErrorType.Unexpected;
+                    taskUnit.throwable = throwable;
+                    return taskUnit;
+                });
     }
 
     private enum ErrorType {
@@ -243,7 +207,47 @@ public class PhotoRecognitionTask {
         Unexpected
     }
 
-    private static class TaskUnit implements IPhotoRecognitionResult {
+    private static class TaskResult implements IPhotoRecognitionResult {
+
+        private final IAsset asset;
+        private final String originalName;
+        private final String errorMessage;
+        private final boolean failed;
+
+        public TaskResult(
+                IAsset asset,
+                String errorMessage,
+                String originalName,
+                boolean failed) {
+
+            this.asset = asset;
+            this.errorMessage = errorMessage;
+            this.failed = failed;
+            this.originalName = originalName;
+        }
+
+        @Override
+        public IAsset asset() {
+            return asset;
+        }
+
+        @Override
+        public String originalName() {
+            return originalName;
+        }
+
+        @Override
+        public String errorMessage() {
+            return errorMessage;
+        }
+
+        @Override
+        public boolean failed() {
+            return failed;
+        }
+    }
+
+    private static class TaskUnit {
 
         @NonNull
         private final IAsset asset;
@@ -269,13 +273,11 @@ public class PhotoRecognitionTask {
             error = ErrorType.NoError;
         }
 
-        @Override
-        public IAsset asset() {
-            return asset;
+        private IPhotoRecognitionResult asResult() {
+            return new TaskResult(asset, getErrorMessage(), originalName, failed);
         }
 
-        @Override
-        public String errorMessage() {
+        private String getErrorMessage() {
             switch (error) {
                 case PhotoError:
                     return "Unable to process asset photo.";
@@ -291,24 +293,25 @@ public class PhotoRecognitionTask {
                     return "Photo recognition succeeded.";
             }
         }
-
-        @Override
-        public boolean failed() {
-            return failed;
-        }
     }
 
-    private IDataManager mDataManager;
-    private PhotoRecognitionListener mPhotoRecognitionListener;
+    private enum Status {
+        Ready,
+        Pending,
+        Running,
+        Terminated
+    }
 
-    private Subscription mSubscription;
-    private Handler mHandler;
+    private final IDataManager mDataManager;
+    private final PhotoRecognitionListener mPhotoRecognitionListener;
+    private final Handler mHandler;
 
-    private boolean mTerminated;
-    private boolean mRunning;
-    private int mProcessed;
-    private int mTotalTasks;
-    private List<IPhotoRecognitionResult> mResultList;
+    private volatile Subscription mSubscription;
+    private volatile Status mStatus;
+
+    private volatile int mProcessed;
+    private volatile int mTotalTasks;
+    private final List<IPhotoRecognitionResult> mResultList;
 
     //endregion
 }

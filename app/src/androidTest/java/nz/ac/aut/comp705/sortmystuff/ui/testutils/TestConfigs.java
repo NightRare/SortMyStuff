@@ -6,5 +6,5 @@ public class TestConfigs {
 
     public static final String TEST_USER_PASSWORD = "SortMyStuff";
 
-    public static final String TEST_USER_ID = "8kXKckU8pMhy3hROFO4fn79OZCL2";
+    public static final String TEST_USER_ID = "ZDaJiOIstvX6xhddrXTcEZHHYNm2";
 }

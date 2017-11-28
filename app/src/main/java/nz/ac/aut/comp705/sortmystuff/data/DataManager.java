@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.WeakHashMap;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
@@ -79,7 +80,7 @@ public class DataManager implements IDataManager, IDebugHelper {
 
         initCachedDetails();
 //        mRemoteRepo.setOnDataChangeCallback(new OnDetailsDataChangeListeners(), FDetail.class);
-        mRemoteRepo.setOnDataChangeCallback(new OnAssetsDataChangeListeners(), FAsset.class);
+//        mRemoteRepo.setOnDataChangeCallback(new OnAssetsDataChangeListeners(), FAsset.class);
 
         cacheAssets();
         cacheCategories();
@@ -594,6 +595,11 @@ public class DataManager implements IDataManager, IDebugHelper {
     @Override
     public Observable<String> getNewAssetName(Bitmap photo) {
         if (mFeatToggle.PhotoDetection && !mResLoader.getDefaultPhoto().sameAs(photo)) {
+            if(mFeatToggle.DevelopmentMode) {
+                return generateNewAssetName("Detected name", false)
+                        .delay(10, TimeUnit.SECONDS);
+            }
+
             return mImageDetectionHelper
                     .result(BitmapHelper.toCloudSightString(photo))
                     .map(result -> result == null ? null : result.name())
@@ -1235,7 +1241,7 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
     }
 
-    private synchronized Observable<String> generateNewAssetName(String prefix, boolean displayZero) {
+    private Observable<String> generateNewAssetName(String prefix, boolean displayZero) {
         Observable<FAsset> assetStreams;
 
         if (mDirtyCachedAssets || mCachedAssets == null) {
