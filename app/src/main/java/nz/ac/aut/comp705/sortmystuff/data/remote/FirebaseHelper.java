@@ -59,6 +59,9 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
         mAppResDB = checkNotNull(appResDB);
         mUserST = checkNotNull(storageReference);
         mSchedulerProvider = checkNotNull(schedulerProvider);
+
+//        deleteAllRecycledAssets();
+//        deleteAllRecycledDetails();
     }
 
     @Override
@@ -134,24 +137,22 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
                     // should not update an existing record
                     if (detailFromFirebase != null) throw new IllegalStateException();
                 })
-                .flatMap(isNewDetail -> {
-                    return Observable.create((Action1<Emitter<Boolean>>) emitter -> {
-                        OnSuccessListener<Void> onNext = aVoid -> {
-                            Boolean requireImageLoading = detail.getType().equals(DetailType.Image)
-                                    && !detail.isDefaultFieldValue();
-                            emitter.onNext(requireImageLoading);
-                        };
+                .flatMap(isNewDetail ->
+                        Observable.create((Action1<Emitter<Boolean>>) emitter -> {
+                            OnSuccessListener<Void> onNext = aVoid -> {
+                                Boolean requireImageLoading = detail.getType().equals(DetailType.Image)
+                                        && !detail.isDefaultFieldValue();
+                                emitter.onNext(requireImageLoading);
+                            };
 
-                        OnFailureListener onError = emitter::onError;
-                        OnCompleteListener<Void> onCompleted = task -> {
-                            emitter.onCompleted();
-                        };
+                            OnFailureListener onError = emitter::onError;
+                            OnCompleteListener<Void> onCompleted = task -> emitter.onCompleted();
 
-                        mUserDB.child(DB_DETAILS).child(detail.getId()).setValue(detail.toMap()).addOnSuccessListener(onNext)
-                                .addOnFailureListener(onError)
-                                .addOnCompleteListener(onCompleted);
-                    }, Emitter.BackpressureMode.BUFFER);
-                })
+                            mUserDB.child(DB_DETAILS).child(detail.getId()).setValue(detail.toMap())
+                                    .addOnSuccessListener(onNext)
+                                    .addOnFailureListener(onError)
+                                    .addOnCompleteListener(onCompleted);
+                        }, Emitter.BackpressureMode.BUFFER))
                 .flatMap(requireImageLoading -> {
                     if (requireImageLoading) {
                         return Observable.create((Action1<Emitter<Void>>) emitter -> {
@@ -476,12 +477,43 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
         }
     };
 
-    private DatabaseReference mUserDB;
-    private DatabaseReference mAppResDB;
-    private StorageReference mUserST;
-    private LocalResourceLoader mResLoader;
-    private ISchedulerProvider mSchedulerProvider;
-    private OnDataChangeCallback<FAsset> mOnAssetsDataChangeCallback;
-    private OnDataChangeCallback<FDetail> mOnDetailsDataChangeCallback;
+    private void deleteAllRecycledAssets() {
+        RxFirebaseDatabase
+                .observeSingleValueEvent(mUserDB.child(DB_ASSETS))
+                .map(dataSnapshot -> jsonDataToList(dataSnapshot, FAsset.class))
+                .onBackpressureBuffer()
+                .flatMap(Observable::from)
+                .filter(FAsset::isRecycled)
+                .map(FAsset::getId)
+                .subscribe(id -> mUserDB.child(DB_ASSETS).child(id).removeValue());
+    }
 
+    private void deleteAllRecycledDetails() {
+        RxFirebaseDatabase
+                .observeSingleValueEvent(mUserDB.child(DB_ASSETS))
+                .map(dataSnapshot -> jsonDataToList(dataSnapshot, FAsset.class))
+                .onBackpressureBuffer()
+                .flatMap(Observable::from)
+                .filter(asset -> !asset.isRecycled())
+                .map(FAsset::getId)
+                .toList()
+                .subscribe(
+                        assets -> RxFirebaseDatabase
+                                .observeSingleValueEvent(mUserDB.child(DB_DETAILS))
+                                .map(dataSnapshot -> jsonDataToList(dataSnapshot, FDetail.class))
+                                .onBackpressureBuffer()
+                                .flatMap(Observable::from)
+                                .filter(detail -> !assets.contains(detail.getAssetId()))
+                                .map(FDetail::getId)
+                                .subscribe(id -> mUserDB.child(DB_DETAILS).child(id).removeValue())
+                );
+    }
+
+    private final DatabaseReference mUserDB;
+    private final DatabaseReference mAppResDB;
+    private final StorageReference mUserST;
+    private final LocalResourceLoader mResLoader;
+    private final ISchedulerProvider mSchedulerProvider;
+    private volatile OnDataChangeCallback<FAsset> mOnAssetsDataChangeCallback;
+    private volatile OnDataChangeCallback<FDetail> mOnDetailsDataChangeCallback;
 }
