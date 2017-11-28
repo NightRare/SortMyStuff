@@ -1,16 +1,20 @@
 package nz.ac.aut.comp705.sortmystuff.data.models;
 
 import android.graphics.Bitmap;
+import android.util.ArrayMap;
 
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import nz.ac.aut.comp705.sortmystuff.utils.AppConfigs;
 import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
@@ -45,6 +49,7 @@ public final class FAsset implements IAsset {
 
     @Exclude
     private static final Map<String, Class> memberClasses;
+
     static {
         Map<String, Class> aMap = new HashMap<>();
         aMap.put(ASSET_ID, String.class);
@@ -65,41 +70,39 @@ public final class FAsset implements IAsset {
 
     //region DATA FIELDS
 
-    private String id;
+    private final String id;
 
-    private String name;
+    private volatile String name;
 
-    private String containerId;
+    private volatile String containerId;
 
-    private List<String> contentIds;
+    private final List<String> contentIds;
 
-    private CategoryType categoryType;
+    private volatile CategoryType categoryType;
 
     /**
      * Value of System.currentTimeMillis() when the asset is created.
      */
-    private Long createTimestamp;
+    private final AtomicLong createTimestamp = new AtomicLong();
 
     /**
      * Value of System.currentTimeMillis() when the asset is modified
      * changing the container and adding contents does not count as modifications
      * to the Asset.
      */
-    private Long modifyTimestamp;
+    private final AtomicLong modifyTimestamp = new AtomicLong();
 
-    private Boolean recycled;
+    private final AtomicBoolean recycled = new AtomicBoolean();
 
-    private List<String> detailIds;
+    private final List<String> detailIds;
 
-    private Bitmap thumbnail;
+    private volatile String thumbnailEncodedData;
+
+    private volatile WeakReference<Bitmap> thumbnail = new WeakReference<>(null);
 
     //endregion
 
     //region STATIC FACTORIES
-
-    public FAsset() {
-        // Default constructor required for calls to DataSnapshot.getValue(Post.class)
-    }
 
     /**
      * Static factory to create an asset with the given name and has a categoryType type as given.
@@ -120,8 +123,10 @@ public final class FAsset implements IAsset {
         Long createTimestamp = System.currentTimeMillis();
         Long modifyTimestamp = System.currentTimeMillis();
 
-        FAsset asset = new FAsset(id, name, containerId, new ArrayList<>(), category,
-                createTimestamp, modifyTimestamp, false, new ArrayList<>(), null, true);
+        List<String> contentIds = Collections.synchronizedList(new ArrayList<>());
+        List<String> detailIds = Collections.synchronizedList(new ArrayList<>());
+        FAsset asset = new FAsset(id, name, containerId, contentIds, category,
+                createTimestamp, modifyTimestamp, false, detailIds, null, true);
 
         return asset;
     }
@@ -172,31 +177,25 @@ public final class FAsset implements IAsset {
         if (detailIds == null) detailIds = new ArrayList<>();
 
         String encodedThumbnail = (String) members.get(ASSET_THUMBNAIL);
-        if (encodedThumbnail != null && !encodedThumbnail.isEmpty()) {
-            Bitmap thumbnail = BitmapHelper.toBitmap(encodedThumbnail);
-            return new FAsset(id, name, containerId, contentIds, categoryType, createTimestamp,
-                    modifyTimestamp, recycled, detailIds, thumbnail, false);
-        } else {
-            return new FAsset(id, name, containerId, contentIds, categoryType, createTimestamp,
-                    modifyTimestamp, recycled, detailIds, null, true);
-        }
+        return new FAsset(id, name, containerId, contentIds, categoryType, createTimestamp,
+                modifyTimestamp, recycled, detailIds, encodedThumbnail, encodedThumbnail == null);
     }
 
     @Exclude
     public Map<String, Object> toMap() {
-        Map<String, Object> map = new HashMap<>();
+        Map<String, Object> map = Collections.synchronizedMap(new ArrayMap<>());
         map.put(ASSET_ID, id);
         map.put(ASSET_NAME, name);
         map.put(ASSET_CONTAINERID, containerId);
         map.put(ASSET_CONTENTIDS, contentIds);
         map.put(ASSET_CATEGORYTYPE, categoryType.toString());
-        map.put(ASSET_CREATETIMESTAMP, createTimestamp);
-        map.put(ASSET_MODIFYTIMESTAMP, modifyTimestamp);
-        map.put(ASSET_RECYCLED, recycled);
+        map.put(ASSET_CREATETIMESTAMP, createTimestamp.get());
+        map.put(ASSET_MODIFYTIMESTAMP, modifyTimestamp.get());
+        map.put(ASSET_RECYCLED, recycled.get());
         map.put(ASSET_DETAILIDS, detailIds);
 
         // if using default thumbnail then don't put it into the map
-        String thumbnailEncodedString = usingDefaultThumbnail ? null : BitmapHelper.toString(thumbnail);
+        String thumbnailEncodedString = usingDefaultThumbnail.get() ? null : thumbnailEncodedData;
         map.put(ASSET_THUMBNAIL, thumbnailEncodedString);
 
         return map;
@@ -205,16 +204,20 @@ public final class FAsset implements IAsset {
     @Exclude
     public void overwrittenBy(FAsset source) {
         checkNotNull(source, "The source asset cannot be null.");
-        id = source.getId();
+        if (!id.equals(source.getId()))
+            throw new IllegalStateException("The source asset must have the same id.");
         name = source.getName();
         containerId = source.getContainerId();
-        contentIds = source.getContentIds();
+        contentIds.clear();
+        contentIds.addAll(source.getContentIds());
         categoryType = source.getCategoryType();
-        createTimestamp = source.getCreateTimestamp();
-        modifyTimestamp = source.getModifyTimestamp();
-        recycled = source.isRecycled();
-        detailIds = source.getDetailIds();
-        thumbnail = source.getThumbnail();
+        createTimestamp.set(source.getCreateTimestamp());
+        modifyTimestamp.set(source.getModifyTimestamp());
+        recycled.set(source.isRecycled());
+        detailIds.clear();
+        detailIds.addAll(source.getDetailIds());
+        thumbnailEncodedData = source.thumbnailEncodedData;
+        usingDefaultThumbnail.set(source.usingDefaultThumbnail.get());
     }
 
     public static Class getMemberClassForDatabase(String key) {
@@ -277,7 +280,7 @@ public final class FAsset implements IAsset {
      */
     @Override
     public Long getCreateTimestamp() {
-        return createTimestamp;
+        return createTimestamp.get();
     }
 
     /**
@@ -287,7 +290,7 @@ public final class FAsset implements IAsset {
      */
     @Override
     public Long getModifyTimestamp() {
-        return modifyTimestamp;
+        return modifyTimestamp.get();
     }
 
     /**
@@ -297,7 +300,7 @@ public final class FAsset implements IAsset {
      */
     @Override
     public Boolean isRecycled() {
-        return recycled;
+        return recycled.get();
     }
 
     /**
@@ -314,7 +317,14 @@ public final class FAsset implements IAsset {
     @Override
     @Exclude
     public Bitmap getThumbnail() {
-        return thumbnail;
+        if(thumbnailEncodedData == null)
+            return null;
+
+        if(thumbnail.get() == null) {
+            thumbnail = new WeakReference<>(BitmapHelper.toBitmap(thumbnailEncodedData));
+        }
+
+        return thumbnail.get();
     }
 
     public List<String> getDetailIds() {
@@ -324,12 +334,6 @@ public final class FAsset implements IAsset {
     //endregion
 
     //region MODIFIERS
-
-    @Exclude
-    public void setId(String id) {
-        if (this.id == null || this.id.isEmpty())
-            this.id = checkNotNull(id);
-    }
 
     /**
      * Sets the name of the asset.
@@ -349,8 +353,9 @@ public final class FAsset implements IAsset {
 
     @Exclude
     public void setRecycled(boolean recycled) {
-        if (!isRoot())
-            this.recycled = recycled;
+        if (!isRoot()) {
+            this.recycled.set(recycled);
+        }
     }
 
     /**
@@ -361,14 +366,24 @@ public final class FAsset implements IAsset {
      */
     @Exclude
     public void setModifyTimestamp(long modifyTimestamp) {
-        if(isRoot() || modifyTimestamp < this.modifyTimestamp) return;
-        this.modifyTimestamp = modifyTimestamp;
+        if (isRoot() || modifyTimestamp < this.modifyTimestamp.get()) return;
+        this.modifyTimestamp.set(modifyTimestamp);
     }
 
     @Exclude
     public void setThumbnail(Bitmap photo, boolean usingDefaultThumbnail) {
-        this.usingDefaultThumbnail = usingDefaultThumbnail;
-        this.thumbnail = checkNotNull(photo);
+
+//        if (encodedThumbnail != null && !encodedThumbnail.isEmpty()) {
+//            Bitmap thumbnail = BitmapHelper.toBitmap(encodedThumbnail);
+//            return new FAsset(id, name, containerId, contentIds, categoryType, createTimestamp,
+//                    modifyTimestamp, recycled, detailIds, thumbnail, false);
+//        } else {
+//            return new FAsset(id, name, containerId, contentIds, categoryType, createTimestamp,
+//                    modifyTimestamp, recycled, detailIds, null, true);
+
+
+        this.usingDefaultThumbnail.set(usingDefaultThumbnail);
+        this.thumbnailEncodedData = BitmapHelper.toString(checkNotNull(photo));
     }
 
     @Exclude
@@ -453,21 +468,30 @@ public final class FAsset implements IAsset {
 
     //region PRIVATE STUFF
 
-    private FAsset(String id, String name, String containerId, List<String> contentIds,
-                   CategoryType categoryType, Long createdTimestamp,
-                   Long modifiedTimestamp, boolean recycled, List<String> detailIds, Bitmap thumbnail,
-                   boolean usingDefaultThumbnail) {
+    private FAsset(
+            String id,
+            String name,
+            String containerId,
+            List<String> contentIds,
+            CategoryType categoryType,
+            Long createdTimestamp,
+            Long modifiedTimestamp,
+            boolean recycled,
+            List<String> detailIds,
+            String thumbnailEncodedData,
+            boolean usingDefaultThumbnail) {
+
         this.id = id;
         this.name = name;
         this.containerId = containerId;
         this.contentIds = contentIds;
         this.categoryType = categoryType;
-        this.createTimestamp = createdTimestamp;
-        this.modifyTimestamp = modifiedTimestamp;
-        this.recycled = recycled;
+        this.createTimestamp.set(createdTimestamp);
+        this.modifyTimestamp.set(modifiedTimestamp);
+        this.recycled.set(recycled);
         this.detailIds = detailIds;
-        this.thumbnail = thumbnail;
-        this.usingDefaultThumbnail = usingDefaultThumbnail;
+        this.thumbnailEncodedData = thumbnailEncodedData;
+        this.usingDefaultThumbnail.set(usingDefaultThumbnail);
     }
 
     /**
@@ -486,7 +510,7 @@ public final class FAsset implements IAsset {
     }
 
     @Exclude
-    private boolean usingDefaultThumbnail;
+    private final AtomicBoolean usingDefaultThumbnail = new AtomicBoolean();
 
     //endregion
 }
