@@ -451,7 +451,7 @@ public class SwipeActivityTest {
         onView(withId(R.id.add_asset_button)).check(matches(isDisplayed()));
 
         // SEARCH BUTTON (menu items)
-        onView(withId(R.id.search_view_button)).check(matches(isDisplayed()));
+        onView(withId(R.id.main_menu_search_button)).check(matches(isDisplayed()));
 
         // DETAILS TAB
         onView(allOf(isDescendantOfA(withId(R.id.tabs)), withText(R.string.details_page)))
@@ -464,7 +464,7 @@ public class SwipeActivityTest {
         // NOW THEY SHOULD BE HIDDEN
         onView(withId(R.id.pathbar_layout)).check(matches(not(isDisplayed())));
         onView(withId(R.id.add_asset_button)).check(matches(not(isDisplayed())));
-        onView(withId(R.id.search_view_button)).check(doesNotExist());
+        onView(withId(R.id.main_menu_search_button)).check(doesNotExist());
         onView(allOf(isDescendantOfA(withId(R.id.tabs)), withText(R.string.details_page)))
                 .check(doesNotExist());
     }
@@ -547,7 +547,7 @@ public class SwipeActivityTest {
         onView(withId(R.id.add_asset_button)).check(matches(isDisplayed()));
 
         // SEARCH BUTTON (menu items)
-        onView(withId(R.id.search_view_button)).check(matches(isDisplayed()));
+        onView(withId(R.id.main_menu_search_button)).check(matches(isDisplayed()));
 
         // DETAILS TAB
         onView(allOf(isDescendantOfA(withId(R.id.tabs)), withText(R.string.details_page)))
@@ -564,7 +564,7 @@ public class SwipeActivityTest {
 
         // NOW THEY SHOULD BE HIDDEN
         onView(withId(R.id.add_asset_button)).check(matches(not(isDisplayed())));
-        onView(withId(R.id.search_view_button)).check(doesNotExist());
+        onView(withId(R.id.main_menu_search_button)).check(doesNotExist());
         onView(allOf(isDescendantOfA(withId(R.id.tabs)), withText(R.string.details_page)))
                 .check(doesNotExist());
 

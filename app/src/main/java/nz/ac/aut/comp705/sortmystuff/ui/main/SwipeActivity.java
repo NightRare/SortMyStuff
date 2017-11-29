@@ -132,9 +132,7 @@ public class SwipeActivity extends BaseActivity {
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        // set menu button visibility according to whether it's root asset
-        MenuItem deleteBtn = mMenu.findItem(R.id.delete_current_asset_button);
-        deleteBtn.setVisible(!isRootAsset);
+        // set menu button visibility here
 
         return super.onPrepareOptionsMenu(menu);
     }
@@ -142,16 +140,13 @@ public class SwipeActivity extends BaseActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.search_view_button:
+            case R.id.main_menu_search_button:
                 Intent searchIntent = new Intent(this, SearchActivity.class);
                 this.startActivity(searchIntent);
                 return true;
 
-            case R.id.selection_mode_button:
-                mContentsViewListeners.onOptionsSelectionModeSelected();
-                return true;
-
-            case R.id.delete_current_asset_button:
+            case R.id.main_menu_sort_button:
+                mContentsViewListeners.onSortContentClick();
                 return true;
 
             case android.R.id.home:

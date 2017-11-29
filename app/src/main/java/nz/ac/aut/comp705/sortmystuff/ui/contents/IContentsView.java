@@ -1,12 +1,9 @@
 package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
 
 import java.util.List;
 
-import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.ui.IView;
 
@@ -30,7 +27,7 @@ public interface IContentsView extends IView<IContentsPresenter> {
      * Displays the assets as a list.
      *
      * @param assets the assets
-     * @param mode   the code of the display mode
+     * @param viewMode   the code of the display mode
      */
     void showAssetContents(List<IAsset> assets, ContentsViewMode viewMode);
 
@@ -60,7 +57,7 @@ public interface IContentsView extends IView<IContentsPresenter> {
 
         boolean onContentAssetLongClick();
 
-        void onOptionsSelectionModeSelected();
+        void onSortContentClick();
 
         void onAddAssetFabClick();
 

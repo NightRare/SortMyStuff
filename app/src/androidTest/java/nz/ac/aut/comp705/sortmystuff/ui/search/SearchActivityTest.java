@@ -90,7 +90,7 @@ public class SearchActivityTest {
         addAsset(ONE_RESULT_SEARCH_ITEM);
         addAsset(TWO_RESULT_SEARCH_ITEM_1);
         addAsset(TWO_RESULT_SEARCH_ITEM_2);
-        onView(withId(R.id.search_view_button)).perform(click());
+        onView(withId(R.id.main_menu_search_button)).perform(click());
     }
 
     @After

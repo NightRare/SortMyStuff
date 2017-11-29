@@ -34,6 +34,7 @@ import nz.ac.aut.comp705.sortmystuff.ui.adding.AddingAssetActivity;
 import nz.ac.aut.comp705.sortmystuff.ui.main.SwipeActivity;
 import nz.ac.aut.comp705.sortmystuff.utils.AppStrings;
 import nz.ac.aut.comp705.sortmystuff.utils.Log;
+import nz.ac.aut.comp705.sortmystuff.utils.PopupMenuHelper;
 
 import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.INTENT_ASSET_ID;
 
@@ -353,6 +354,21 @@ public class ContentsFragment extends Fragment implements IContentsView {
         return builder.create();
     }
 
+    private boolean sortContentAssetsBy(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.sort_menu_by_name:
+                mAdapter.sortData(AssetRecyclerAdapter.SortParam.Name, false);
+                return true;
+            case R.id.sort_menu_by_create:
+                mAdapter.sortData(AssetRecyclerAdapter.SortParam.CreatedAt, true);
+                return true;
+            case R.id.sort_menu_by_modify:
+                mAdapter.sortData(AssetRecyclerAdapter.SortParam.ModfiedAt, true);
+                return true;
+        }
+        return false;
+    }
+
     private class ContentsViewListeners implements IContentsView.ViewListeners {
 
         @Override
@@ -386,8 +402,14 @@ public class ContentsFragment extends Fragment implements IContentsView {
         }
 
         @Override
-        public void onOptionsSelectionModeSelected() {
-            mPresenter.loadCurrentContentsWithMode(ContentsViewMode.Selection);
+        public void onSortContentClick() {
+            View sortButtonView = getActivity().findViewById(R.id.main_menu_sort_button);
+            PopupMenuHelper.build(
+                    getContext(),
+                    sortButtonView,
+                    R.menu.sort_menu,
+                    ContentsFragment.this::sortContentAssetsBy,
+                    false).show();
         }
 
         @Override

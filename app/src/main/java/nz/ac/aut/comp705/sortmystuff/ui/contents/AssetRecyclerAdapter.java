@@ -9,19 +9,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.ImageView;
-import android.widget.PopupMenu;
 import android.widget.TextView;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
-import nz.ac.aut.comp705.sortmystuff.utils.Log;
+import nz.ac.aut.comp705.sortmystuff.utils.PopupMenuHelper;
 import rx.Observable;
 import rx.schedulers.Schedulers;
 
@@ -59,7 +57,7 @@ public class AssetRecyclerAdapter extends
         holder.mCheckBox.setVisibility(mViewMode.equals(ContentsViewMode.Selection) ?
                 View.VISIBLE : View.GONE);
         holder.mMoreOptionsView.setVisibility(mViewMode.equals(ContentsViewMode.Default) ?
-            View.VISIBLE : View.GONE);
+                View.VISIBLE : View.GONE);
         holder.mCheckBox.setChecked(mSelectedAssets.contains(mAssets.get(position).getId()));
 
         //gray the asset name if it is in moving list
@@ -83,11 +81,15 @@ public class AssetRecyclerAdapter extends
 
         holder.itemView.setOnLongClickListener(v ->
                 mViewMode.equals(ContentsViewMode.Default) &&
-                mItemListener.onContentAssetLongClick());
+                        mItemListener.onContentAssetLongClick());
 
         holder.mMoreOptionsView.setOnClickListener(v ->
-                initialiseMoreOptionsMenu(holder, position).show());
-
+                PopupMenuHelper.build(
+                        mContext,
+                        holder.mMoreOptionsView,
+                        R.menu.asset_menu,
+                        item -> mItemListener.onAssetMoreOptionsClick(mAssets.get(position), item),
+                        true).show());
     }
 
     @Override
@@ -107,8 +109,29 @@ public class AssetRecyclerAdapter extends
         mAssets.addAll(checkNotNull(assets));
         mViewMode = checkNotNull(viewMode);
 
-        if(viewMode.equals(ContentsViewMode.Default))
+        if (viewMode.equals(ContentsViewMode.Default))
             mSelectedAssets.clear();
+        notifyDataSetChanged();
+    }
+
+    public void sortData(SortParam param, boolean desc) {
+        switch (param) {
+            case Name:
+                Collections.sort(mAssets, (o1, o2) -> desc ?
+                        o2.getName().compareTo(o1.getName()) :
+                        o1.getName().compareTo(o2.getName()));
+                break;
+            case CreatedAt:
+                Collections.sort(mAssets, (o1, o2) -> desc ?
+                        o2.getCreateTimestamp().compareTo(o1.getCreateTimestamp()) :
+                        o1.getCreateTimestamp().compareTo(o2.getCreateTimestamp()));
+                break;
+            case ModfiedAt:
+                Collections.sort(mAssets, (o1, o2) -> desc ?
+                        o2.getModifyTimestamp().compareTo(o1.getModifyTimestamp()) :
+                        o1.getModifyTimestamp().compareTo(o2.getModifyTimestamp()));
+                break;
+        }
         notifyDataSetChanged();
     }
 
@@ -118,7 +141,7 @@ public class AssetRecyclerAdapter extends
                 .filter(asset -> asset.getId().equals(id))
                 .isEmpty()
                 .subscribe(empty -> {
-                    if(!empty) {
+                    if (!empty) {
                         mSelectedAssets.add(id);
                     }
                 });
@@ -157,6 +180,12 @@ public class AssetRecyclerAdapter extends
         }
     }
 
+    public enum SortParam {
+        Name,
+        CreatedAt,
+        ModfiedAt
+    }
+
     //region PRIVATE STUFF
 
     private void toggleCheckBox(CheckBox checkBox, int position) {
@@ -165,38 +194,6 @@ public class AssetRecyclerAdapter extends
             mSelectedAssets.add(mAssets.get(position).getId());
         else
             mSelectedAssets.remove(mAssets.get(position).getId());
-    }
-
-    private PopupMenu initialiseMoreOptionsMenu(AssetRecyclerAdapter.ViewHolder holder, int position) {
-        PopupMenu popupMenu = new PopupMenu(mContext, holder.mMoreOptionsView);
-        popupMenu.inflate(R.menu.asset_menu);
-        popupMenu.setOnMenuItemClickListener(item ->
-                mItemListener.onAssetMoreOptionsClick(mAssets.get(position), item));
-
-        // this code snippet is to show the icons in the popup menu
-        // TODO: this code snippet wouldn't work with proguard. Need to add proguard configuration:
-        //(Note, I am using PopupMenu from support package)
-        // -keepclassmembernames class android.support.v7.widget.PopupMenu { private android.support.v7.internal.view.menu.MenuPopupHelper mPopup; }
-        // -keepclassmembernames class android.support.v7.internal.view.menu.MenuPopupHelper { public void setForceShowIcon(boolean); } –
-        try {
-            Field[] fields = popupMenu.getClass().getDeclaredFields();
-            for (Field field : fields) {
-                if ("mPopup".equals(field.getName())) {
-                    field.setAccessible(true);
-                    Object menuPopupHelper = field.get(popupMenu);
-                    Class<?> classPopupHelper = Class.forName(menuPopupHelper
-                            .getClass().getName());
-                    Method setForceIcons = classPopupHelper.getMethod(
-                            "setForceShowIcon", boolean.class);
-                    setForceIcons.invoke(menuPopupHelper, true);
-                    break;
-                }
-            }
-        } catch (Exception e) {
-            Log.e(TAG, e.getMessage(), e);
-        }
-
-        return popupMenu;
     }
 
     private static final String TAG = "AssetRecyclerAdapter";
