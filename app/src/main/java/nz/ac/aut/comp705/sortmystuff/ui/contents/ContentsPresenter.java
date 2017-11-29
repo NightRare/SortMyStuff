@@ -158,6 +158,7 @@ public class ContentsPresenter implements IContentsPresenter {
         for (String id : assetIds) {
             mDataManager.recycleAssetAndItsContents(id);
         }
+        mView.showMessage(assetIds.size() + " assets deleted");
         loadCurrentContentsWithMode(ContentsViewMode.Default);
     }
 

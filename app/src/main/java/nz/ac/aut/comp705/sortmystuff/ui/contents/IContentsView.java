@@ -57,8 +57,6 @@ public interface IContentsView extends IView<IContentsPresenter> {
 
         void onContentAssetClick(IAsset clickedAsset);
 
-        void onContentAssetClick(AdapterView<?> parent, View view, int position, long id);
-
         boolean onAssetMoreOptionsClick(IAsset clickedAsset, MenuItem clickedOption);
 
         boolean onContentAssetLongClick();

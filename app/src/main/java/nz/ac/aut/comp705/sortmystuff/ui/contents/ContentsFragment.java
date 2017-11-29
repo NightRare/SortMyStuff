@@ -16,7 +16,6 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -214,7 +213,8 @@ public class ContentsFragment extends Fragment implements IContentsView {
         builder.setPositiveButton(R.string.delete_asset_confirm_button,
                 (dialog, which) -> mViewListeners.onDeleteDialogConfirmClick(deletingCurrentAsset));
         //creates the Cancel button and what happens when clicked
-        builder.setNegativeButton(R.string.cancel_button, (dialog, id) -> dialog.cancel());
+        builder.setNegativeButton(R.string.cancel_button, (dialog, id) ->
+                mPresenter.loadCurrentContentsWithMode(ContentsViewMode.Default));
         builder.create().show();
     }
 
@@ -304,11 +304,6 @@ public class ContentsFragment extends Fragment implements IContentsView {
         mAssetListView.setLayoutManager(layoutManager);
         mAssetListView.addItemDecoration(dividerItemDecoration);
         mAssetListView.setAdapter(mContentsAdapter);
-//        mAssetListView.setOnItemClickListener((parent, view, position, id) ->
-//                mViewListeners.onContentAssetClick(parent, view, position, id));
-//
-//        mAssetListView.setOnItemLongClickListener(((parent, view, position, id) ->
-//                mViewListeners.onContentAssetLongClick()));
     }
 
     private void initSelectionModeButtons() {
@@ -330,27 +325,6 @@ public class ContentsFragment extends Fragment implements IContentsView {
             //sets the selected asset's ID as the current asset (to be viewed)
             mPresenter.setCurrentAssetId(clickedAsset.getId());
             mPresenter.loadCurrentContents();
-        }
-
-        @Override
-        public void onContentAssetClick(AdapterView<?> parent, View view, int position, long id) {
-            AssetListAdapter.ViewHolder holder = (AssetListAdapter.ViewHolder) view.getTag();
-            //if the text is grey light then should not be able to interact
-            if (holder.textView.getCurrentTextColor()
-                    == ContextCompat.getColor(mActivity, R.color.light_grey)) return;
-            AssetListAdapter adapter = (AssetListAdapter) parent.getAdapter();
-
-            //if it's in selection mode
-            if (adapter.isCheckboxShowed()) {
-                holder.checkbox.toggle();
-                adapter.getmSelectStatusMap().put(position, holder.checkbox.isChecked());
-            } else {
-                //fetches the selected asset in the list
-                IAsset clickedAsset = (IAsset) parent.getItemAtPosition(position);
-                //sets the selected asset's ID as the current asset (to be viewed)
-                mPresenter.setCurrentAssetId(clickedAsset.getId());
-                mPresenter.loadCurrentContents();
-            }
         }
 
         @Override
@@ -420,7 +394,6 @@ public class ContentsFragment extends Fragment implements IContentsView {
                 showMessage("Please select the assets to be deleted.");
             else {
                 showDeleteDialog(false);
-//                mPresenter.loadCurrentContentsWithMode(ContentsViewMode.Default);
             }
         }
 
