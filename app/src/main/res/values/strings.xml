@@ -43,4 +43,7 @@
     <string name="sort_menu_by_modify_title">Recently modified</string>
     <string name="sort_menu_by_default_title">Default</string>
 
+    <!--messages-->
+    <string name="msg_click_again_to_exit">Click back again to exit</string>
+
 </resources>

@@ -10,6 +10,7 @@ import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
@@ -24,6 +25,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -168,6 +170,19 @@ public class SwipeActivity extends BaseActivity {
 //            }
 //        }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (mDoubleBackToExitPressedOnce) {
+            super.onBackPressed();
+            return;
+        }
+
+        this.mDoubleBackToExitPressedOnce = true;
+        Toast.makeText(this, R.string.msg_click_again_to_exit, Toast.LENGTH_SHORT).show();
+
+        new Handler().postDelayed(() -> mDoubleBackToExitPressedOnce =false, 2000);
     }
 
     public void setContentsViewListeners(IContentsView.ViewListeners listener) {
@@ -433,6 +448,7 @@ public class SwipeActivity extends BaseActivity {
 
     private boolean isRootAsset;
     private IFactory mFactory;
+    private boolean mDoubleBackToExitPressedOnce;
 
     //endregion
 }
