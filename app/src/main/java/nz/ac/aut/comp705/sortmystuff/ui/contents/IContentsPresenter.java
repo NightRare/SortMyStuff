@@ -64,13 +64,6 @@ public interface IContentsPresenter extends IPresenter {
 
     void renameAsset(String assetId, String newName);
 
-    void deleteCurrentAsset();
-
-    /**
-     * Recycle the current asset and all its contained assets.
-     */
-    void recycleCurrentAssetRecursively();
-
     /**
      * Recycle the selected assets and all their contained assets.
      *

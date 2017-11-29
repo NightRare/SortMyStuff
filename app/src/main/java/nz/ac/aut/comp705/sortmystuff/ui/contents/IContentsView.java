@@ -44,12 +44,9 @@ public interface IContentsView extends IView<IContentsPresenter> {
      */
     void showPath(List<IAsset> assets);
 
-    /**
-     * Displays the delete confirm dialog.
-     *
-     * @param deletingCurrentAsset true if it is deleting the currentAsset
-     */
-    void showDeleteDialog(boolean deletingCurrentAsset);
+    void showDeleteDialog();
+
+    void showDeleteDialog(IAsset asset);
 
     void showRenameAssetDialog(String assetId, String oldName);
 
@@ -62,8 +59,6 @@ public interface IContentsView extends IView<IContentsPresenter> {
         boolean onAssetMoreOptionsClick(IAsset clickedAsset, MenuItem clickedOption);
 
         boolean onContentAssetLongClick();
-
-        void onOptionsDeleteCurrentAssetSelected();
 
         void onOptionsSelectionModeSelected();
 
@@ -87,6 +82,6 @@ public interface IContentsView extends IView<IContentsPresenter> {
 
         void onMovingModeCancelClick();
 
-        void onDeleteDialogConfirmClick(boolean deletingCurrentAsset);
+        void onDeleteDialogConfirmClick(List<String> deletingAssetIds);
     }
 }

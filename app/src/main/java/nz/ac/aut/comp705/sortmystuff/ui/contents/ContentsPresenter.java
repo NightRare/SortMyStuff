@@ -148,22 +148,6 @@ public class ContentsPresenter implements IContentsPresenter {
     }
 
     @Override
-    public void deleteCurrentAsset() {
-        if(mCurrentAssetId.equals(ROOT_ASSET_ID))
-            mView.showMessage("Cannot delete the root asset");
-        else
-            mView.showDeleteDialog(true);
-    }
-
-    @Override
-    public void recycleCurrentAssetRecursively() {
-        String deleteAssetId = mCurrentAssetId;
-        setCurrentAssetIdToContainer();
-        mDataManager.recycleAssetAndItsContents(deleteAssetId);
-        loadCurrentContentsWithMode(ContentsViewMode.Default);
-    }
-
-    @Override
     public void recycleAssetsRecursively(List<String> assetIds) {
         checkNotNull(assetIds);
         for (String id : assetIds) {

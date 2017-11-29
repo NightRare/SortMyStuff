@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
@@ -24,6 +25,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
@@ -196,30 +198,24 @@ public class ContentsFragment extends Fragment implements IContentsView {
         mPathBar.setAdapter(pba);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void showDeleteDialog(boolean deletingCurrentAsset) {
-        String message;
-        if (deletingCurrentAsset) {
-            message = "Deleting \'" + mActivity.getTitle().toString() + "\'\n" +
-                    "and its children assets.";
-        } else {
-            message = "Deleting selected assets\n" +
-                    "and their children assets.";
-        }
+    public void showDeleteDialog() {
+        String message = "Deleting selected assets\n" +
+                "and their children assets.";
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-        builder.setTitle(message);
-
-        builder.setPositiveButton(R.string.delete_asset_confirm_button,
-                (dialog, which) -> mViewListeners.onDeleteDialogConfirmClick(deletingCurrentAsset));
-        //creates the Cancel button and what happens when clicked
-        builder.setNegativeButton(R.string.cancel_button, (dialog, id) ->
-                mPresenter.loadCurrentContentsWithMode(ContentsViewMode.Default));
-        builder.create().show();
+        buildDeleteDialog(message, mContentsAdapter.getSelectedAssets())
+                .show();
     }
+
+    @Override
+    public void showDeleteDialog(@NonNull IAsset asset) {
+        String message = "Deleting \'" + asset.getName() + "\'\n" +
+                "and its children assets.";
+
+        buildDeleteDialog(message, Arrays.asList(asset.getId()))
+                .show();
+    }
+
 
     @Override
     public void showRenameAssetDialog(String assetId, String oldName) {
@@ -346,6 +342,18 @@ public class ContentsFragment extends Fragment implements IContentsView {
         mMove_btn.setOnClickListener(v -> mViewListeners.onSelectionModeMoveClick());
     }
 
+    private AlertDialog buildDeleteDialog(String message, List<String> deletingAssetIds) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+        builder.setTitle(message);
+
+        builder.setPositiveButton(R.string.delete_asset_confirm_button,
+                (dialog, which) -> mViewListeners.onDeleteDialogConfirmClick(deletingAssetIds));
+        //creates the Cancel button and what happens when clicked
+        builder.setNegativeButton(R.string.cancel_button, (dialog, id) ->
+                mPresenter.loadCurrentContentsWithMode(ContentsViewMode.Default));
+        return builder.create();
+    }
+
     private class ContentsViewListeners implements IContentsView.ViewListeners {
 
         @Override
@@ -361,6 +369,9 @@ public class ContentsFragment extends Fragment implements IContentsView {
                 case R.id.asset_more_rename:
                     showRenameAssetDialog(clickedAsset.getId(), clickedAsset.getName());
                     return true;
+                case R.id.asset_more_delete:
+                    showDeleteDialog(clickedAsset);
+                    return true;
             }
             return false;
         }
@@ -369,11 +380,6 @@ public class ContentsFragment extends Fragment implements IContentsView {
         public boolean onContentAssetLongClick() {
             mPresenter.loadCurrentContentsWithMode(ContentsViewMode.Selection);
             return true;
-        }
-
-        @Override
-        public void onOptionsDeleteCurrentAssetSelected() {
-            mPresenter.deleteCurrentAsset();
         }
 
         @Override
@@ -422,7 +428,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
             if (mContentsAdapter.getSelectedAssets().isEmpty())
                 showMessage("Please select the assets to be deleted.");
             else {
-                showDeleteDialog(false);
+                showDeleteDialog();
             }
         }
 
@@ -448,11 +454,8 @@ public class ContentsFragment extends Fragment implements IContentsView {
         }
 
         @Override
-        public void onDeleteDialogConfirmClick(boolean deletingCurrentAsset) {
-            if (deletingCurrentAsset)
-                mPresenter.recycleCurrentAssetRecursively();
-            else
-                mPresenter.recycleAssetsRecursively(mContentsAdapter.getSelectedAssets());
+        public void onDeleteDialogConfirmClick(List<String> deletingAssetIds) {
+            mPresenter.recycleAssetsRecursively(deletingAssetIds);
         }
     }
 

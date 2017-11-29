@@ -12,6 +12,8 @@ import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -19,6 +21,7 @@ import java.util.Set;
 
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
+import nz.ac.aut.comp705.sortmystuff.utils.Log;
 import rx.Observable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -86,14 +89,6 @@ public class AssetRecyclerAdapter extends
 
     }
 
-    private void toggleCheckBox(CheckBox checkBox, int position) {
-        checkBox.toggle();
-        if (checkBox.isChecked())
-            mSelectedAssets.add(mAssets.get(position).getId());
-        else
-            mSelectedAssets.remove(mAssets.get(position).getId());
-    }
-
     @Override
     public int getItemCount() {
         return mAssets.size();
@@ -115,19 +110,6 @@ public class AssetRecyclerAdapter extends
             mSelectedAssets.clear();
         notifyDataSetChanged();
     }
-
-//    private void switchViewMode (ContentsViewMode viewMode) {
-//        switch (viewMode) {
-//            case Default:
-//                mSelectedAssets.clear();
-//                mMovingAssets.clear();
-//                break;
-//            case Moving:
-//                mMovingAssets.addAll(mSelectedAssets);
-//                mSelectedAssets.clear();
-//                break;
-//        }
-//    }
 
     public void clearSelectedAssets() {
         mSelectedAssets.clear();
@@ -163,13 +145,47 @@ public class AssetRecyclerAdapter extends
 
     //region PRIVATE STUFF
 
-    private PopupMenu initialiseMoreOptionsMenu(AssetRecyclerAdapter.ViewHolder holder, int position) {
-        PopupMenu menu = new PopupMenu(mContext, holder.mMoreOptionsView);
-        menu.inflate(R.menu.assets_menu);
-        menu.setOnMenuItemClickListener(item ->
-                mItemListener.onAssetMoreOptionsClick(mAssets.get(position), item));
-        return menu;
+    private void toggleCheckBox(CheckBox checkBox, int position) {
+        checkBox.toggle();
+        if (checkBox.isChecked())
+            mSelectedAssets.add(mAssets.get(position).getId());
+        else
+            mSelectedAssets.remove(mAssets.get(position).getId());
     }
+
+    private PopupMenu initialiseMoreOptionsMenu(AssetRecyclerAdapter.ViewHolder holder, int position) {
+        PopupMenu popupMenu = new PopupMenu(mContext, holder.mMoreOptionsView);
+        popupMenu.inflate(R.menu.assets_menu);
+        popupMenu.setOnMenuItemClickListener(item ->
+                mItemListener.onAssetMoreOptionsClick(mAssets.get(position), item));
+
+        // this code snippet is to show the icons in the popup menu
+        // TODO: this code snippet wouldn't work with proguard. Need to add proguard configuration:
+        //(Note, I am using PopupMenu from support package)
+        // -keepclassmembernames class android.support.v7.widget.PopupMenu { private android.support.v7.internal.view.menu.MenuPopupHelper mPopup; }
+        // -keepclassmembernames class android.support.v7.internal.view.menu.MenuPopupHelper { public void setForceShowIcon(boolean); } –
+        try {
+            Field[] fields = popupMenu.getClass().getDeclaredFields();
+            for (Field field : fields) {
+                if ("mPopup".equals(field.getName())) {
+                    field.setAccessible(true);
+                    Object menuPopupHelper = field.get(popupMenu);
+                    Class<?> classPopupHelper = Class.forName(menuPopupHelper
+                            .getClass().getName());
+                    Method setForceIcons = classPopupHelper.getMethod(
+                            "setForceShowIcon", boolean.class);
+                    setForceIcons.invoke(menuPopupHelper, true);
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage(), e);
+        }
+
+        return popupMenu;
+    }
+
+    private static final String TAG = "AssetRecyclerAdapter";
 
     @NonNull
     private final Context mContext;
@@ -185,8 +201,6 @@ public class AssetRecyclerAdapter extends
 
     @NonNull
     private ContentsViewMode mViewMode;
-
-
 
     //endregion
 }

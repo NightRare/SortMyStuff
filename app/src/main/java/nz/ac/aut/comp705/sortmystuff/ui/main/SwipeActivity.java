@@ -152,7 +152,6 @@ public class SwipeActivity extends BaseActivity {
                 return true;
 
             case R.id.delete_current_asset_button:
-                mContentsViewListeners.onOptionsDeleteCurrentAssetSelected();
                 return true;
 
             case android.R.id.home:

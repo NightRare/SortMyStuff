@@ -36,5 +36,6 @@
     <string name="contents_photo_description">asset photo</string>
     <string name="asset_more_rename_title">Rename</string>
     <string name="rename_asset_action_title">Rename asset</string>
+    <string name="asset_more_delete_title">Delete</string>
 
 </resources>

@@ -5,7 +5,11 @@
     <item
         android:id="@+id/asset_more_rename"
         android:title="@string/asset_more_rename_title"
-        android:icon="@drawable/ic_asset_rename"
-        app:showAsAction="never"/>
+        android:icon="@drawable/ic_asset_rename"/>
+
+    <item
+        android:id="@+id/asset_more_delete"
+        android:title="@string/asset_more_delete_title"
+        android:icon="@drawable/ic_asset_delete"/>
 
 </menu>
