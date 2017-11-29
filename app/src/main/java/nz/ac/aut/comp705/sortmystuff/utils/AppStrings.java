@@ -14,13 +14,6 @@ public class AppStrings {
 
     public static final String INTENT_NAME_DETECTION_ASSET_ID = "INTENT_NAME_DETECTION_ASSET_ID";
 
-
-    public static final int CONTENTS_DEFAULT_MODE = 1001;
-
-    public static final int CONTENTS_SELECTION_MODE = 1002;
-
-    public static final int CONTENTS_MOVING_MODE = 1003;
-
     //region INTENT REQUEST CODE
 
     public static final int REQUEST_TAKE_PHOTO = 901;

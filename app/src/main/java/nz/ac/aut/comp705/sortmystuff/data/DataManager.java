@@ -458,6 +458,7 @@ public class DataManager implements IDataManager, IDebugHelper {
 
             FAsset to = mCachedAssets.get(newContainerId);
             if (to == null) return;
+            if(from.getId().equals(to.getId())) return;
 
             if (isParentOf(asset, to) || !asset.move(from, to)) {
                 Log.e(getClass().getName(), "move asset failed, asset id: " + asset.getId()
@@ -483,6 +484,7 @@ public class DataManager implements IDataManager, IDebugHelper {
             Observable.zip(assetObservable, fromObservable, toObservable, (asset, from, to) -> {
                 if (asset == null || from == null || to == null) throw new NoSuchElementException();
 
+                if(from.getId().equals(to.getId())) return null;
                 if (isParentOf(asset, to) || !asset.move(from, to)) {
                     Log.e(getClass().getName(), "move asset failed, asset id: " + asset.getId()
                             + " container id: " + to.getId());

@@ -11,7 +11,6 @@ import rx.Subscription;
 import rx.subscriptions.CompositeSubscription;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.CONTENTS_DEFAULT_MODE;
 import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.ROOT_ASSET_ID;
 
 /**
@@ -31,7 +30,7 @@ public class ContentsPresenter implements IContentsPresenter {
         mImmediateSchedulerProvider = checkNotNull(immediateSchedulerProvider, "The immediateSchedulerProvider cannot be null.");
         mCurrentAssetId = checkNotNull(currentAssetId, "The currentAssetId cannot be null.");
 
-        mContentsDisplayMode = CONTENTS_DEFAULT_MODE;
+        mViewMode = ContentsViewMode.Default;
         mSubscriptions = new CompositeSubscription();
         mFirstLaunch = true;
 
@@ -96,8 +95,8 @@ public class ContentsPresenter implements IContentsPresenter {
     }
 
     @Override
-    public void loadCurrentContentsWithMode(int mode) {
-        mContentsDisplayMode = mode;
+    public void loadCurrentContentsWithMode(ContentsViewMode mode) {
+        mViewMode = mode;
         loadCurrentContents();
     }
 
@@ -127,19 +126,14 @@ public class ContentsPresenter implements IContentsPresenter {
     }
 
     @Override
-    public void moveAssets(List<IAsset> assets) {
-        checkNotNull(assets, "The assets to move cannot be null.");
-        if(assets.isEmpty()) return;
+    public void moveAssets(List<String> assetIds) {
+        checkNotNull(assetIds, "The assets to move cannot be null.");
+        if(assetIds.isEmpty()) return;
 
-        //reject the attempt to move to current directory
-        if (assets.get(0).getContainerId().equals(mCurrentAssetId)) {
-            mView.showMessage("The assets are already here");
-            return;
+        for (String id : assetIds) {
+            mDataManager.moveAsset(id, mCurrentAssetId);
         }
-        for (IAsset a : assets) {
-            mDataManager.moveAsset(a.getId(), mCurrentAssetId);
-        }
-        mView.showMessage(assets.size() + " asset" + (assets.size() > 1 ? "s" : "") + " moved");
+        mView.showMessage(assetIds.size() + " asset" + (assetIds.size() > 1 ? "s" : "") + " moved");
     }
 
     @Override
@@ -155,16 +149,16 @@ public class ContentsPresenter implements IContentsPresenter {
         String deleteAssetId = mCurrentAssetId;
         setCurrentAssetIdToContainer();
         mDataManager.recycleAssetAndItsContents(deleteAssetId);
-        loadCurrentContents();
+        loadCurrentContentsWithMode(ContentsViewMode.Default);
     }
 
     @Override
-    public void recycleAssetsRecursively(List<IAsset> assets) {
-        checkNotNull(assets);
-        for (IAsset a : assets) {
-            mDataManager.recycleAssetAndItsContents(a.getId());
+    public void recycleAssetsRecursively(List<String> assetIds) {
+        checkNotNull(assetIds);
+        for (String id : assetIds) {
+            mDataManager.recycleAssetAndItsContents(id);
         }
-        loadCurrentContents();
+        loadCurrentContentsWithMode(ContentsViewMode.Default);
     }
 
     //endregion
@@ -193,14 +187,14 @@ public class ContentsPresenter implements IContentsPresenter {
 
     private void processContentResults(IAsset asset, List<IAsset> contentAssets, List<IAsset> parentAssets) {
         mView.showTitle(asset);
-        mView.showAssetContents(contentAssets, mContentsDisplayMode);
+        mView.showAssetContents(contentAssets, mViewMode);
         mView.showPath(parentAssets);
     }
 
     private IContentsView mView;
     private IDataManager mDataManager;
     private String mCurrentAssetId;
-    private int mContentsDisplayMode;
+    private ContentsViewMode mViewMode;
     private ISchedulerProvider mSchedulerProvider;
     private ISchedulerProvider mImmediateSchedulerProvider;
     private CompositeSubscription mSubscriptions;

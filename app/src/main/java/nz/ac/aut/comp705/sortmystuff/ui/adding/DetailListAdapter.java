@@ -19,7 +19,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class DetailListAdapter extends
         RecyclerView.Adapter<DetailListAdapter.ViewHolder> {
 
-    public DetailListAdapter(Context context, List<IDetail> details, DetailItemListener itemListeners) {
+    public DetailListAdapter(
+            Context context,
+            List<IDetail> details,
+            DetailItemListener itemListeners) {
         mInflater = LayoutInflater.from(checkNotNull(context, "The context cannot be null."));
         checkNotNull(details, "The assets cannot be null.");
         mDetails = excludeNonTextDetail(details);
@@ -67,7 +70,7 @@ public class DetailListAdapter extends
         private TextView mLabelView;
         private TextView mFieldView;
 
-        public ViewHolder(View itemView) {
+        private ViewHolder(View itemView) {
             super(itemView);
             mLabelView = (TextView) itemView.findViewById(R.id.aa_detail_label);
             mFieldView = (TextView) itemView.findViewById(R.id.aa_detail_field);

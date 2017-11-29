@@ -3,7 +3,6 @@ package nz.ac.aut.comp705.sortmystuff.ui.contents;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
-import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.ui.IPresenter;
 import nz.ac.aut.comp705.sortmystuff.utils.AppStrings;
 
@@ -26,7 +25,7 @@ public interface IContentsPresenter extends IPresenter {
      *
      * @param mode the code of the mode, refer to {@link AppStrings}
      */
-    void loadCurrentContentsWithMode(int mode);
+    void loadCurrentContentsWithMode(ContentsViewMode mode);
 
     /**
      * Sets the current asset id to the given one. This will change the current asset.
@@ -59,9 +58,9 @@ public interface IContentsPresenter extends IPresenter {
     /**
      * Move a list of assets to a new container.
      *
-     * @param assets the assets to move.
+     * @param assetIds the assets to move.
      */
-    void moveAssets(List<IAsset> assets);
+    void moveAssets(List<String> assetIds);
 
     void deleteCurrentAsset();
 
@@ -73,8 +72,8 @@ public interface IContentsPresenter extends IPresenter {
     /**
      * Recycle the selected assets and all their contained assets.
      *
-     * @param assets the list of the assets to be recycled
+     * @param assetIds the list of the assets to be recycled
      */
-    void recycleAssetsRecursively(List<IAsset> assets);
+    void recycleAssetsRecursively(List<String> assetIds);
 
 }

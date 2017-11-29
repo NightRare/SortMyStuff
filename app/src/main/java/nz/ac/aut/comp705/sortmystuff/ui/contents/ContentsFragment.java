@@ -9,14 +9,15 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,9 +32,6 @@ import nz.ac.aut.comp705.sortmystuff.ui.main.SwipeActivity;
 import nz.ac.aut.comp705.sortmystuff.utils.AppStrings;
 import nz.ac.aut.comp705.sortmystuff.utils.Log;
 
-import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.CONTENTS_DEFAULT_MODE;
-import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.CONTENTS_MOVING_MODE;
-import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.CONTENTS_SELECTION_MODE;
 import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.INTENT_ASSET_ID;
 
 public class ContentsFragment extends Fragment implements IContentsView {
@@ -51,7 +49,8 @@ public class ContentsFragment extends Fragment implements IContentsView {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
+        mContentsAdapter = new AssetRecyclerAdapter(
+                this.getContext(), new ArrayList<>(), mViewListeners);
     }
 
     @Override
@@ -67,7 +66,9 @@ public class ContentsFragment extends Fragment implements IContentsView {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         mRootView = inflater.inflate(R.layout.contents_frag, container, false);
-        mSelectedAssets = new ArrayList<>();
+
+        mRefreshScrollLayout = (ScrollChildSwipeRefreshLayout) mRootView
+                .findViewById(R.id.contents_refresh_layout);
 
         initPathBar();
         initAddAssetFab();
@@ -142,13 +143,10 @@ public class ContentsFragment extends Fragment implements IContentsView {
      * {@inheritDoc}
      */
     @Override
-    public void showAssetContents(List<IAsset> assets, int mode) {
-        boolean displayCheckbox = false;
-        List<IAsset> movingAssets = new ArrayList<>();
+    public void showAssetContents(List<IAsset> assets, ContentsViewMode viewMode) {
 
-        switch (mode) {
-            case CONTENTS_SELECTION_MODE:
-                displayCheckbox = true;
+        switch (viewMode) {
+            case Selection:
                 setSelectionModeButtonsVisibility(true);
                 setMovingModeFabsVisibility(false);
                 mFab.setVisibility(View.GONE);
@@ -156,9 +154,11 @@ public class ContentsFragment extends Fragment implements IContentsView {
 
                 mActivity.toggleMenuDisplay(false);
                 mActivity.setDetailsPageVisibility(false);
+
+                mRefreshScrollLayout.setEnabled(false);
                 break;
 
-            case CONTENTS_MOVING_MODE:
+            case Moving:
                 setSelectionModeButtonsVisibility(false);
                 setMovingModeFabsVisibility(true);
                 mFab.setVisibility(View.GONE);
@@ -167,10 +167,9 @@ public class ContentsFragment extends Fragment implements IContentsView {
                 mActivity.toggleMenuDisplay(false);
                 mActivity.setDetailsPageVisibility(false);
 
-                movingAssets = new ArrayList<>(mSelectedAssets);
+                mRefreshScrollLayout.setEnabled(false);
                 break;
 
-            // CONTENTS_DEFAULT_MODE falls into this
             default:
                 setSelectionModeButtonsVisibility(false);
                 setMovingModeFabsVisibility(false);
@@ -180,11 +179,10 @@ public class ContentsFragment extends Fragment implements IContentsView {
                 mActivity.toggleMenuDisplay(true);
                 mActivity.setDetailsPageVisibility(true);
 
+                mRefreshScrollLayout.setEnabled(true);
                 break;
         }
-        mAdapter = new AssetListAdapter(assets, mActivity.getApplicationContext()
-                , displayCheckbox, movingAssets);
-        mAssetListView.setAdapter(mAdapter);
+        mContentsAdapter.replaceData(assets, viewMode);
     }
 
     /**
@@ -253,17 +251,11 @@ public class ContentsFragment extends Fragment implements IContentsView {
     }
 
     private void setSelectionModeButtonsVisibility(boolean isVisible) {
-        if (isVisible) {
-            mCancel_btn.setVisibility(View.VISIBLE);
-            mSelectAll_btn.setVisibility(View.VISIBLE);
-            mDelete_btn.setVisibility(View.VISIBLE);
-            mMove_btn.setVisibility(View.VISIBLE);
-        } else {
-            mCancel_btn.setVisibility(View.GONE);
-            mSelectAll_btn.setVisibility(View.GONE);
-            mDelete_btn.setVisibility(View.GONE);
-            mMove_btn.setVisibility(View.GONE);
-        }
+        int visibility = isVisible ? View.VISIBLE : View.GONE;
+        mCancel_btn.setVisibility(visibility);
+        mSelectAll_btn.setVisibility(visibility);
+        mDelete_btn.setVisibility(visibility);
+        mMove_btn.setVisibility(visibility);
     }
 
     private void setMovingModeFabsVisibility(boolean isVisible) {
@@ -303,12 +295,20 @@ public class ContentsFragment extends Fragment implements IContentsView {
     }
 
     private void initAssetsListView() {
-        mAssetListView = (ListView) mRootView.findViewById(R.id.assets_list);
-        mAssetListView.setOnItemClickListener((parent, view, position, id) ->
-                mViewListeners.onContentAssetClick(parent, view, position, id));
-
-        mAssetListView.setOnItemLongClickListener(((parent, view, position, id) ->
-                mViewListeners.onContentAssetLongClick()));
+        mAssetListView = (RecyclerView) mRootView.findViewById(R.id.assets_list);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(
+                mAssetListView.getContext(), LinearLayoutManager.VERTICAL, false);
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(
+                mAssetListView.getContext(),
+                layoutManager.getOrientation());
+        mAssetListView.setLayoutManager(layoutManager);
+        mAssetListView.addItemDecoration(dividerItemDecoration);
+        mAssetListView.setAdapter(mContentsAdapter);
+//        mAssetListView.setOnItemClickListener((parent, view, position, id) ->
+//                mViewListeners.onContentAssetClick(parent, view, position, id));
+//
+//        mAssetListView.setOnItemLongClickListener(((parent, view, position, id) ->
+//                mViewListeners.onContentAssetLongClick()));
     }
 
     private void initSelectionModeButtons() {
@@ -324,6 +324,13 @@ public class ContentsFragment extends Fragment implements IContentsView {
     }
 
     private class ContentsViewListeners implements IContentsView.ViewListeners {
+
+        @Override
+        public void onContentAssetClick(IAsset clickedAsset) {
+            //sets the selected asset's ID as the current asset (to be viewed)
+            mPresenter.setCurrentAssetId(clickedAsset.getId());
+            mPresenter.loadCurrentContents();
+        }
 
         @Override
         public void onContentAssetClick(AdapterView<?> parent, View view, int position, long id) {
@@ -347,8 +354,17 @@ public class ContentsFragment extends Fragment implements IContentsView {
         }
 
         @Override
+        public boolean onAssetMoreOptionsClick(IAsset clickedAsset, MenuItem clickedOption) {
+            switch (clickedOption.getItemId()) {
+                case R.id.asset_more_rename:
+
+            }
+            return false;
+        }
+
+        @Override
         public boolean onContentAssetLongClick() {
-            mPresenter.loadCurrentContentsWithMode(CONTENTS_SELECTION_MODE);
+            mPresenter.loadCurrentContentsWithMode(ContentsViewMode.Selection);
             return true;
         }
 
@@ -359,7 +375,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
 
         @Override
         public void onOptionsSelectionModeSelected() {
-            mPresenter.loadCurrentContentsWithMode(CONTENTS_SELECTION_MODE);
+            mPresenter.loadCurrentContentsWithMode(ContentsViewMode.Selection);
         }
 
         @Override
@@ -388,55 +404,45 @@ public class ContentsFragment extends Fragment implements IContentsView {
 
         @Override
         public void onSelectionModeCancelClick() {
-            mPresenter.loadCurrentContentsWithMode(CONTENTS_DEFAULT_MODE);
+            mContentsAdapter.clearSelectedAssets();
+            mPresenter.loadCurrentContentsWithMode(ContentsViewMode.Default);
         }
 
         @Override
         public void onSelectionModeSelectAllClick() {
-            for (int i = 0; i < mAdapter.getCount(); i++) {
-                mAdapter.getmSelectStatusMap().put(i, true);
-            }
-            mAdapter.notifyDataSetChanged();
-
-            showMessage(mAdapter.getCount() + " items selected");
+            mContentsAdapter.selectAllAssets();
+            showMessage(mContentsAdapter.getSelectedAssets().size() + " items selected");
         }
 
         @Override
         public void onSelectionModeDeleteClick() {
-            mSelectedAssets = new ArrayList<>(mAdapter.getSelectedAssets().values());
-            if (mSelectedAssets.isEmpty())
+            if (mContentsAdapter.getSelectedAssets().isEmpty())
                 showMessage("Please select the assets to be deleted.");
             else {
                 showDeleteDialog(false);
-                mPresenter.loadCurrentContentsWithMode(CONTENTS_DEFAULT_MODE);
+//                mPresenter.loadCurrentContentsWithMode(ContentsViewMode.Default);
             }
         }
 
         @Override
         public void onSelectionModeMoveClick() {
-            mSelectedAssets = new ArrayList<>(mAdapter.getSelectedAssets().values());
-
-            if (mSelectedAssets.isEmpty())
+            if (mContentsAdapter.getSelectedAssets().isEmpty())
                 showMessage("Please select the assets to be moved.");
             else
-                mPresenter.loadCurrentContentsWithMode(CONTENTS_MOVING_MODE);
+                mPresenter.loadCurrentContentsWithMode(ContentsViewMode.Moving);
         }
 
         @Override
         public void onMovingModeConfirmClick() {
-            if (mSelectedAssets.isEmpty()) {
-                Toast.makeText(mActivity,
-                        "You haven't selected any items.", Toast.LENGTH_SHORT).show();
-            } else {
-                mPresenter.moveAssets(mSelectedAssets);
-                mPresenter.loadCurrentContents();
-            }
-            mPresenter.loadCurrentContentsWithMode(CONTENTS_DEFAULT_MODE);
+            List<String> movingAssets = mContentsAdapter.getSelectedAssets();
+            if (movingAssets.isEmpty()) return;
+            mPresenter.moveAssets(movingAssets);
+            mPresenter.loadCurrentContentsWithMode(ContentsViewMode.Default);
         }
 
         @Override
         public void onMovingModeCancelClick() {
-            mPresenter.loadCurrentContentsWithMode(CONTENTS_DEFAULT_MODE);
+            mPresenter.loadCurrentContentsWithMode(ContentsViewMode.Default);
         }
 
         @Override
@@ -444,7 +450,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
             if (deletingCurrentAsset)
                 mPresenter.recycleCurrentAssetRecursively();
             else
-                mPresenter.recycleAssetsRecursively(mSelectedAssets);
+                mPresenter.recycleAssetsRecursively(mContentsAdapter.getSelectedAssets());
         }
     }
 
@@ -455,19 +461,21 @@ public class ContentsFragment extends Fragment implements IContentsView {
     private FloatingActionButton mFab;
     private FloatingActionButton mFabCancelMoveButton;
     private FloatingActionButton mFabConfirmMoveButton;
+    private ScrollChildSwipeRefreshLayout mRefreshScrollLayout;
 
     private View mPathBarLayout;
     private TextView mPathBarRoot;
     private RecyclerView mPathBar;
 
-    private ListView mAssetListView;
+    private RecyclerView mAssetListView;
     private Button mCancel_btn, mSelectAll_btn, mMove_btn, mDelete_btn;
-    private AssetListAdapter mAdapter;
+//    private AssetListAdapter mAdapter;
+
+    private AssetRecyclerAdapter mContentsAdapter;
 
     //endregion
 
     private IContentsPresenter mPresenter;
-    private List<IAsset> mSelectedAssets;
     private SwipeActivity mActivity;
     private IContentsView.ViewListeners mViewListeners = new ContentsViewListeners();
 

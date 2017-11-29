@@ -1,5 +1,6 @@
 package nz.ac.aut.comp705.sortmystuff.ui.contents;
 
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 
@@ -31,7 +32,7 @@ public interface IContentsView extends IView<IContentsPresenter> {
      * @param assets the assets
      * @param mode   the code of the display mode
      */
-    void showAssetContents(List<IAsset> assets, int mode);
+    void showAssetContents(List<IAsset> assets, ContentsViewMode viewMode);
 
     /**
      * Displays the path bar according to the order of the list: from left to right in view <=>
@@ -54,7 +55,11 @@ public interface IContentsView extends IView<IContentsPresenter> {
 
     interface ViewListeners {
 
+        void onContentAssetClick(IAsset clickedAsset);
+
         void onContentAssetClick(AdapterView<?> parent, View view, int position, long id);
+
+        boolean onAssetMoreOptionsClick(IAsset clickedAsset, MenuItem clickedOption);
 
         boolean onContentAssetLongClick();
 

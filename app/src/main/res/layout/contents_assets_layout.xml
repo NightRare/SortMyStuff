@@ -3,40 +3,59 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content">
 
 
-        <ImageView
-            android:id="@+id/contents_asset_image"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_marginLeft="10dp"
-            android:layout_centerVertical="true"/>
+    <ImageView
+        android:id="@+id/contents_asset_image"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="10dp"
+        android:src="@drawable/default_square"
+        android:contentDescription="@string/contents_photo_description" />
 
-        <TextView
+    <TextView
             android:id="@+id/asset_name"
             android:layout_width="match_parent"
             android:layout_height="80dp"
-            android:layout_marginLeft="30dp"
-            android:layout_marginRight="10dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="10dp"
             android:gravity="center_vertical"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textColor="@color/dark_grey"
             android:layout_centerVertical="true"
-            android:layout_toRightOf="@id/contents_asset_image"
-            android:layout_toLeftOf="@+id/asset_checkbox"/>
+            android:layout_toEndOf="@id/contents_asset_image"
+            android:layout_toStartOf="@+id/asset_rightmost_item_layout"
+            android:maxLines="2"/>
 
-        <CheckBox
-            android:id="@id/asset_checkbox"
+        <FrameLayout
+            android:id="@id/asset_rightmost_item_layout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:clickable="false"
-            android:focusable="false"
-            android:focusableInTouchMode="false"
-            android:buttonTint="@color/colorAccent"
             android:layout_centerVertical="true"
-            android:layout_alignParentRight="true"
-            android:layout_marginRight="10dp"/>
+            android:layout_alignParentEnd="true">
+
+            <ImageView
+                android:id="@+id/asset_more_options"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:src="@drawable/ic_assets_more"
+                android:tint="@color/icon_gray"/>
+
+            <CheckBox
+                android:id="@+id/asset_checkbox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="false"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:buttonTint="@color/colorAccent"
+                android:layout_marginEnd="10dp"/>
+
+        </FrameLayout>
+
 
 
 </RelativeLayout>

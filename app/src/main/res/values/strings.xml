@@ -33,5 +33,7 @@
     <string name="nav_drawer_menu_prservice_inprogress">Recognising photos</string>
     <string name="nav_drawer_menu_prservice_completed">PR Completed</string>
     <string name="nav_drawer_menu_prservice_ready">Ready to recognise</string>
+    <string name="contents_photo_description">asset photo</string>
+    <string name="asset_more_rename_title">Rename</string>
 
 </resources>
