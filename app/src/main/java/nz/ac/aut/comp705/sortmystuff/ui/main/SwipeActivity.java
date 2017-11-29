@@ -100,16 +100,16 @@ public class SwipeActivity extends BaseActivity {
         mSwipeAdapter = new SwipeAdapter(getSupportFragmentManager(), this, currentAssetId);
 
         // Set up the ViewPager with the sections adapter.
-        mViewPager = (ViewPager) findViewById(R.id.viewpager);
-        mViewPager.setAdapter(mSwipeAdapter);
+        ViewPager viewPager = (ViewPager) findViewById(R.id.viewpager);
+        viewPager.setAdapter(mSwipeAdapter);
 
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
-        tabLayout.setupWithViewPager(mViewPager);
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.main_tabs);
+        tabLayout.setupWithViewPager(viewPager);
 
         // prepared for camera
         Display display = getWindowManager().getDefaultDisplay();
-        mScreenSize = new Point();
-        display.getSize(mScreenSize);
+        Point screenSize = new Point();
+        display.getSize(screenSize);
 
         if (mFeatToggle.PhotoDetection && mFeatToggle.DelayPhotoDetection)
             bindNameDetectionService();
@@ -373,7 +373,7 @@ public class SwipeActivity extends BaseActivity {
     }
 
     private void bindNameDetectionService() {
-        mPRServiceConnection = new ServiceConnection() {
+        ServiceConnection prServiceConnection = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
                 mPRServiceBinder = (PhotoRecognitionService.ServiceBinder) service;
@@ -387,7 +387,7 @@ public class SwipeActivity extends BaseActivity {
 
         Intent intent = new Intent(this, PhotoRecognitionService.class);
         startService(intent);
-        bindService(intent, mPRServiceConnection, BIND_AUTO_CREATE);
+        bindService(intent, prServiceConnection, BIND_AUTO_CREATE);
     }
 
     private void stopAnimatePRServiceIcon() {
@@ -401,15 +401,12 @@ public class SwipeActivity extends BaseActivity {
         final int gray = getResources().getColor(R.color.light_grey);
 
         mPRServiceIconAnimator = ObjectAnimator.ofFloat(0f, 1f);
-        mPRServiceIconAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                float mul = (Float) animation.getAnimatedValue();
-                int alphaColor = adjustAlpha(gray, mul);
-                drawable.setColorFilter(alphaColor, PorterDuff.Mode.SRC_ATOP);
-                if (mul == 0.0) {
-                    drawable.setColorFilter(null);
-                }
+        mPRServiceIconAnimator.addUpdateListener(animation -> {
+            float mul = (Float) animation.getAnimatedValue();
+            int alphaColor = adjustAlpha(gray, mul);
+            drawable.setColorFilter(alphaColor, PorterDuff.Mode.SRC_ATOP);
+            if (mul == 0.0) {
+                drawable.setColorFilter(null);
             }
         });
 
@@ -433,16 +430,13 @@ public class SwipeActivity extends BaseActivity {
     private static final String CURRENT_ASSET_ID = "CURRENT_ASSET_ID";
 
     private Menu mMenu;
-    private Point mScreenSize;
     private SwipeAdapter mSwipeAdapter;
-    private ViewPager mViewPager;
     private DrawerLayout mDrawerLayout;
     private IContentsView.ViewListeners mContentsViewListeners;
     private IDetailsView.ViewListeners mDetailsViewListeners;
     private Features mFeatToggle;
 
     private PhotoRecognitionService.ServiceBinder mPRServiceBinder;
-    private ServiceConnection mPRServiceConnection;
     private MenuItem mPRServiceItem;
     private ValueAnimator mPRServiceIconAnimator;
 

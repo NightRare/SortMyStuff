@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -28,7 +29,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import nz.ac.aut.comp705.sortmystuff.Features;
 import nz.ac.aut.comp705.sortmystuff.R;
+import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.ui.adding.AddingAssetActivity;
 import nz.ac.aut.comp705.sortmystuff.ui.main.SwipeActivity;
@@ -52,8 +55,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mAdapter = new AssetRecyclerAdapter(
-                this.getContext(), new ArrayList<>(), mViewListeners);
+
     }
 
     @Override
@@ -62,7 +64,12 @@ public class ContentsFragment extends Fragment implements IContentsView {
 
         mActivity = (SwipeActivity) getActivity();
         mActivity.setContentsViewListeners(mViewListeners);
+
+        mAdapter = new AssetRecyclerAdapter(
+                this.getContext(), new ArrayList<>(), mViewListeners);
         mSortMethod = new SortMethod();
+        mFeatureToggle = ((SortMyStuffApp) mActivity.getApplication())
+                .getFactory().getFeatureToggle();
     }
 
     @Override
@@ -120,8 +127,8 @@ public class ContentsFragment extends Fragment implements IContentsView {
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
+    public void onStop() {
+        super.onStop();
         mPresenter.unsubscribe();
     }
 
@@ -180,6 +187,8 @@ public class ContentsFragment extends Fragment implements IContentsView {
                 mRefreshScrollLayout.setEnabled(true);
                 break;
         }
+        if(mFeatureToggle.DisplayContentAmount)
+            showContentAssetsNumberOnTitle(assets.size());
         mAdapter.replaceData(assets, viewMode, mSortMethod.sortParam, mSortMethod.desc);
     }
 
@@ -446,6 +455,13 @@ public class ContentsFragment extends Fragment implements IContentsView {
         mMove_btn.setOnClickListener(v -> mViewListeners.onSelectionModeMoveClick());
     }
 
+    private void showContentAssetsNumberOnTitle(int size) {
+       TabLayout tabLayout = (TabLayout) mActivity.findViewById(R.id.main_tabs);
+       TabLayout.Tab contentsTab = tabLayout.getTabAt(0);
+       String suffix = size <= 0 ? "" : " (" +  size + ")";
+       contentsTab.setText(contentsTab.getText() + suffix);
+    }
+
     private AlertDialog buildDeleteDialog(String message, List<String> deletingAssetIds) {
         AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
         builder.setTitle(message);
@@ -526,6 +542,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
     private SwipeActivity mActivity;
     private IContentsView.ViewListeners mViewListeners = new ContentsViewListeners();
     private SortMethod mSortMethod;
+    private Features mFeatureToggle;
 
     //endregion
 }

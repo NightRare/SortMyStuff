@@ -18,7 +18,8 @@ public class SortMyStuffApp extends Application {
     private final String[] enabledFeatures = new String[] {
             "PhotoDetection",
             "DelayPhotoDetection",
-            "DevelopmentMode"
+            "DevelopmentMode",
+            "DisplayContentAmount"
     };
 
     @Override

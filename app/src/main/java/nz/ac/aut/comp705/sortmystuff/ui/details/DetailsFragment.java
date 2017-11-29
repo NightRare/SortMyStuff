@@ -77,8 +77,8 @@ public class DetailsFragment extends Fragment implements IDetailsView {
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
+    public void onStop() {
+        super.onStop();
         mPresenter.unsubscribe();
     }
 

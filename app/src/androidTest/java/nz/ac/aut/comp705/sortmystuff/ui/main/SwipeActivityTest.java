@@ -454,7 +454,7 @@ public class SwipeActivityTest {
         onView(withId(R.id.main_menu_search_button)).check(matches(isDisplayed()));
 
         // DETAILS TAB
-        onView(allOf(isDescendantOfA(withId(R.id.tabs)), withText(R.string.details_page)))
+        onView(allOf(isDescendantOfA(withId(R.id.main_tabs)), withText(R.string.details_page)))
                 .check(matches(isDisplayed()));
 
         // enter selection mode
@@ -465,7 +465,7 @@ public class SwipeActivityTest {
         onView(withId(R.id.pathbar_layout)).check(matches(not(isDisplayed())));
         onView(withId(R.id.add_asset_button)).check(matches(not(isDisplayed())));
         onView(withId(R.id.main_menu_search_button)).check(doesNotExist());
-        onView(allOf(isDescendantOfA(withId(R.id.tabs)), withText(R.string.details_page)))
+        onView(allOf(isDescendantOfA(withId(R.id.main_tabs)), withText(R.string.details_page)))
                 .check(doesNotExist());
     }
 
@@ -550,7 +550,7 @@ public class SwipeActivityTest {
         onView(withId(R.id.main_menu_search_button)).check(matches(isDisplayed()));
 
         // DETAILS TAB
-        onView(allOf(isDescendantOfA(withId(R.id.tabs)), withText(R.string.details_page)))
+        onView(allOf(isDescendantOfA(withId(R.id.main_tabs)), withText(R.string.details_page)))
                 .check(matches(isDisplayed()));
 
         // enter selection mode
@@ -565,7 +565,7 @@ public class SwipeActivityTest {
         // NOW THEY SHOULD BE HIDDEN
         onView(withId(R.id.add_asset_button)).check(matches(not(isDisplayed())));
         onView(withId(R.id.main_menu_search_button)).check(doesNotExist());
-        onView(allOf(isDescendantOfA(withId(R.id.tabs)), withText(R.string.details_page)))
+        onView(allOf(isDescendantOfA(withId(R.id.main_tabs)), withText(R.string.details_page)))
                 .check(doesNotExist());
 
         // PATH BAR should be DISPLAYED
