@@ -45,8 +45,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
     }
 
     public static ContentsFragment newInstance() {
-        ContentsFragment fragment = new ContentsFragment();
-        return fragment;
+        return new ContentsFragment();
     }
 
     @Override

@@ -418,7 +418,7 @@ public class DataManager implements IDataManager, IDebugHelper {
         Preconditions.checkArgument(
                 newName.length() <= AppConfigs.ASSET_NAME_CAP,
                 "The length of the name should be shorter than "
-                + AppConfigs.ASSET_NAME_CAP + " characters");
+                        + AppConfigs.ASSET_NAME_CAP + " characters");
 
         long modifyTimestamp = System.currentTimeMillis();
         LoggedAction updateAsset = executedFromLog -> {
@@ -464,7 +464,7 @@ public class DataManager implements IDataManager, IDebugHelper {
 
             FAsset to = mCachedAssets.get(newContainerId);
             if (to == null) return;
-            if(from.getId().equals(to.getId())) return;
+            if (from.getId().equals(to.getId())) return;
 
             if (isParentOf(asset, to) || !asset.move(from, to)) {
                 Log.e(getClass().getName(), "move asset failed, asset id: " + asset.getId()
@@ -490,7 +490,7 @@ public class DataManager implements IDataManager, IDebugHelper {
             Observable.zip(assetObservable, fromObservable, toObservable, (asset, from, to) -> {
                 if (asset == null || from == null || to == null) throw new NoSuchElementException();
 
-                if(from.getId().equals(to.getId())) return null;
+                if (from.getId().equals(to.getId())) return null;
                 if (isParentOf(asset, to) || !asset.move(from, to)) {
                     Log.e(getClass().getName(), "move asset failed, asset id: " + asset.getId()
                             + " container id: " + to.getId());
@@ -783,28 +783,25 @@ public class DataManager implements IDataManager, IDebugHelper {
             for (int i = 0; i < details.size(); i++) {
                 final int index = i;
                 asset.addDetailId(details.get(i).getId());
-                Action1<Emitter<String>> emitDetailId = new Action1<Emitter<String>>() {
-                    @Override
-                    public void call(Emitter<String> stringEmitter) {
-                        IDataRepository.OnUpdatedCallback onAddDetail = new IDataRepository.OnUpdatedCallback() {
-                            @Override
-                            public void onSuccess(Void aVoid) {
-                                stringEmitter.onNext(details.get(index).getId());
-                            }
+                Action1<Emitter<String>> emitDetailId = stringEmitter -> {
+                    IDataRepository.OnUpdatedCallback onAddDetail = new IDataRepository.OnUpdatedCallback() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            stringEmitter.onNext(details.get(index).getId());
+                        }
 
-                            @Override
-                            public void onFailure(Throwable e) {
-                                stringEmitter.onError(e);
-                            }
+                        @Override
+                        public void onFailure(Throwable e) {
+                            stringEmitter.onError(e);
+                        }
 
-                            @Override
-                            public void onComplete() {
-                                stringEmitter.onCompleted();
-                            }
-                        };
+                        @Override
+                        public void onComplete() {
+                            stringEmitter.onCompleted();
+                        }
+                    };
 
-                        mRemoteRepo.addDetail(details.get(index), onAddDetail);
-                    }
+                    mRemoteRepo.addDetail(details.get(index), onAddDetail);
                 };
 
                 if (outputObservable == null) {
@@ -817,28 +814,25 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
 
         // POST asset
-        Action1<Emitter<String>> emitAssetId = new Action1<Emitter<String>>() {
-            @Override
-            public void call(Emitter<String> stringEmitter) {
-                IDataRepository.OnUpdatedCallback onAddDetail = new IDataRepository.OnUpdatedCallback() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        stringEmitter.onNext(asset.getId());
-                    }
+        Action1<Emitter<String>> emitAssetId = stringEmitter -> {
+            IDataRepository.OnUpdatedCallback onAddDetail = new IDataRepository.OnUpdatedCallback() {
+                @Override
+                public void onSuccess(Void aVoid) {
+                    stringEmitter.onNext(asset.getId());
+                }
 
-                    @Override
-                    public void onFailure(Throwable e) {
-                        stringEmitter.onError(e);
-                    }
+                @Override
+                public void onFailure(Throwable e) {
+                    stringEmitter.onError(e);
+                }
 
-                    @Override
-                    public void onComplete() {
-                        stringEmitter.onCompleted();
-                    }
-                };
+                @Override
+                public void onComplete() {
+                    stringEmitter.onCompleted();
+                }
+            };
 
-                mRemoteRepo.addOrUpdateAsset(asset, onAddDetail);
-            }
+            mRemoteRepo.addOrUpdateAsset(asset, onAddDetail);
         };
 
         if (outputObservable == null) {
@@ -936,9 +930,10 @@ public class DataManager implements IDataManager, IDebugHelper {
                                 : BitmapHelper.toString(photo),
                         isDefaultValue);
 
-                if (!isDefaultValue) {
-                    newAsset.setThumbnail(BitmapHelper.toThumbnail(photo), false);
-                }
+                newAsset.setThumbnail(
+                        isDefaultValue ? mResLoader.getDefaultThumbnail()
+                                : BitmapHelper.toThumbnail(photo),
+                        isDefaultValue);
             }
             IDetail correspondingDetail = sourceMap.get(nd.getLabel());
             if (correspondingDetail == null ||
