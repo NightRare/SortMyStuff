@@ -103,8 +103,22 @@ public class SwipeActivity extends BaseActivity {
         ViewPager viewPager = (ViewPager) findViewById(R.id.viewpager);
         viewPager.setAdapter(mSwipeAdapter);
 
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.main_tabs);
-        tabLayout.setupWithViewPager(viewPager);
+        mTabLayout = (TabLayout) findViewById(R.id.main_tabs);
+        mTabLayout.setupWithViewPager(viewPager);
+        mTabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                mCurrentTab = tab.getPosition();
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+            }
+        });
 
         // prepared for camera
         Display display = getWindowManager().getDefaultDisplay();
@@ -174,6 +188,14 @@ public class SwipeActivity extends BaseActivity {
 
     @Override
     public void onBackPressed() {
+        // if its not in contents view then return to contents view
+        if(mCurrentTab != 0) {
+            TabLayout.Tab contentsTab = mTabLayout.getTabAt(0);
+            contentsTab.select();
+            return;
+        }
+
+        // click twice back to exit
         if (mDoubleBackToExitPressedOnce) {
             super.onBackPressed();
             return;
@@ -439,10 +461,12 @@ public class SwipeActivity extends BaseActivity {
     private PhotoRecognitionService.ServiceBinder mPRServiceBinder;
     private MenuItem mPRServiceItem;
     private ValueAnimator mPRServiceIconAnimator;
+    private TabLayout mTabLayout;
 
     private boolean isRootAsset;
     private IFactory mFactory;
     private boolean mDoubleBackToExitPressedOnce;
+    private int mCurrentTab;
 
     //endregion
 }
