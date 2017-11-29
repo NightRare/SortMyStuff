@@ -9,7 +9,6 @@ import com.google.firebase.database.IgnoreExtraProperties;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -32,7 +31,7 @@ import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.ROOT_ASSET_ID;
  * @author Yuan
  */
 @IgnoreExtraProperties
-public final class FAsset implements IAsset {
+public final class Asset implements IAsset {
 
     //region FIELD NAMES
 
@@ -46,25 +45,6 @@ public final class FAsset implements IAsset {
     public static final String ASSET_MODIFYTIMESTAMP = "modifyTimestamp";
     public static final String ASSET_DETAILIDS = "detailIds";
     public static final String ASSET_THUMBNAIL = "thumbnail";
-
-    @Exclude
-    private static final Map<String, Class> memberClasses;
-
-    static {
-        Map<String, Class> aMap = new HashMap<>();
-        aMap.put(ASSET_ID, String.class);
-        aMap.put(ASSET_NAME, String.class);
-        aMap.put(ASSET_CONTAINERID, String.class);
-        aMap.put(ASSET_RECYCLED, Boolean.class);
-        aMap.put(ASSET_CONTENTIDS, List.class);
-        aMap.put(ASSET_CATEGORYTYPE, CategoryType.class);
-        aMap.put(ASSET_CREATETIMESTAMP, Long.class);
-        aMap.put(ASSET_MODIFYTIMESTAMP, Long.class);
-        aMap.put(ASSET_DETAILIDS, List.class);
-        // Bitmap is transferred into a String to store in the Database
-        aMap.put(ASSET_THUMBNAIL, String.class);
-        memberClasses = Collections.unmodifiableMap(aMap);
-    }
 
     //endregion
 
@@ -115,7 +95,7 @@ public final class FAsset implements IAsset {
      * @throws IllegalArgumentException if name is empty or exceeds the length limit
      */
     @Exclude
-    public static FAsset create(String name, String containerId, CategoryType category) {
+    public static Asset create(String name, String containerId, CategoryType category) {
         checkIllegalName(name);
         checkNotNull(containerId);
 
@@ -125,8 +105,18 @@ public final class FAsset implements IAsset {
 
         List<String> contentIds = Collections.synchronizedList(new ArrayList<>());
         List<String> detailIds = Collections.synchronizedList(new ArrayList<>());
-        FAsset asset = new FAsset(id, name, containerId, contentIds, category,
-                createTimestamp, modifyTimestamp, false, detailIds, null, true);
+        Asset asset = new Asset(
+                id,
+                name,
+                containerId,
+                contentIds,
+                category,
+                createTimestamp,
+                modifyTimestamp,
+                false,
+                detailIds,
+                null,
+                true);
 
         return asset;
     }
@@ -141,7 +131,8 @@ public final class FAsset implements IAsset {
      * @throws IllegalArgumentException if name is empty or exceeds the length limit
      */
     @Exclude
-    public static FAsset createAsMisc(String name, String containerId) {
+    public static Asset createAsMisc(
+            String name, String containerId) {
         return create(name, containerId, CategoryType.Miscellaneous);
     }
 
@@ -151,11 +142,21 @@ public final class FAsset implements IAsset {
      * @return the Root Asset instance
      */
     @Exclude
-    public static FAsset createRoot() {
+    public static Asset createRoot() {
         String id = ROOT_ASSET_ID;
 
-        return new FAsset(id, "Assets", "", new ArrayList<>(), CategoryType.None,
-                System.currentTimeMillis(), System.currentTimeMillis(), false, new ArrayList<>(), null, true);
+        return new Asset(
+                id,
+                "Assets",
+                "",
+                new ArrayList<>(),
+                CategoryType.None,
+                System.currentTimeMillis(),
+                System.currentTimeMillis(),
+                false,
+                new ArrayList<>(),
+                null,
+                true);
     }
 
     //endregion
@@ -163,7 +164,7 @@ public final class FAsset implements IAsset {
     //region TRANSFORMERS AND UTILS
 
     @Exclude
-    public static FAsset fromMap(Map<String, Object> members) {
+    public static Asset fromMap(Map<String, Object> members) {
         String id = members.get(ASSET_ID).toString();
         String name = members.get(ASSET_NAME).toString();
         String containerId = members.get(ASSET_CONTAINERID).toString();
@@ -177,8 +178,18 @@ public final class FAsset implements IAsset {
         if (detailIds == null) detailIds = new ArrayList<>();
 
         String encodedThumbnail = (String) members.get(ASSET_THUMBNAIL);
-        return new FAsset(id, name, containerId, contentIds, categoryType, createTimestamp,
-                modifyTimestamp, recycled, detailIds, encodedThumbnail, encodedThumbnail == null);
+        return new Asset(
+                id,
+                name,
+                containerId,
+                contentIds,
+                categoryType,
+                createTimestamp,
+                modifyTimestamp,
+                recycled,
+                detailIds,
+                encodedThumbnail,
+                encodedThumbnail == null);
     }
 
     @Exclude
@@ -202,7 +213,7 @@ public final class FAsset implements IAsset {
     }
 
     @Exclude
-    public void overwrittenBy(FAsset source) {
+    public void overwrittenBy(Asset source) {
         checkNotNull(source, "The source asset cannot be null.");
         if (!id.equals(source.getId()))
             throw new IllegalStateException("The source asset must have the same id.");
@@ -220,8 +231,19 @@ public final class FAsset implements IAsset {
         usingDefaultThumbnail.set(source.usingDefaultThumbnail.get());
     }
 
-    public static Class getMemberClassForDatabase(String key) {
-        return memberClasses.get(key);
+    public static Class getMemberType(String key) {
+        try {
+            Class fieldType = Asset.class.getDeclaredField(key).getType();
+            if(fieldType.equals(AtomicBoolean.class)) {
+                return Boolean.class;
+            }
+            else if (fieldType.equals(AtomicLong.class)) {
+                return Long.class;
+            }
+            else return fieldType;
+        } catch (NoSuchFieldException e) {
+            return null;
+        }
     }
 
     //endregion
@@ -372,16 +394,6 @@ public final class FAsset implements IAsset {
 
     @Exclude
     public void setThumbnail(Bitmap photo, boolean usingDefaultThumbnail) {
-
-//        if (encodedThumbnail != null && !encodedThumbnail.isEmpty()) {
-//            Bitmap thumbnail = BitmapHelper.toBitmap(encodedThumbnail);
-//            return new FAsset(id, name, containerId, contentIds, categoryType, createTimestamp,
-//                    modifyTimestamp, recycled, detailIds, thumbnail, false);
-//        } else {
-//            return new FAsset(id, name, containerId, contentIds, categoryType, createTimestamp,
-//                    modifyTimestamp, recycled, detailIds, null, true);
-
-
         this.usingDefaultThumbnail.set(usingDefaultThumbnail);
         this.thumbnailEncodedData = BitmapHelper.toString(checkNotNull(photo));
     }
@@ -407,7 +419,7 @@ public final class FAsset implements IAsset {
     }
 
     @Exclude
-    public boolean move(FAsset from, FAsset to) {
+    public boolean move(Asset from, Asset to) {
         checkNotNull(from);
         checkNotNull(to);
 
@@ -434,8 +446,8 @@ public final class FAsset implements IAsset {
     @Override
     @Exclude
     public boolean equals(Object o) {
-        if (o instanceof FAsset) {
-            FAsset a = (FAsset) o;
+        if (o instanceof Asset) {
+            Asset a = (Asset) o;
             if (a.id.equals(id))
                 return true;
         }
@@ -468,7 +480,7 @@ public final class FAsset implements IAsset {
 
     //region PRIVATE STUFF
 
-    private FAsset(
+    private Asset(
             String id,
             String name,
             String containerId,

@@ -26,10 +26,10 @@ import nz.ac.aut.comp705.sortmystuff.Features;
 import nz.ac.aut.comp705.sortmystuff.data.IDataRepository;
 import nz.ac.aut.comp705.sortmystuff.data.IDebugHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
-import nz.ac.aut.comp705.sortmystuff.data.models.FAsset;
-import nz.ac.aut.comp705.sortmystuff.data.models.FCategory;
-import nz.ac.aut.comp705.sortmystuff.data.models.FDetail;
+import nz.ac.aut.comp705.sortmystuff.data.models.Category;
 import nz.ac.aut.comp705.sortmystuff.di.qualifiers.AppResDatabaseRef;
 import nz.ac.aut.comp705.sortmystuff.di.qualifiers.RegularScheduler;
 import nz.ac.aut.comp705.sortmystuff.di.qualifiers.UserDatabaseRef;
@@ -41,7 +41,7 @@ import rx.Observable;
 import rx.functions.Action1;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static nz.ac.aut.comp705.sortmystuff.data.models.FDetail.DETAIL_FIELD;
+import static nz.ac.aut.comp705.sortmystuff.data.models.Detail.DETAIL_FIELD;
 
 public class FirebaseHelper implements IDataRepository, IDebugHelper {
 
@@ -66,25 +66,25 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
         mSchedulerProvider = checkNotNull(schedulerProvider);
         mFeatureToggle = checkNotNull(featToggle);
 
-        if(mFeatureToggle.DevelopmentMode) {
+        if (mFeatureToggle.DevelopmentMode) {
             deleteAllRecycledAssets();
             deleteAllRecycledDetails();
         }
     }
 
     @Override
-    public Observable<List<FAsset>> retrieveAllAssets() {
+    public Observable<List<Asset>> retrieveAllAssets() {
         return RxFirebaseDatabase
                 .observeSingleValueEvent(mUserDB.child(DB_ASSETS))
-                .map(dataSnapshot -> jsonDataToList(dataSnapshot, FAsset.class));
+                .map(dataSnapshot -> jsonDataToList(dataSnapshot, Asset.class));
     }
 
     @Override
-    public Observable<FAsset> retrieveAsset(String assetId) {
+    public Observable<Asset> retrieveAsset(String assetId) {
         checkNotNull(assetId, "The assetId cannot be null.");
         return RxFirebaseDatabase
                 .observeSingleValueEvent(mUserDB.child(DB_ASSETS).child(checkNotNull(assetId)))
-                .map(dataSnapshot -> jsonDataToObject(dataSnapshot, FAsset.class))
+                .map(dataSnapshot -> jsonDataToObject(dataSnapshot, Asset.class))
                 .onErrorReturn(throwable -> {
                     Log.e(FirebaseHelper.class.getName(), throwable.getMessage(), throwable);
                     return null;
@@ -92,14 +92,14 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     }
 
     @Override
-    public Observable<List<FDetail>> retrieveAllDetails() {
+    public Observable<List<Detail>> retrieveAllDetails() {
         return RxFirebaseDatabase
                 .observeSingleValueEvent(mUserDB.child(DB_DETAILS))
-                .map(dataSnapshot -> jsonDataToList(dataSnapshot, FDetail.class));
+                .map(dataSnapshot -> jsonDataToList(dataSnapshot, Detail.class));
     }
 
     @Override
-    public Observable<List<FDetail>> retrieveDetails(String assetId) {
+    public Observable<List<Detail>> retrieveDetails(String assetId) {
         checkNotNull(assetId, "The assetId cannot be null.");
         return retrieveAsset(assetId)
                 .doOnNext(asset -> {
@@ -113,20 +113,20 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     }
 
     @Override
-    public Observable<FDetail> retrieveDetail(String detailId) {
+    public Observable<Detail> retrieveDetail(String detailId) {
         checkNotNull(detailId, "The detailId cannot be null.");
 
         return assembleDetail(detailId);
     }
 
     @Override
-    public Observable<List<FCategory>> retrieveCategories() {
+    public Observable<List<Category>> retrieveCategories() {
         return RxFirebaseDatabase.observeSingleValueEvent(mAppResDB.child(DB_CATEGORIES))
-                .map(dataSnapshot -> jsonDataToList(dataSnapshot, FCategory.class));
+                .map(dataSnapshot -> jsonDataToList(dataSnapshot, Category.class));
     }
 
     @Override
-    public void addOrUpdateAsset(FAsset asset, OnUpdatedCallback onUpdatedCallback) {
+    public void addOrUpdateAsset(Asset asset, OnUpdatedCallback onUpdatedCallback) {
         OnUpdatedCallback callback = onUpdatedCallback == null ? mDoNothingCallback : onUpdatedCallback;
 
         mUserDB.child(DB_ASSETS).child(checkNotNull(asset).getId()).setValue(asset.toMap())
@@ -136,7 +136,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     }
 
     @Override
-    public void addDetail(FDetail detail, OnUpdatedCallback onUpdatedCallback) {
+    public void addDetail(Detail detail, OnUpdatedCallback onUpdatedCallback) {
         OnUpdatedCallback callback = onUpdatedCallback == null ? mDoNothingCallback : onUpdatedCallback;
 
         retrieveDetail(checkNotNull(detail).getId())
@@ -193,7 +193,8 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     public <E> void updateAsset(String assetId, String key, E value, OnUpdatedCallback onUpdatedCallback) {
         OnUpdatedCallback callback = onUpdatedCallback == null ? mDoNothingCallback : onUpdatedCallback;
 
-        if (value != null && !FAsset.getMemberClassForDatabase(key).isAssignableFrom(value.getClass())) {
+        Class fieldType =  Asset.getMemberType(key);
+        if (value != null && (fieldType == null || !fieldType.isAssignableFrom(value.getClass()))) {
             IllegalArgumentException e = new IllegalArgumentException("Incorrect value type.");
             callback.onFailure(e);
             throw e;
@@ -207,7 +208,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     }
 
     @Override
-    public void updateDetail(FDetail detail, boolean updatingField, OnUpdatedCallback onUpdatedCallback) {
+    public void updateDetail(Detail detail, boolean updatingField, OnUpdatedCallback onUpdatedCallback) {
         OnUpdatedCallback callback = onUpdatedCallback == null ? mDoNothingCallback : onUpdatedCallback;
 
         if (updatingField) {
@@ -259,12 +260,12 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
         checkNotNull(onDataChangeCallback);
         checkNotNull(type);
 
-        if (type.equals(FAsset.class)) {
-            mOnAssetsDataChangeCallback = (OnDataChangeCallback<FAsset>) onDataChangeCallback;
+        if (type.equals(Asset.class)) {
+            mOnAssetsDataChangeCallback = (OnDataChangeCallback<Asset>) onDataChangeCallback;
             reloadDataChangeListener(type);
 
-        } else if (type.equals(FDetail.class)) {
-            mOnDetailsDataChangeCallback = (OnDataChangeCallback<FDetail>) onDataChangeCallback;
+        } else if (type.equals(Detail.class)) {
+            mOnDetailsDataChangeCallback = (OnDataChangeCallback<Detail>) onDataChangeCallback;
             reloadDataChangeListener(type);
         }
     }
@@ -274,14 +275,14 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
         if (type == null) {
             mOnAssetsDataChangeCallback = null;
             mOnDetailsDataChangeCallback = null;
-            reloadDataChangeListener(FAsset.class);
-            reloadDataChangeListener(FDetail.class);
-        } else if (type.equals(FAsset.class)) {
+            reloadDataChangeListener(Asset.class);
+            reloadDataChangeListener(Detail.class);
+        } else if (type.equals(Asset.class)) {
             mOnAssetsDataChangeCallback = null;
-            reloadDataChangeListener(FAsset.class);
-        } else if (type.equals(FDetail.class)) {
+            reloadDataChangeListener(Asset.class);
+        } else if (type.equals(Detail.class)) {
             mOnDetailsDataChangeCallback = null;
-            reloadDataChangeListener(FDetail.class);
+            reloadDataChangeListener(Detail.class);
         }
     }
 
@@ -319,22 +320,22 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
         Map<String, Object> members = (Map) dataSnapshot.getValue();
         if (members == null) return null;
 
-        if (type.equals(FAsset.class)) {
-            FAsset asset = FAsset.fromMap(members);
+        if (type.equals(Asset.class)) {
+            Asset asset = Asset.fromMap(members);
             if (asset.getThumbnail() == null)
                 asset.setThumbnail(mResLoader.getDefaultThumbnail(), true);
             return (E) asset;
 
-        } else if (type.equals(FDetail.class)) {
-            FDetail detail = FDetail.fromMap(members);
+        } else if (type.equals(Detail.class)) {
+            Detail detail = Detail.fromMap(members);
 
             if (detail.isDefaultFieldValue() && detail.getType().equals(DetailType.Image)) {
                 detail.setFieldData(mResLoader.getDefaultPhotoDataString(), true);
             }
             return (E) detail;
 
-        } else if (type.equals(FCategory.class)) {
-            FCategory category = FCategory.fromMap(members);
+        } else if (type.equals(Category.class)) {
+            Category category = Category.fromMap(members);
             category.setDefaultFieldValue(mResLoader.getDefaultText(), mResLoader.getDefaultPhotoDataString());
 
             return (E) category;
@@ -390,11 +391,11 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
         }, Emitter.BackpressureMode.BUFFER);
     }
 
-    private Observable<FDetail> assembleDetail(String detailId) {
+    private Observable<Detail> assembleDetail(String detailId) {
         Observable<byte[]> getImageObservable = getImageFile(detailId);
-        Observable<FDetail> getDetailObservable = RxFirebaseDatabase
+        Observable<Detail> getDetailObservable = RxFirebaseDatabase
                 .observeSingleValueEvent(mUserDB.child(DB_DETAILS).child(detailId))
-                .map(dataSnapshot -> jsonDataToObject(dataSnapshot, FDetail.class));
+                .map(dataSnapshot -> jsonDataToObject(dataSnapshot, Detail.class));
 
         return Observable.zip(getImageObservable, getDetailObservable, (bytes, detail) -> {
             if (detail == null) return null;
@@ -414,12 +415,12 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
 
     private <T> void reloadDataChangeListener(Class<T> type) {
         checkNotNull(type);
-        if (type.equals(FAsset.class)) {
+        if (type.equals(Asset.class)) {
             mUserDB.child(DB_ASSETS).removeEventListener(mAssetChildEventListener);
             if (mOnAssetsDataChangeCallback != null) {
                 mUserDB.child(DB_ASSETS).addChildEventListener(mAssetChildEventListener);
             }
-        } else if (type.equals(FDetail.class)) {
+        } else if (type.equals(Detail.class)) {
             mUserDB.child(DB_DETAILS).removeEventListener(mDetailChildListener);
             if (mOnDetailsDataChangeCallback != null) {
                 mUserDB.child(DB_DETAILS).addChildEventListener(mDetailChildListener);
@@ -430,22 +431,22 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     ChildEventListener mAssetChildEventListener = new ChildEventListener() {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-            mOnAssetsDataChangeCallback.onDataAdded(jsonDataToObject(dataSnapshot, FAsset.class));
+            mOnAssetsDataChangeCallback.onDataAdded(jsonDataToObject(dataSnapshot, Asset.class));
         }
 
         @Override
         public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-            mOnAssetsDataChangeCallback.onDataChanged(jsonDataToObject(dataSnapshot, FAsset.class));
+            mOnAssetsDataChangeCallback.onDataChanged(jsonDataToObject(dataSnapshot, Asset.class));
         }
 
         @Override
         public void onChildRemoved(DataSnapshot dataSnapshot) {
-            mOnAssetsDataChangeCallback.onDataRemoved(jsonDataToObject(dataSnapshot, FAsset.class));
+            mOnAssetsDataChangeCallback.onDataRemoved(jsonDataToObject(dataSnapshot, Asset.class));
         }
 
         @Override
         public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-            mOnAssetsDataChangeCallback.onDataMoved(jsonDataToObject(dataSnapshot, FAsset.class));
+            mOnAssetsDataChangeCallback.onDataMoved(jsonDataToObject(dataSnapshot, Asset.class));
         }
 
         @Override
@@ -457,22 +458,22 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     ChildEventListener mDetailChildListener = new ChildEventListener() {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-            mOnDetailsDataChangeCallback.onDataAdded(jsonDataToObject(dataSnapshot, FDetail.class));
+            mOnDetailsDataChangeCallback.onDataAdded(jsonDataToObject(dataSnapshot, Detail.class));
         }
 
         @Override
         public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-            mOnDetailsDataChangeCallback.onDataChanged(jsonDataToObject(dataSnapshot, FDetail.class));
+            mOnDetailsDataChangeCallback.onDataChanged(jsonDataToObject(dataSnapshot, Detail.class));
         }
 
         @Override
         public void onChildRemoved(DataSnapshot dataSnapshot) {
-            mOnDetailsDataChangeCallback.onDataRemoved(jsonDataToObject(dataSnapshot, FDetail.class));
+            mOnDetailsDataChangeCallback.onDataRemoved(jsonDataToObject(dataSnapshot, Detail.class));
         }
 
         @Override
         public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-            mOnDetailsDataChangeCallback.onDataMoved(jsonDataToObject(dataSnapshot, FDetail.class));
+            mOnDetailsDataChangeCallback.onDataMoved(jsonDataToObject(dataSnapshot, Detail.class));
         }
 
         @Override
@@ -498,31 +499,31 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     private void deleteAllRecycledAssets() {
         RxFirebaseDatabase
                 .observeSingleValueEvent(mUserDB.child(DB_ASSETS))
-                .map(dataSnapshot -> jsonDataToList(dataSnapshot, FAsset.class))
+                .map(dataSnapshot -> jsonDataToList(dataSnapshot, Asset.class))
                 .onBackpressureBuffer()
                 .flatMap(Observable::from)
-                .filter(FAsset::isRecycled)
-                .map(FAsset::getId)
+                .filter(Asset::isRecycled)
+                .map(Asset::getId)
                 .subscribe(id -> mUserDB.child(DB_ASSETS).child(id).removeValue());
     }
 
     private void deleteAllRecycledDetails() {
         RxFirebaseDatabase
                 .observeSingleValueEvent(mUserDB.child(DB_ASSETS))
-                .map(dataSnapshot -> jsonDataToList(dataSnapshot, FAsset.class))
+                .map(dataSnapshot -> jsonDataToList(dataSnapshot, Asset.class))
                 .onBackpressureBuffer()
                 .flatMap(Observable::from)
                 .filter(asset -> !asset.isRecycled())
-                .map(FAsset::getId)
+                .map(Asset::getId)
                 .toList()
                 .subscribe(
                         assets -> RxFirebaseDatabase
                                 .observeSingleValueEvent(mUserDB.child(DB_DETAILS))
-                                .map(dataSnapshot -> jsonDataToList(dataSnapshot, FDetail.class))
+                                .map(dataSnapshot -> jsonDataToList(dataSnapshot, Detail.class))
                                 .onBackpressureBuffer()
                                 .flatMap(Observable::from)
                                 .filter(detail -> !assets.contains(detail.getAssetId()))
-                                .map(FDetail::getId)
+                                .map(Detail::getId)
                                 .subscribe(id -> mUserDB.child(DB_DETAILS).child(id).removeValue())
                 );
     }
@@ -533,7 +534,7 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     private final LocalResourceLoader mResLoader;
     private final ISchedulerProvider mSchedulerProvider;
     private volatile Features mFeatureToggle;
-    private volatile OnDataChangeCallback<FAsset> mOnAssetsDataChangeCallback;
-    private volatile OnDataChangeCallback<FDetail> mOnDetailsDataChangeCallback;
+    private volatile OnDataChangeCallback<Asset> mOnAssetsDataChangeCallback;
+    private volatile OnDataChangeCallback<Detail> mOnDetailsDataChangeCallback;
 
 }

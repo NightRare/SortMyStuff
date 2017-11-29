@@ -18,7 +18,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Created by Yuan on 2017/5/27.
  */
 
-public class FCategory implements ICategory {
+public class Category implements ICategory {
 
     //region FIELD NAMES
 
@@ -34,13 +34,13 @@ public class FCategory implements ICategory {
      */
     private String name;
 
-    private List<FDetail> details;
+    private List<Detail> details;
 
     //endregion
 
     //region CONSTRUCTORS
 
-    public FCategory() {
+    public Category() {
         // Default constructor required for calls to DataSnapshot.getValue(Post.class)
     }
 
@@ -49,18 +49,18 @@ public class FCategory implements ICategory {
     //region TRANSFORMERS
 
     @Exclude
-    public static FCategory fromMap(Map<String, Object> members) {
+    public static Category fromMap(Map<String, Object> members) {
         String name = (String) members.get(CATEGORY_NAME);
         List<Map> detailObjects = (List<Map>) members.get(CATEGORY_DETAILS);
         if(detailObjects == null) detailObjects = new ArrayList<>();
 
-        List<FDetail> details = new ArrayList<>();
+        List<Detail> details = new ArrayList<>();
         for (Map<String, Object> dMember : detailObjects) {
-            FDetail detail = FDetail.fromMap(dMember);
+            Detail detail = Detail.fromMap(dMember);
             if (detail != null)
                 details.add(detail);
         }
-        return new FCategory(name, details);
+        return new Category(name, details);
     }
 
     //endregion
@@ -82,7 +82,7 @@ public class FCategory implements ICategory {
     //region OTHER METHODS
 
     public void setDefaultFieldValue(String defaultTextValue, String defaultImageValue) {
-        for (FDetail detail : details) {
+        for (Detail detail : details) {
             if (detail.getType().equals(DetailType.Text) || detail.getType().equals(DetailType.Date)) {
                 detail.setFieldData(defaultTextValue, true);
 
@@ -101,12 +101,12 @@ public class FCategory implements ICategory {
      * @throws NullPointerException if assetId is {@code null}
      */
     @Exclude
-    public List<FDetail> generateDetails(String assetId) {
+    public List<Detail> generateDetails(String assetId) {
         checkNotNull(assetId);
 
-        List<FDetail> clone = new ArrayList<>();
-        for (FDetail templateDetail : details) {
-            FDetail detail = FDetail.createDetail(assetId, templateDetail.getType(), templateDetail.getLabel(), templateDetail.getFieldData());
+        List<Detail> clone = new ArrayList<>();
+        for (Detail templateDetail : details) {
+            Detail detail = Detail.createDetail(assetId, templateDetail.getType(), templateDetail.getLabel(), templateDetail.getFieldData());
             detail.setPosition(templateDetail.getPosition());
             if (detail != null)
                 clone.add(detail);
@@ -121,7 +121,7 @@ public class FCategory implements ICategory {
     @Exclude
     private static final String DUMMY_ASSET_ID = "DUMMY_ASSET_ID";
 
-    private FCategory(String name, List<FDetail> details) {
+    private Category(String name, List<Detail> details) {
         this.name = name;
         this.details = details;
     }

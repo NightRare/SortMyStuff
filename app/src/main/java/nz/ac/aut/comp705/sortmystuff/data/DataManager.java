@@ -22,11 +22,11 @@ import javax.inject.Inject;
 
 import nz.ac.aut.comp705.sortmystuff.Features;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
+import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
-import nz.ac.aut.comp705.sortmystuff.data.models.FAsset;
-import nz.ac.aut.comp705.sortmystuff.data.models.FCategory;
-import nz.ac.aut.comp705.sortmystuff.data.models.FDetail;
+import nz.ac.aut.comp705.sortmystuff.data.models.Category;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
 import nz.ac.aut.comp705.sortmystuff.data.remote.IImageDetectionHelper;
@@ -43,11 +43,11 @@ import rx.functions.Action1;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static nz.ac.aut.comp705.sortmystuff.data.models.FAsset.ASSET_CONTAINERID;
-import static nz.ac.aut.comp705.sortmystuff.data.models.FAsset.ASSET_CONTENTIDS;
-import static nz.ac.aut.comp705.sortmystuff.data.models.FAsset.ASSET_MODIFYTIMESTAMP;
-import static nz.ac.aut.comp705.sortmystuff.data.models.FAsset.ASSET_RECYCLED;
-import static nz.ac.aut.comp705.sortmystuff.data.models.FAsset.ASSET_THUMBNAIL;
+import static nz.ac.aut.comp705.sortmystuff.data.models.Asset.ASSET_CONTAINERID;
+import static nz.ac.aut.comp705.sortmystuff.data.models.Asset.ASSET_CONTENTIDS;
+import static nz.ac.aut.comp705.sortmystuff.data.models.Asset.ASSET_MODIFYTIMESTAMP;
+import static nz.ac.aut.comp705.sortmystuff.data.models.Asset.ASSET_RECYCLED;
+import static nz.ac.aut.comp705.sortmystuff.data.models.Asset.ASSET_THUMBNAIL;
 import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.ASSET_DEFAULT_NAME;
 import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.ASSET_PLACEHOLDER_ID;
 import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.ROOT_ASSET_ID;
@@ -84,8 +84,8 @@ public class DataManager implements IDataManager, IDebugHelper {
         mCachedCategories = new ArrayMap<>();
 
         initCachedDetails();
-//        mRemoteRepo.setOnDataChangeCallback(new OnDetailsDataChangeListeners(), FDetail.class);
-//        mRemoteRepo.setOnDataChangeCallback(new OnAssetsDataChangeListeners(), FAsset.class);
+//        mRemoteRepo.setOnDataChangeCallback(new OnDetailsDataChangeListeners(), Detail.class);
+//        mRemoteRepo.setOnDataChangeCallback(new OnAssetsDataChangeListeners(), Asset.class);
 
         cacheAssets();
         cacheCategories();
@@ -137,7 +137,7 @@ public class DataManager implements IDataManager, IDebugHelper {
         if (mDirtyCachedAssets || mCachedRecycledAssets == null) {
             return mRemoteRepo.retrieveAllAssets()
                     .flatMap(Observable::from)
-                    .filter(FAsset::isRecycled)
+                    .filter(Asset::isRecycled)
                     .map(fAsset -> (IAsset) fAsset)
                     .toList();
         }
@@ -221,7 +221,7 @@ public class DataManager implements IDataManager, IDebugHelper {
                     .onErrorReturn(throwable -> null);
         }
 
-        FAsset container = mCachedAssets.get(assetId);
+        Asset container = mCachedAssets.get(assetId);
         if (container == null)
             return Observable.just(null);
 
@@ -240,13 +240,13 @@ public class DataManager implements IDataManager, IDebugHelper {
             return mRemoteRepo.retrieveAllAssets()
                     .flatMap(Observable::from)
                     .filter(asset -> !asset.isRecycled())
-                    .toMap(FAsset::getId)
+                    .toMap(Asset::getId)
                     .map(allNonRecycledAssets -> {
                         // if the root asset has not been initialised/stored yet
                         if (allNonRecycledAssets == null || allNonRecycledAssets.isEmpty()) {
                             return new ArrayList<IAsset>();
                         }
-                        FAsset asset = allNonRecycledAssets.get(assetId);
+                        Asset asset = allNonRecycledAssets.get(assetId);
                         if (asset == null)
                             throw new NoSuchElementException();
 
@@ -255,7 +255,7 @@ public class DataManager implements IDataManager, IDebugHelper {
                     .onErrorReturn(throwable -> null);
         }
 
-        FAsset asset = mCachedAssets.get(assetId);
+        Asset asset = mCachedAssets.get(assetId);
         if (asset == null)
             throw new IllegalArgumentException("Asset not exists, id: " + assetId);
 
@@ -280,7 +280,7 @@ public class DataManager implements IDataManager, IDebugHelper {
         Preconditions.checkArgument(name.length() <= AppConfigs.ASSET_NAME_CAP, "The length of the name should be shorter than "
                 + AppConfigs.ASSET_NAME_CAP + " characters");
 
-        FAsset asset = FAsset.create(name, containerId, categoryType);
+        Asset asset = Asset.create(name, containerId, categoryType);
 
         if (mDirtyCachedCategories) {
             mRemoteRepo.retrieveCategories()
@@ -294,7 +294,7 @@ public class DataManager implements IDataManager, IDebugHelper {
                             details -> createAssetProcess(asset, details)
                     );
         } else {
-            List<FDetail> details = mCachedCategories.get(categoryType).generateDetails(asset.getId());
+            List<Detail> details = mCachedCategories.get(categoryType).generateDetails(asset.getId());
             createAssetProcess(asset, details);
         }
 
@@ -316,7 +316,7 @@ public class DataManager implements IDataManager, IDebugHelper {
         Preconditions.checkArgument(name.length() <= AppConfigs.ASSET_NAME_CAP, "The length of the name should be shorter than "
                 + AppConfigs.ASSET_NAME_CAP + " characters");
 
-        FAsset asset = FAsset.create(name, containerId, categoryType);
+        Asset asset = Asset.create(name, containerId, categoryType);
 
         if (mDirtyCachedCategories) {
             mRemoteRepo.retrieveCategories()
@@ -333,7 +333,7 @@ public class DataManager implements IDataManager, IDebugHelper {
                             }
                     );
         } else {
-            List<FDetail> newDetails = mCachedCategories.get(categoryType).generateDetails(asset.getId());
+            List<Detail> newDetails = mCachedCategories.get(categoryType).generateDetails(asset.getId());
             createAssetProcessNewDetails(newDetails, details, photo, asset);
             createAssetProcess(asset, newDetails);
         }
@@ -350,7 +350,7 @@ public class DataManager implements IDataManager, IDebugHelper {
         Preconditions.checkArgument(name.length() <= AppConfigs.ASSET_NAME_CAP, "The length of the name should be shorter than "
                 + AppConfigs.ASSET_NAME_CAP + " characters");
 
-        FAsset asset = FAsset.create(name, containerId, categoryType);
+        Asset asset = Asset.create(name, containerId, categoryType);
 
         if (mDirtyCachedCategories) {
             return mRemoteRepo.retrieveCategories()
@@ -361,7 +361,7 @@ public class DataManager implements IDataManager, IDebugHelper {
                     .map(category -> category.generateDetails(asset.getId()))
                     .flatMap(details -> createAssetProcessSafely(asset, details));
         } else {
-            List<FDetail> details = mCachedCategories.get(categoryType).generateDetails(asset.getId());
+            List<Detail> details = mCachedCategories.get(categoryType).generateDetails(asset.getId());
             return createAssetProcessSafely(asset, details);
         }
     }
@@ -381,7 +381,7 @@ public class DataManager implements IDataManager, IDebugHelper {
         Preconditions.checkArgument(name.length() <= AppConfigs.ASSET_NAME_CAP, "The length of the name should be shorter than "
                 + AppConfigs.ASSET_NAME_CAP + " characters");
 
-        FAsset asset = FAsset.create(name, containerId, categoryType);
+        Asset asset = Asset.create(name, containerId, categoryType);
 
         if (mDirtyCachedCategories) {
             return mRemoteRepo.retrieveCategories()
@@ -398,7 +398,7 @@ public class DataManager implements IDataManager, IDebugHelper {
                             }
                     );
         } else {
-            List<FDetail> newDetails = mCachedCategories.get(categoryType).generateDetails(asset.getId());
+            List<Detail> newDetails = mCachedCategories.get(categoryType).generateDetails(asset.getId());
             createAssetProcessNewDetails(newDetails, details, photo, asset);
             return createAssetProcessSafely(asset, newDetails);
         }
@@ -422,7 +422,7 @@ public class DataManager implements IDataManager, IDebugHelper {
 
         long modifyTimestamp = System.currentTimeMillis();
         LoggedAction updateAsset = executedFromLog -> {
-            FAsset asset = mCachedAssets.get(assetId);
+            Asset asset = mCachedAssets.get(assetId);
             if (asset == null) return;
 
             asset.setName(newName);
@@ -457,12 +457,12 @@ public class DataManager implements IDataManager, IDebugHelper {
             return;
 
         LoggedAction moveAsset = executedFromLog -> {
-            FAsset asset = mCachedAssets.get(assetId);
+            Asset asset = mCachedAssets.get(assetId);
             if (asset == null) return;
 
-            FAsset from = mCachedAssets.get(asset.getContainerId());
+            Asset from = mCachedAssets.get(asset.getContainerId());
 
-            FAsset to = mCachedAssets.get(newContainerId);
+            Asset to = mCachedAssets.get(newContainerId);
             if (to == null) return;
             if (from.getId().equals(to.getId())) return;
 
@@ -477,14 +477,14 @@ public class DataManager implements IDataManager, IDebugHelper {
         };
 
         if (mDirtyCachedAssets) {
-            Observable<FAsset> assetObservable = mRemoteRepo.retrieveAsset(assetId)
+            Observable<Asset> assetObservable = mRemoteRepo.retrieveAsset(assetId)
                     .subscribeOn(mSchedulerProvider.io());
 
-            Observable<FAsset> fromObservable = mRemoteRepo.retrieveAsset(assetId)
+            Observable<Asset> fromObservable = mRemoteRepo.retrieveAsset(assetId)
                     .subscribeOn(mSchedulerProvider.io())
                     .flatMap(asset -> mRemoteRepo.retrieveAsset(asset.getContainerId()));
 
-            Observable<FAsset> toObservable = mRemoteRepo.retrieveAsset(newContainerId)
+            Observable<Asset> toObservable = mRemoteRepo.retrieveAsset(newContainerId)
                     .subscribeOn(mSchedulerProvider.io());
 
             Observable.zip(assetObservable, fromObservable, toObservable, (asset, from, to) -> {
@@ -535,7 +535,7 @@ public class DataManager implements IDataManager, IDebugHelper {
                             }
                     );
         } else {
-            FAsset asset = mCachedAssets.get(assetId);
+            Asset asset = mCachedAssets.get(assetId);
             if (asset == null) return;
 
             if (!asset.getContentIds().isEmpty()) {
@@ -574,7 +574,7 @@ public class DataManager implements IDataManager, IDebugHelper {
         long modifyTimestamp = System.currentTimeMillis();
 
         if (mCachedDetails.containsKey(assetId)) {
-            for (FDetail detail : mCachedDetails.get(assetId)) {
+            for (Detail detail : mCachedDetails.get(assetId)) {
                 if (detail.getId().equals(detailId) && detail.getAssetId().equals(assetId)) {
                     updateDetailAndUpdateInRemote(detail, newLabel, fieldData, false, modifyTimestamp);
                     updateAssetModifyTimestamp(detail.getAssetId(), modifyTimestamp);
@@ -636,7 +636,7 @@ public class DataManager implements IDataManager, IDebugHelper {
             return mRemoteRepo.retrieveCategories()
                     .subscribeOn(mSchedulerProvider.io())
                     .flatMap(Observable::from)
-                    .toMap(FCategory::getName)
+                    .toMap(Category::getName)
                     .map(categories -> categories.get(categoryType.toString())
                             .generateDetails(ASSET_PLACEHOLDER_ID))
                     .flatMap(Observable::from)
@@ -724,7 +724,7 @@ public class DataManager implements IDataManager, IDebugHelper {
                 .subscribe();
     }
 
-    private void putAssetIntoCacheObjects(FAsset asset) {
+    private void putAssetIntoCacheObjects(Asset asset) {
         if (asset.isRecycled()) {
             mCachedRecycledAssets.put(asset.getId(), asset);
         } else {
@@ -739,7 +739,7 @@ public class DataManager implements IDataManager, IDebugHelper {
         mDirtyCachedDetails = false;
     }
 
-    private Observable<List<FDetail>> loadAndCacheDetails(String assetId) {
+    private Observable<List<Detail>> loadAndCacheDetails(String assetId) {
         if (mDirtyCachedDetails || mCachedDetails == null) {
             initCachedDetails();
         } else if (mCachedDetails.containsKey(assetId)) {
@@ -754,7 +754,7 @@ public class DataManager implements IDataManager, IDebugHelper {
                 });
     }
 
-    private void addToCachedDetails(String assetId, List<FDetail> details) {
+    private void addToCachedDetails(String assetId, List<Detail> details) {
 
         // Releases one cache from the cachedDetails map if the size of the cache is bigger than the limit.
         // The cache algorithm now is LRU (Latest Recently Used).
@@ -767,13 +767,13 @@ public class DataManager implements IDataManager, IDebugHelper {
         mCachedDetailsKeyList.add(assetId);
     }
 
-    private FAsset createRootAsset() {
-        FAsset root = FAsset.createRoot();
+    private Asset createRootAsset() {
+        Asset root = Asset.createRoot();
         mRemoteRepo.addOrUpdateAsset(root, null);
         return root;
     }
 
-    private Observable<String> createAssetProcessSafely(FAsset asset, List<FDetail> details) {
+    private Observable<String> createAssetProcessSafely(Asset asset, List<Detail> details) {
 
         Observable<String> outputObservable = null;
         Emitter.BackpressureMode backpressureMode = Emitter.BackpressureMode.BUFFER;
@@ -856,7 +856,7 @@ public class DataManager implements IDataManager, IDebugHelper {
                                 @Override
                                 public void onSuccess(Void aVoid) {
                                     mActionsQueue.add(executedFromLog -> {
-                                        FAsset cachedContainer = mCachedAssets.get(asset.getContainerId());
+                                        Asset cachedContainer = mCachedAssets.get(asset.getContainerId());
                                         if (cachedContainer == null) return;
 
                                         cachedContainer.addContentId(asset.getId());
@@ -880,7 +880,7 @@ public class DataManager implements IDataManager, IDebugHelper {
                         }, backpressureMode);
                     });
         } else {
-            FAsset container = mCachedAssets.get(asset.getContainerId());
+            Asset container = mCachedAssets.get(asset.getContainerId());
             outputObservable = outputObservable
                     .flatMap(assetId -> {
                         if (container == null)
@@ -915,14 +915,14 @@ public class DataManager implements IDataManager, IDebugHelper {
     }
 
     private void createAssetProcessNewDetails(
-            List<FDetail> newDetails,
+            List<Detail> newDetails,
             List<IDetail> sourceDetails,
             Bitmap photo,
-            FAsset newAsset) {
+            Asset newAsset) {
 
         Map<String, IDetail> sourceMap = Maps.uniqueIndex(sourceDetails, IDetail::getLabel);
 
-        for (FDetail nd : newDetails) {
+        for (Detail nd : newDetails) {
             if (nd.getLabel().equals(CategoryType.BasicDetail.PHOTO)) {
                 boolean isDefaultValue = photo.sameAs(mResLoader.getDefaultPhoto());
                 nd.setFieldData(
@@ -945,16 +945,16 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
     }
 
-    private void createAssetProcess(FAsset asset, List<FDetail> details) {
+    private void createAssetProcess(Asset asset, List<Detail> details) {
 
-        for (FDetail d : details) {
+        for (Detail d : details) {
             asset.addDetailId(d.getId());
             mRemoteRepo.addDetail(d, mOnDetailUpdated);
         }
         mRemoteRepo.addOrUpdateAsset(asset, mOnAssetUpdated);
 
         LoggedAction updateCacheData = executedFromLog -> {
-            FAsset container = mCachedAssets.get(asset.getContainerId());
+            Asset container = mCachedAssets.get(asset.getContainerId());
             if (container == null) return;
 
             container.addContentId(asset.getId());
@@ -997,7 +997,7 @@ public class DataManager implements IDataManager, IDebugHelper {
      * @param a1 the asset to be checked
      * @return true if this asset is the parent of the given asset
      */
-    private boolean isParentOf(FAsset a1, FAsset a2) {
+    private boolean isParentOf(Asset a1, Asset a2) {
         if (a1.getId().equals(a2.getId())) return false;
         if (a1.isRoot()) return true;
         if (a2.isRoot()) return false;
@@ -1009,8 +1009,8 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
     }
 
-    private List<IAsset> getParentAssetsList(FAsset asset, boolean rootToChildren,
-                                             Map<String, FAsset> allNonRecycledAssets) {
+    private List<IAsset> getParentAssetsList(Asset asset, boolean rootToChildren,
+                                             Map<String, Asset> allNonRecycledAssets) {
         List<IAsset> results = new ArrayList<>();
         //children to root order
         while (!asset.isRoot()) {
@@ -1023,19 +1023,19 @@ public class DataManager implements IDataManager, IDebugHelper {
         return results;
     }
 
-    private void moveAssetUpdateRemoteRepo(FAsset asset, FAsset from, FAsset to) {
+    private void moveAssetUpdateRemoteRepo(Asset asset, Asset from, Asset to) {
         mRemoteRepo.updateAsset(asset.getId(), ASSET_CONTAINERID, asset.getContainerId(), mOnAssetUpdated);
         mRemoteRepo.updateAsset(from.getId(), ASSET_CONTENTIDS, from.getContentIds(), mOnAssetUpdated);
         mRemoteRepo.updateAsset(to.getId(), ASSET_CONTENTIDS, to.getContentIds(), mOnAssetUpdated);
     }
 
-    private void recycleAsset(FAsset asset) {
+    private void recycleAsset(Asset asset) {
         checkNotNull(asset);
 
         LoggedAction recycleAction = executedFromLog -> {
             // the containerId of the recycled asset is not removed on purpose
             // in case it needs to be restored in the future
-            FAsset container = mCachedAssets.get(asset.getContainerId());
+            Asset container = mCachedAssets.get(asset.getContainerId());
             container.removeContentId(asset.getId());
             mCachedAssets.get(asset.getId()).setRecycled(true);
             mCachedRecycledAssets.put(asset.getId(), mCachedAssets.remove(asset.getId()));
@@ -1060,7 +1060,7 @@ public class DataManager implements IDataManager, IDebugHelper {
         mRemoteRepo.updateAsset(asset.getId(), ASSET_RECYCLED, true, mOnAssetUpdated);
     }
 
-    private Observable<FAsset> recycleAssetGetAllChildrenAssets(FAsset asset) {
+    private Observable<Asset> recycleAssetGetAllChildrenAssets(Asset asset) {
         if (asset.getContentIds().isEmpty())
             return Observable.just(asset);
 
@@ -1075,7 +1075,7 @@ public class DataManager implements IDataManager, IDebugHelper {
         String thumbnailDataString = usingDefaultPhoto ? null : BitmapHelper.toString(thumbnail);
 
         LoggedAction updateThumbnail = executedFromLog -> {
-            FAsset asset = mCachedAssets.get(assetId);
+            Asset asset = mCachedAssets.get(assetId);
             if (asset != null) {
                 asset.setThumbnail(thumbnail, usingDefaultPhoto);
             }
@@ -1100,7 +1100,7 @@ public class DataManager implements IDataManager, IDebugHelper {
         long modifyTimestamp = System.currentTimeMillis();
 
         if (mCachedDetails.containsKey(assetId)) {
-            for (FDetail detail : mCachedDetails.get(assetId)) {
+            for (Detail detail : mCachedDetails.get(assetId)) {
                 if (detail.getId().equals(detailId) && detail.getAssetId().equals(assetId)) {
                     if (detail.getType().equals(DetailType.Text) || detail.getType().equals(DetailType.Date)) {
                         updateDetailAndUpdateInRemote(detail, newLabel, mResLoader.getDefaultText(),
@@ -1132,7 +1132,7 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
     }
 
-    private <E> void updateDetailAndUpdateInRemote(FDetail<E> detail, String newLabel,
+    private <E> void updateDetailAndUpdateInRemote(Detail<E> detail, String newLabel,
                                                    String newFieldData, boolean defaultFieldValue, long modifyTimestamp) {
         if (newLabel != null)
             detail.setLabel(newLabel);
@@ -1155,18 +1155,18 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
     }
 
-    private class OnAssetsDataChangeListeners implements IDataRepository.OnDataChangeCallback<FAsset> {
+    private class OnAssetsDataChangeListeners implements IDataRepository.OnDataChangeCallback<Asset> {
 
         @Override
-        public void onDataAdded(FAsset asset) {
+        public void onDataAdded(Asset asset) {
             if (!mCachedAssets.containsKey(asset.getId()))
                 putAssetIntoCacheObjects(asset);
         }
 
         @Override
-        public void onDataChanged(FAsset asset) {
+        public void onDataChanged(Asset asset) {
             LoggedAction updateCache = executedFromLog -> {
-                FAsset cachedOne = mCachedAssets.get(asset.getId());
+                Asset cachedOne = mCachedAssets.get(asset.getId());
                 if (cachedOne == null) return;
 
                 cachedOne.overwrittenBy(asset);
@@ -1180,12 +1180,12 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
 
         @Override
-        public void onDataRemoved(FAsset asset) {
+        public void onDataRemoved(Asset asset) {
             // assets won't be removed
         }
 
         @Override
-        public void onDataMoved(FAsset asset) {
+        public void onDataMoved(Asset asset) {
             // does not matter
         }
     }
@@ -1207,23 +1207,23 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
     }
 
-    private class OnDetailsDataChangeListeners implements IDataRepository.OnDataChangeCallback<FDetail> {
+    private class OnDetailsDataChangeListeners implements IDataRepository.OnDataChangeCallback<Detail> {
 
         @Override
-        public void onDataAdded(FDetail detail) {
+        public void onDataAdded(Detail detail) {
             // does not matter for now, because details won't be added without adding a new asset
             // will pass in null, as currently set up in FirebaseHelper
         }
 
         @Override
-        public void onDataChanged(FDetail detail) {
+        public void onDataChanged(Detail detail) {
 
             if (mDirtyCachedDetails) {
                 initCachedDetails();
             } else {
                 if (!mCachedDetails.containsKey(detail.getAssetId())) return;
 
-                for (FDetail d : mCachedDetails.get(detail.getAssetId())) {
+                for (Detail d : mCachedDetails.get(detail.getAssetId())) {
                     if (d.getId().equals(detail.getId())) {
                         d.overwrittenBy(detail);
                         break;
@@ -1233,18 +1233,18 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
 
         @Override
-        public void onDataRemoved(FDetail detail) {
+        public void onDataRemoved(Detail detail) {
             // won't be removed for now
         }
 
         @Override
-        public void onDataMoved(FDetail detail) {
+        public void onDataMoved(Detail detail) {
             // does not matter
         }
     }
 
     private Observable<String> generateNewAssetName(String prefix, boolean displayZero) {
-        Observable<FAsset> assetStreams;
+        Observable<Asset> assetStreams;
 
         if (mDirtyCachedAssets || mCachedAssets == null) {
             assetStreams = mRemoteRepo.retrieveAllAssets()
@@ -1254,7 +1254,7 @@ public class DataManager implements IDataManager, IDebugHelper {
         }
 
         return assetStreams
-                .map(FAsset::getName)
+                .map(Asset::getName)
                 .filter(assetName -> assetName.startsWith(prefix))
                 .map(assetName -> getPostfixNum(assetName, prefix))
                 .filter(num -> num != -1)
@@ -1435,12 +1435,12 @@ public class DataManager implements IDataManager, IDebugHelper {
 
     private final List<LoggedAction> mActionsQueue;
 
-    private volatile FAsset mCachedRootAsset;
-    private final Map<String, FAsset> mCachedAssets;
-    private final Map<String, List<FDetail>> mCachedDetails;
-    private final Map<String, FAsset> mCachedRecycledAssets;
+    private volatile Asset mCachedRootAsset;
+    private final Map<String, Asset> mCachedAssets;
+    private final Map<String, List<Detail>> mCachedDetails;
+    private final Map<String, Asset> mCachedRecycledAssets;
     private final List<String> mCachedDetailsKeyList;
-    private final Map<CategoryType, FCategory> mCachedCategories;
+    private final Map<CategoryType, Category> mCachedCategories;
 
     private volatile boolean mDirtyCachedAssets;
     private volatile boolean mDirtyCachedDetails;

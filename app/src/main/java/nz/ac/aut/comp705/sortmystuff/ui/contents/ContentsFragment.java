@@ -130,9 +130,6 @@ public class ContentsFragment extends Fragment implements IContentsView {
         super.onDetach();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setPresenter(IContentsPresenter presenter) {
         mPresenter = presenter;
@@ -143,9 +140,6 @@ public class ContentsFragment extends Fragment implements IContentsView {
         mActivity.setCurrentAsset(asset);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void showAssetContents(List<IAsset> assets, ContentsViewMode viewMode) {
 

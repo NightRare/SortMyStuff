@@ -3,9 +3,9 @@ package nz.ac.aut.comp705.sortmystuff.data;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.ISortMyStuffAppComponent;
-import nz.ac.aut.comp705.sortmystuff.data.models.FAsset;
-import nz.ac.aut.comp705.sortmystuff.data.models.FCategory;
-import nz.ac.aut.comp705.sortmystuff.data.models.FDetail;
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Detail;
+import nz.ac.aut.comp705.sortmystuff.data.models.Category;
 import rx.Observable;
 
 public interface IDataRepository extends ISortMyStuffAppComponent{
@@ -17,7 +17,7 @@ public interface IDataRepository extends ISortMyStuffAppComponent{
      *
      * @return an Observable emitting one list of all assets
      */
-    Observable<List<FAsset>> retrieveAllAssets();
+    Observable<List<Asset>> retrieveAllAssets();
 
     /**
      * Retrieve an asset according to the given id.
@@ -26,24 +26,24 @@ public interface IDataRepository extends ISortMyStuffAppComponent{
      * @return an Observable emitting the queried asset; or emitting {@code null} if no such asset
      * @throws NullPointerException if assetId is {@code null}
      */
-    Observable<FAsset> retrieveAsset(String assetId);
+    Observable<Asset> retrieveAsset(String assetId);
 
     /**
      * Retrieve all details in an unordered list.
      *
      * @return an Observable emitting one list of all details
      */
-    Observable<List<FDetail>> retrieveAllDetails();
+    Observable<List<Detail>> retrieveAllDetails();
 
     /**
      * Retrieve details of the specified asset.
-     * Details are ordered according to the sequence of {@link FAsset#getDetailIds()}.
+     * Details are ordered according to the sequence of {@link Asset#getDetailIds()}.
      *
      * @param assetId the id of the owner asset
      * @return an Observable emitting one list of details; or emitting {@code null} if no such asset
      * @throws NullPointerException if assetId is {@code null}
      */
-    Observable<List<FDetail>> retrieveDetails(String assetId);
+    Observable<List<Detail>> retrieveDetails(String assetId);
 
     /**
      * Retrieve a detail according to the given id.
@@ -52,14 +52,14 @@ public interface IDataRepository extends ISortMyStuffAppComponent{
      * @return an Observable emitting the detail; or emitting {@code null} if no such detail
      * @throws NullPointerException if detailId is {@code null}
      */
-    Observable<FDetail> retrieveDetail(String detailId);
+    Observable<Detail> retrieveDetail(String detailId);
 
     /**
      * Retrieve all the categories.
      *
      * @return an Observable emitting one list of categories
      */
-    Observable<List<FCategory>> retrieveCategories();
+    Observable<List<Category>> retrieveCategories();
 
     //endregion
 
@@ -75,7 +75,7 @@ public interface IDataRepository extends ISortMyStuffAppComponent{
      *                          be invoked if NullPointerException is thrown due to null arguments
      * @throws NullPointerException if asset is {@code null}
      */
-    void addOrUpdateAsset(FAsset asset, OnUpdatedCallback onUpdatedCallback);
+    void addOrUpdateAsset(Asset asset, OnUpdatedCallback onUpdatedCallback);
 
     /**
      * Add the detail to the data repository. If the id of the given detail is found in the data repository,
@@ -87,7 +87,7 @@ public interface IDataRepository extends ISortMyStuffAppComponent{
      *                          be invoked if NullPointerException is thrown due to null arguments
      * @throws NullPointerException if detail is {@code null}
      */
-    void addDetail(FDetail detail, OnUpdatedCallback onUpdatedCallback);
+    void addDetail(Detail detail, OnUpdatedCallback onUpdatedCallback);
 
     //endregion
 
@@ -97,14 +97,14 @@ public interface IDataRepository extends ISortMyStuffAppComponent{
      * Update a specific member of the given asset to the data repository.
      *
      * @param assetId           the id of the asset
-     * @param key               the name of the member as listed in {@link FAsset}
+     * @param key               the name of the member as listed in {@link Asset}
      * @param value             the value of the member
      * @param onUpdatedCallback the callback methods when the task is successful, failed or completed;
      *                          put in {@code null} if no following actions required; onFailure won't
      *                          be invoked if NullPointerException is thrown due to null arguments
      * @throws NullPointerException     if assetId or key is {@code null}
      * @throws IllegalArgumentException if value is not {@code null} and is not of the correct class
-     *                                  as specified in {@link FAsset#getMemberClassForDatabase(String)}
+     *                                  as specified in {@link Asset#getMemberType(String)}
      */
     <E> void updateAsset(String assetId, String key, E value, OnUpdatedCallback onUpdatedCallback);
 
@@ -119,7 +119,7 @@ public interface IDataRepository extends ISortMyStuffAppComponent{
      *                          be invoked if NullPointerException is thrown due to null arguments
      * @throws NullPointerException if detail or key is {@code null}
      */
-    void updateDetail(FDetail detail, boolean updatingField, OnUpdatedCallback onUpdatedCallback);
+    void updateDetail(Detail detail, boolean updatingField, OnUpdatedCallback onUpdatedCallback);
 
     //endregion
 

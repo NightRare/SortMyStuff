@@ -27,7 +27,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @param <T> the type of the field
  */
-public class FDetail<T> implements IDetail<T>, Comparable {
+public class Detail<T> implements IDetail<T>, Comparable {
 
     //region FIELD NAMES
 
@@ -70,7 +70,7 @@ public class FDetail<T> implements IDetail<T>, Comparable {
     //region STATIC FACTORIES
 
     @Exclude
-    public static FDetail createDetail(String assetId, DetailType type, String label, String fieldData) {
+    public static Detail createDetail(String assetId, DetailType type, String label, String fieldData) {
         checkIllegalAssetId(assetId);
         checkIllegalLabel(label);
         checkNotNull(fieldData);
@@ -78,11 +78,11 @@ public class FDetail<T> implements IDetail<T>, Comparable {
 
         String id = UUID.randomUUID().toString();
         long createTimestamp = System.currentTimeMillis();
-        return new FDetail(id, assetId, type, label, fieldData, createTimestamp, createTimestamp, -1, true);
+        return new Detail(id, assetId, type, label, fieldData, createTimestamp, createTimestamp, -1, true);
     }
 
     @Exclude
-    public static FDetail<String> createTextDetail(String assetId, String label, String fieldData) {
+    public static Detail<String> createTextDetail(String assetId, String label, String fieldData) {
         checkIllegalAssetId(assetId);
         checkIllegalLabel(label);
         checkNotNull(fieldData);
@@ -91,11 +91,11 @@ public class FDetail<T> implements IDetail<T>, Comparable {
         DetailType type = DetailType.Text;
         long createTimestamp = System.currentTimeMillis();
 
-        return new FDetail<String>(id, assetId, type, label, fieldData, createTimestamp, createTimestamp, -1, true);
+        return new Detail<String>(id, assetId, type, label, fieldData, createTimestamp, createTimestamp, -1, true);
     }
 
     @Exclude
-    public static FDetail<String> createDateDetail(String assetId, String label, String fieldData) {
+    public static Detail<String> createDateDetail(String assetId, String label, String fieldData) {
         checkIllegalAssetId(assetId);
         checkIllegalLabel(label);
         checkNotNull(fieldData);
@@ -104,11 +104,11 @@ public class FDetail<T> implements IDetail<T>, Comparable {
         DetailType type = DetailType.Date;
         long createTimestamp = System.currentTimeMillis();
 
-        return new FDetail<String>(id, assetId, type, label, fieldData, createTimestamp, createTimestamp, -1, true);
+        return new Detail<String>(id, assetId, type, label, fieldData, createTimestamp, createTimestamp, -1, true);
     }
 
     @Exclude
-    public static FDetail<Bitmap> createImageDetail(String assetId, String label, String fieldData) {
+    public static Detail<Bitmap> createImageDetail(String assetId, String label, String fieldData) {
         checkIllegalAssetId(assetId);
         checkIllegalLabel(label);
         checkNotNull(fieldData);
@@ -117,7 +117,7 @@ public class FDetail<T> implements IDetail<T>, Comparable {
         DetailType type = DetailType.Image;
         long createTimestamp = System.currentTimeMillis();
 
-        return new FDetail<Bitmap>(id, assetId, type, label, fieldData, createTimestamp, createTimestamp, -1, true);
+        return new Detail<Bitmap>(id, assetId, type, label, fieldData, createTimestamp, createTimestamp, -1, true);
     }
 
     //endregion
@@ -125,7 +125,7 @@ public class FDetail<T> implements IDetail<T>, Comparable {
     //region TRANSFORMERS
 
     @Exclude
-    public static FDetail fromMap(Map<String, Object> members) {
+    public static Detail fromMap(Map<String, Object> members) {
         String id = members.get(DETAIL_ID).toString();
         String assetId = members.get(DETAIL_ASSETID).toString();
         DetailType type = DetailType.valueOf(members.get(DETAIL_TYPE).toString());
@@ -139,9 +139,9 @@ public class FDetail<T> implements IDetail<T>, Comparable {
         String fieldData = (String) members.get(DETAIL_FIELD);
         if (type.equals(DetailType.Date) || type.equals(DetailType.Text)) {
             if (fieldData == null) fieldData = "";
-            return new FDetail<String>(id, assetId, type, label, fieldData, createTimestamp, modifyTimestamp, position, defaultFieldValue);
+            return new Detail<String>(id, assetId, type, label, fieldData, createTimestamp, modifyTimestamp, position, defaultFieldValue);
         } else if (type.equals(DetailType.Image)) {
-            return new FDetail<Bitmap>(id, assetId, type, label, fieldData, createTimestamp, modifyTimestamp, position, defaultFieldValue);
+            return new Detail<Bitmap>(id, assetId, type, label, fieldData, createTimestamp, modifyTimestamp, position, defaultFieldValue);
         } else return null;
     }
 
@@ -169,9 +169,9 @@ public class FDetail<T> implements IDetail<T>, Comparable {
     }
 
     @Exclude
-    public void overwrittenBy(FDetail source) {
+    public void overwrittenBy(Detail source) {
         if (!type.equals(source.getType()))
-            throw new IllegalStateException("Cannot be overwritten by a different type of FDetail");
+            throw new IllegalStateException("Cannot be overwritten by a different type of Detail");
 
         id = source.getId();
         assetId = source.getAssetId();
@@ -322,8 +322,8 @@ public class FDetail<T> implements IDetail<T>, Comparable {
     @Override
     @Exclude
     public boolean equals(Object o) {
-        if (o instanceof FDetail) {
-            FDetail d = (FDetail) o;
+        if (o instanceof Detail) {
+            Detail d = (Detail) o;
             if (d.id.equals(id))
                 return true;
         }
@@ -351,11 +351,11 @@ public class FDetail<T> implements IDetail<T>, Comparable {
 
     @Override
     public int compareTo(@NonNull Object o) {
-        if (o instanceof FDetail) {
-            FDetail d = (FDetail) o;
+        if (o instanceof Detail) {
+            Detail d = (Detail) o;
             return Integer.compare(position, d.getPosition());
         }
-        // always bigger than something not a FDetail
+        // always bigger than something not a Detail
         return 1;
     }
 
@@ -363,8 +363,8 @@ public class FDetail<T> implements IDetail<T>, Comparable {
 
     //region PRIVATE STUFF
 
-    private FDetail(String id, String assetId, DetailType type, String label, String fieldData,
-                    long createTimestamp, long modifyTimestamp, int position, boolean defaultFieldValue) {
+    private Detail(String id, String assetId, DetailType type, String label, String fieldData,
+                   long createTimestamp, long modifyTimestamp, int position, boolean defaultFieldValue) {
         this.id = id;
         this.assetId = assetId;
         this.type = type;

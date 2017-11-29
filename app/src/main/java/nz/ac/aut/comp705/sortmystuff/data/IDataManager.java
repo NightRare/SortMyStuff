@@ -7,7 +7,7 @@ import java.util.List;
 import nz.ac.aut.comp705.sortmystuff.ISortMyStuffAppComponent;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
-import nz.ac.aut.comp705.sortmystuff.data.models.FAsset;
+import nz.ac.aut.comp705.sortmystuff.data.models.Asset;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
 import nz.ac.aut.comp705.sortmystuff.utils.exceptions.ReadLocalStorageFailedException;
@@ -75,7 +75,7 @@ public interface IDataManager extends ISortMyStuffAppComponent {
     /**
      * Get the content assets of the given asset.
      * <p>
-     * The list is ordered according to the sequence of {@link FAsset#getContentIds()}.
+     * The list is ordered according to the sequence of {@link Asset#getContentIds()}.
      *
      * @param containerId the id of the container asset
      * @return the Observable emitting one list of Assets; or which emits {@code null} if the
