@@ -23,6 +23,7 @@ import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.utils.Log;
 import rx.Observable;
+import rx.schedulers.Schedulers;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -111,6 +112,18 @@ public class AssetRecyclerAdapter extends
         notifyDataSetChanged();
     }
 
+    public void addToSelectedAsset(String id) {
+        Observable.from(mAssets)
+                .subscribeOn(Schedulers.immediate())
+                .filter(asset -> asset.getId().equals(id))
+                .isEmpty()
+                .subscribe(empty -> {
+                    if(!empty) {
+                        mSelectedAssets.add(id);
+                    }
+                });
+    }
+
     public void clearSelectedAssets() {
         mSelectedAssets.clear();
         notifyDataSetChanged();
@@ -118,6 +131,7 @@ public class AssetRecyclerAdapter extends
 
     public void selectAllAssets() {
         Observable.from(mAssets)
+                .subscribeOn(Schedulers.immediate())
                 .map(IAsset::getId)
                 .toList()
                 .subscribe(ids -> {
@@ -155,7 +169,7 @@ public class AssetRecyclerAdapter extends
 
     private PopupMenu initialiseMoreOptionsMenu(AssetRecyclerAdapter.ViewHolder holder, int position) {
         PopupMenu popupMenu = new PopupMenu(mContext, holder.mMoreOptionsView);
-        popupMenu.inflate(R.menu.assets_menu);
+        popupMenu.inflate(R.menu.asset_menu);
         popupMenu.setOnMenuItemClickListener(item ->
                 mItemListener.onAssetMoreOptionsClick(mAssets.get(position), item));
 

@@ -12,4 +12,9 @@
         android:title="@string/asset_more_delete_title"
         android:icon="@drawable/ic_asset_delete"/>
 
+    <item
+        android:id="@+id/asset_more_move"
+        android:title="@string/asset_more_move_title"
+        android:icon="@drawable/ic_asset_move"/>
+
 </menu>

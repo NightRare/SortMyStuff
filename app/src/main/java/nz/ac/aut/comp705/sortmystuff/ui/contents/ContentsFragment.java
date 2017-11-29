@@ -29,7 +29,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import nz.ac.aut.comp705.sortmystuff.R;
-import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
 import nz.ac.aut.comp705.sortmystuff.data.models.IAsset;
 import nz.ac.aut.comp705.sortmystuff.ui.adding.AddingAssetActivity;
 import nz.ac.aut.comp705.sortmystuff.ui.main.SwipeActivity;
@@ -53,7 +52,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mContentsAdapter = new AssetRecyclerAdapter(
+        mAdapter = new AssetRecyclerAdapter(
                 this.getContext(), new ArrayList<>(), mViewListeners);
     }
 
@@ -186,7 +185,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
                 mRefreshScrollLayout.setEnabled(true);
                 break;
         }
-        mContentsAdapter.replaceData(assets, viewMode);
+        mAdapter.replaceData(assets, viewMode);
     }
 
     /**
@@ -203,7 +202,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
         String message = "Deleting selected assets\n" +
                 "and their children assets.";
 
-        buildDeleteDialog(message, mContentsAdapter.getSelectedAssets())
+        buildDeleteDialog(message, mAdapter.getSelectedAssets())
                 .show();
     }
 
@@ -298,8 +297,8 @@ public class ContentsFragment extends Fragment implements IContentsView {
     }
 
     private void initPathBar() {
-        mPathBarRoot = (TextView) mRootView.findViewById(R.id.pathbar_root);
-        mPathBarRoot.setOnClickListener(v -> mViewListeners.onPathbarRootClick());
+        TextView pathBarRoot = (TextView) mRootView.findViewById(R.id.pathbar_root);
+        pathBarRoot.setOnClickListener(v -> mViewListeners.onPathbarRootClick());
 
         mPathBar = (RecyclerView) mRootView.findViewById(R.id.pathbar_pathview);
         LinearLayoutManager llm = new LinearLayoutManager(this.getContext());
@@ -319,15 +318,15 @@ public class ContentsFragment extends Fragment implements IContentsView {
     }
 
     private void initAssetsListView() {
-        mAssetListView = (RecyclerView) mRootView.findViewById(R.id.assets_list);
+        RecyclerView assetListView = (RecyclerView) mRootView.findViewById(R.id.assets_list);
         LinearLayoutManager layoutManager = new LinearLayoutManager(
-                mAssetListView.getContext(), LinearLayoutManager.VERTICAL, false);
+                assetListView.getContext(), LinearLayoutManager.VERTICAL, false);
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(
-                mAssetListView.getContext(),
+                assetListView.getContext(),
                 layoutManager.getOrientation());
-        mAssetListView.setLayoutManager(layoutManager);
-        mAssetListView.addItemDecoration(dividerItemDecoration);
-        mAssetListView.setAdapter(mContentsAdapter);
+        assetListView.setLayoutManager(layoutManager);
+        assetListView.addItemDecoration(dividerItemDecoration);
+        assetListView.setAdapter(mAdapter);
     }
 
     private void initSelectionModeButtons() {
@@ -372,6 +371,10 @@ public class ContentsFragment extends Fragment implements IContentsView {
                 case R.id.asset_more_delete:
                     showDeleteDialog(clickedAsset);
                     return true;
+                case R.id.asset_more_move:
+                    mAdapter.addToSelectedAsset(clickedAsset.getId());
+                    mPresenter.loadCurrentContentsWithMode(ContentsViewMode.Moving);
+                    return true;
             }
             return false;
         }
@@ -395,11 +398,6 @@ public class ContentsFragment extends Fragment implements IContentsView {
         }
 
         @Override
-        public void onAddAssetConfirmClick(String name, CategoryType category) {
-            mPresenter.createAsset(name, category);
-        }
-
-        @Override
         public void onPathbarRootClick() {
             mPresenter.setCurrentAssetIdToRoot();
             mPresenter.loadCurrentContents();
@@ -413,19 +411,19 @@ public class ContentsFragment extends Fragment implements IContentsView {
 
         @Override
         public void onSelectionModeCancelClick() {
-            mContentsAdapter.clearSelectedAssets();
+            mAdapter.clearSelectedAssets();
             mPresenter.loadCurrentContentsWithMode(ContentsViewMode.Default);
         }
 
         @Override
         public void onSelectionModeSelectAllClick() {
-            mContentsAdapter.selectAllAssets();
-            showMessage(mContentsAdapter.getSelectedAssets().size() + " items selected");
+            mAdapter.selectAllAssets();
+            showMessage(mAdapter.getSelectedAssets().size() + " items selected");
         }
 
         @Override
         public void onSelectionModeDeleteClick() {
-            if (mContentsAdapter.getSelectedAssets().isEmpty())
+            if (mAdapter.getSelectedAssets().isEmpty())
                 showMessage("Please select the assets to be deleted.");
             else {
                 showDeleteDialog();
@@ -434,7 +432,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
 
         @Override
         public void onSelectionModeMoveClick() {
-            if (mContentsAdapter.getSelectedAssets().isEmpty())
+            if (mAdapter.getSelectedAssets().isEmpty())
                 showMessage("Please select the assets to be moved.");
             else
                 mPresenter.loadCurrentContentsWithMode(ContentsViewMode.Moving);
@@ -442,7 +440,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
 
         @Override
         public void onMovingModeConfirmClick() {
-            List<String> movingAssets = mContentsAdapter.getSelectedAssets();
+            List<String> movingAssets = mAdapter.getSelectedAssets();
             if (movingAssets.isEmpty()) return;
             mPresenter.moveAssets(movingAssets);
             mPresenter.loadCurrentContentsWithMode(ContentsViewMode.Default);
@@ -469,14 +467,10 @@ public class ContentsFragment extends Fragment implements IContentsView {
     private ScrollChildSwipeRefreshLayout mRefreshScrollLayout;
 
     private View mPathBarLayout;
-    private TextView mPathBarRoot;
     private RecyclerView mPathBar;
 
-    private RecyclerView mAssetListView;
     private Button mCancel_btn, mSelectAll_btn, mMove_btn, mDelete_btn;
-//    private AssetListAdapter mAdapter;
-
-    private AssetRecyclerAdapter mContentsAdapter;
+    private AssetRecyclerAdapter mAdapter;
 
     //endregion
 

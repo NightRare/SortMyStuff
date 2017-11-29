@@ -64,8 +64,6 @@ public interface IContentsView extends IView<IContentsPresenter> {
 
         void onAddAssetFabClick();
 
-        void onAddAssetConfirmClick(String name, CategoryType category);
-
         void onPathbarRootClick();
 
         void onPathbarItemClick(String intendingAssetId);
