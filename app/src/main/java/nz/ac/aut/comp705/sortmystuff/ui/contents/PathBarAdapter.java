@@ -46,7 +46,7 @@ public class PathBarAdapter extends
         if(position == 0)
             sb.append("  ");
         else
-            sb.append(" >  ");
+            sb.append(" ⟩  ");
 
         sb.append(mAssets.get(position).getName());
 
@@ -77,7 +77,7 @@ public class PathBarAdapter extends
 
     //endregion
 
-    //region Private stuff
+    //region PRIVATE STUFF
 
     private LayoutInflater mInflater;
     private List<IAsset> mAssets;

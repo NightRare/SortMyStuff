@@ -45,5 +45,6 @@
 
     <!--messages-->
     <string name="msg_click_again_to_exit">Click back again to exit</string>
+    <string name="pathbar_root"><![CDATA[Assets ⟩]]></string>
 
 </resources>
