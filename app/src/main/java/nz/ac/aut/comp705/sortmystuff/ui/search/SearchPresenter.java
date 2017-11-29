@@ -12,9 +12,9 @@ import rx.subscriptions.CompositeSubscription;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class SearchPresenter implements ISearchPresenter{
+public class SearchPresenter implements ISearchPresenter {
 
-    public SearchPresenter(IDataManager dataManager, ISearchView view, ISchedulerProvider schedulerProvider){
+    public SearchPresenter(IDataManager dataManager, ISearchView view, ISchedulerProvider schedulerProvider) {
         mDataManager = checkNotNull(dataManager, "The dataManager cannot be null.");
         mView = checkNotNull(view, "The view cannot be null.");
         mSchedulerProvider = checkNotNull(schedulerProvider, "The schedulerProvider cannot be null.");
@@ -38,23 +38,35 @@ public class SearchPresenter implements ISearchPresenter{
 
     /**
      * Load the resultRaw of the query into the mActivity
+     *
      * @param query
      */
     @Override
     public void loadResult(String query) {
-        if(query.replaceAll(" ", "").isEmpty()) {
+        if (query.trim().isEmpty()) {
             mView.showResultList(new ArrayList<>());
             return;
         }
 
-        String regex = "(?i).*"+query+".*";
+        String[] searchTerms = query.split(" ");
+
+        List<String> regexes = new ArrayList<>();
+        for(String st : searchTerms) {
+            regexes.add("(?i).*" + st + ".*");
+        }
 
         mSubscriptions.clear();
         Subscription subscription = mDataManager
                 .getAssets()
                 .flatMap(Observable::from)
                 .filter(asset -> !asset.isRoot())
-                .filter(asset -> asset.getName().matches(regex))
+                .filter(asset -> {
+                    boolean match = true;
+                    for (String regex : regexes) {
+                        match = match && asset.getName().matches(regex);
+                    }
+                    return match;
+                })
                 .toList()
                 .subscribeOn(mSchedulerProvider.io())
                 .observeOn(mSchedulerProvider.ui())
@@ -73,7 +85,7 @@ public class SearchPresenter implements ISearchPresenter{
     //region PRIVATE STUFF
 
     private void processSearchResults(List<IAsset> assets) {
-        if(assets.isEmpty())
+        if (assets.isEmpty())
             mView.showMessage("No results found");
         mView.showResultList(assets);
     }

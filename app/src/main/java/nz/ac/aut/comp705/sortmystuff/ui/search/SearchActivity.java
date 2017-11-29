@@ -8,7 +8,6 @@ import android.support.v7.widget.Toolbar;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -128,12 +127,9 @@ public class SearchActivity extends AppCompatActivity implements ISearchView {
 
     //region LISTENERS
 
-    AdapterView.OnItemClickListener mClickOnSearchResult = new AdapterView.OnItemClickListener(){
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            IAsset clickedAsset = (IAsset) parent.getItemAtPosition(position);
-            turnToAssetPage(clickedAsset.getId());
-        }
+    AdapterView.OnItemClickListener mClickOnSearchResult = (parent, view, position, id) -> {
+        IAsset clickedAsset = (IAsset) parent.getItemAtPosition(position);
+        turnToAssetPage(clickedAsset.getId());
     };
 
     SearchView.OnQueryTextListener mQueryTextListener = new SearchView.OnQueryTextListener() {
