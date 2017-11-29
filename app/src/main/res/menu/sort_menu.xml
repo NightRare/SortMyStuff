@@ -3,6 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/sort_menu_by_default"
+        android:title="@string/sort_menu_by_default_title"/>
+
+    <item
         android:id="@+id/sort_menu_by_name"
         android:title="@string/sort_menu_by_name_title"/>
 

@@ -41,5 +41,6 @@
     <string name="sort_menu_by_name_title">Name</string>
     <string name="sort_menu_by_create_title">Recently created</string>
     <string name="sort_menu_by_modify_title">Recently modified</string>
+    <string name="sort_menu_by_default_title">Default</string>
 
 </resources>

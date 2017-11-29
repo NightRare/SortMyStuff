@@ -105,33 +105,27 @@ public class AssetRecyclerAdapter extends
     public void replaceData(
             @NonNull List<IAsset> assets,
             @NonNull ContentsViewMode viewMode) {
+        replaceData(assets, viewMode, SortParam.Default, false);
+    }
+
+    public void replaceData(
+            @NonNull List<IAsset> assets,
+            @NonNull ContentsViewMode viewMode,
+            @NonNull SortParam sortParam,
+            boolean desc) {
         mAssets.clear();
         mAssets.addAll(checkNotNull(assets));
         mViewMode = checkNotNull(viewMode);
 
         if (viewMode.equals(ContentsViewMode.Default))
             mSelectedAssets.clear();
+
+        sortList(sortParam, desc);
         notifyDataSetChanged();
     }
 
     public void sortData(SortParam param, boolean desc) {
-        switch (param) {
-            case Name:
-                Collections.sort(mAssets, (o1, o2) -> desc ?
-                        o2.getName().compareTo(o1.getName()) :
-                        o1.getName().compareTo(o2.getName()));
-                break;
-            case CreatedAt:
-                Collections.sort(mAssets, (o1, o2) -> desc ?
-                        o2.getCreateTimestamp().compareTo(o1.getCreateTimestamp()) :
-                        o1.getCreateTimestamp().compareTo(o2.getCreateTimestamp()));
-                break;
-            case ModfiedAt:
-                Collections.sort(mAssets, (o1, o2) -> desc ?
-                        o2.getModifyTimestamp().compareTo(o1.getModifyTimestamp()) :
-                        o1.getModifyTimestamp().compareTo(o2.getModifyTimestamp()));
-                break;
-        }
+        sortList(param, desc);
         notifyDataSetChanged();
     }
 
@@ -181,12 +175,38 @@ public class AssetRecyclerAdapter extends
     }
 
     public enum SortParam {
+        Default,
         Name,
         CreatedAt,
-        ModfiedAt
+        ModifiedAt
     }
 
     //region PRIVATE STUFF
+
+    private void sortList(SortParam param, boolean desc) {
+        switch (param) {
+            case Name:
+                Collections.sort(mAssets, (o1, o2) -> desc ?
+                        o2.getName().compareTo(o1.getName()) :
+                        o1.getName().compareTo(o2.getName()));
+                break;
+            case CreatedAt:
+                Collections.sort(mAssets, (o1, o2) -> desc ?
+                        o2.getCreateTimestamp().compareTo(o1.getCreateTimestamp()) :
+                        o1.getCreateTimestamp().compareTo(o2.getCreateTimestamp()));
+                break;
+            case ModifiedAt:
+                Collections.sort(mAssets, (o1, o2) -> desc ?
+                        o2.getModifyTimestamp().compareTo(o1.getModifyTimestamp()) :
+                        o1.getModifyTimestamp().compareTo(o2.getModifyTimestamp()));
+                break;
+            case Default:
+                // CreatedAt ascending
+                Collections.sort(mAssets, (o1, o2) ->
+                        o1.getCreateTimestamp().compareTo(o2.getCreateTimestamp()));
+                break;
+        }
+    }
 
     private void toggleCheckBox(CheckBox checkBox, int position) {
         checkBox.toggle();

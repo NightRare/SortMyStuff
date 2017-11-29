@@ -62,6 +62,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
 
         mActivity = (SwipeActivity) getActivity();
         mActivity.setContentsViewListeners(mViewListeners);
+        mSortMethod = new SortMethod();
     }
 
     @Override
@@ -185,7 +186,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
                 mRefreshScrollLayout.setEnabled(true);
                 break;
         }
-        mAdapter.replaceData(assets, viewMode);
+        mAdapter.replaceData(assets, viewMode, mSortMethod.sortParam, mSortMethod.desc);
     }
 
     /**
@@ -262,111 +263,6 @@ public class ContentsFragment extends Fragment implements IContentsView {
     }
 
     //region PRIVATE STUFF
-
-    private void checkIntendedAsset() {
-        String intendedAssetId = mActivity.getIntent().getStringExtra(INTENT_ASSET_ID);
-        if (intendedAssetId != null) {
-            // once acquired the intended asset, remove it from the intent
-            mActivity.getIntent().removeExtra(INTENT_ASSET_ID);
-
-            mPresenter.setCurrentAssetId(intendedAssetId);
-        }
-    }
-
-    private void setSelectionModeButtonsVisibility(boolean isVisible) {
-        int visibility = isVisible ? View.VISIBLE : View.GONE;
-        mCancel_btn.setVisibility(visibility);
-        mSelectAll_btn.setVisibility(visibility);
-        mDelete_btn.setVisibility(visibility);
-        mMove_btn.setVisibility(visibility);
-    }
-
-    private void setMovingModeFabsVisibility(boolean isVisible) {
-        if (isVisible) {
-            mFabCancelMoveButton.setVisibility(View.VISIBLE);
-            mFabConfirmMoveButton.setVisibility(View.VISIBLE);
-        } else {
-            mFabCancelMoveButton.setVisibility(View.GONE);
-            mFabConfirmMoveButton.setVisibility(View.GONE);
-        }
-    }
-
-    private void initAddAssetFab() {
-        mFab = (FloatingActionButton) mRootView.findViewById(R.id.add_asset_button);
-        mFab.setOnClickListener(v -> mViewListeners.onAddAssetFabClick());
-    }
-
-    private void initPathBar() {
-        TextView pathBarRoot = (TextView) mRootView.findViewById(R.id.pathbar_root);
-        pathBarRoot.setOnClickListener(v -> mViewListeners.onPathbarRootClick());
-
-        mPathBar = (RecyclerView) mRootView.findViewById(R.id.pathbar_pathview);
-        LinearLayoutManager llm = new LinearLayoutManager(this.getContext());
-        llm.setOrientation(LinearLayoutManager.HORIZONTAL);
-        llm.setStackFromEnd(true);
-        mPathBar.setLayoutManager(llm);
-
-        mPathBarLayout = mRootView.findViewById(R.id.pathbar_layout);
-    }
-
-    private void initMovingModeFabs() {
-        mFabConfirmMoveButton = (FloatingActionButton) mRootView.findViewById(R.id.confirm_move_button);
-        mFabConfirmMoveButton.setOnClickListener(v -> mViewListeners.onMovingModeConfirmClick());
-
-        mFabCancelMoveButton = (FloatingActionButton) mRootView.findViewById(R.id.cancel_move_button);
-        mFabCancelMoveButton.setOnClickListener(v -> mViewListeners.onMovingModeCancelClick());
-    }
-
-    private void initAssetsListView() {
-        RecyclerView assetListView = (RecyclerView) mRootView.findViewById(R.id.assets_list);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(
-                assetListView.getContext(), LinearLayoutManager.VERTICAL, false);
-        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(
-                assetListView.getContext(),
-                layoutManager.getOrientation());
-        assetListView.setLayoutManager(layoutManager);
-        assetListView.addItemDecoration(dividerItemDecoration);
-        assetListView.setAdapter(mAdapter);
-    }
-
-    private void initSelectionModeButtons() {
-        mCancel_btn = (Button) mRootView.findViewById(R.id.selection_cancel_button);
-        mSelectAll_btn = (Button) mRootView.findViewById(R.id.selection_select_all_button);
-        mDelete_btn = (Button) mRootView.findViewById(R.id.selection_delete_button);
-        mMove_btn = (Button) mRootView.findViewById(R.id.selection_move_button);
-
-        mCancel_btn.setOnClickListener(v -> mViewListeners.onSelectionModeCancelClick());
-        mSelectAll_btn.setOnClickListener(v -> mViewListeners.onSelectionModeSelectAllClick());
-        mDelete_btn.setOnClickListener(v -> mViewListeners.onSelectionModeDeleteClick());
-        mMove_btn.setOnClickListener(v -> mViewListeners.onSelectionModeMoveClick());
-    }
-
-    private AlertDialog buildDeleteDialog(String message, List<String> deletingAssetIds) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-        builder.setTitle(message);
-
-        builder.setPositiveButton(R.string.delete_asset_confirm_button,
-                (dialog, which) -> mViewListeners.onDeleteDialogConfirmClick(deletingAssetIds));
-        //creates the Cancel button and what happens when clicked
-        builder.setNegativeButton(R.string.cancel_button, (dialog, id) ->
-                mPresenter.loadCurrentContentsWithMode(ContentsViewMode.Default));
-        return builder.create();
-    }
-
-    private boolean sortContentAssetsBy(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.sort_menu_by_name:
-                mAdapter.sortData(AssetRecyclerAdapter.SortParam.Name, false);
-                return true;
-            case R.id.sort_menu_by_create:
-                mAdapter.sortData(AssetRecyclerAdapter.SortParam.CreatedAt, true);
-                return true;
-            case R.id.sort_menu_by_modify:
-                mAdapter.sortData(AssetRecyclerAdapter.SortParam.ModfiedAt, true);
-                return true;
-        }
-        return false;
-    }
 
     private class ContentsViewListeners implements IContentsView.ViewListeners {
 
@@ -478,6 +374,143 @@ public class ContentsFragment extends Fragment implements IContentsView {
         }
     }
 
+    private void checkIntendedAsset() {
+        String intendedAssetId = mActivity.getIntent().getStringExtra(INTENT_ASSET_ID);
+        if (intendedAssetId != null) {
+            // once acquired the intended asset, remove it from the intent
+            mActivity.getIntent().removeExtra(INTENT_ASSET_ID);
+
+            mPresenter.setCurrentAssetId(intendedAssetId);
+        }
+    }
+
+    private void setSelectionModeButtonsVisibility(boolean isVisible) {
+        int visibility = isVisible ? View.VISIBLE : View.GONE;
+        mCancel_btn.setVisibility(visibility);
+        mSelectAll_btn.setVisibility(visibility);
+        mDelete_btn.setVisibility(visibility);
+        mMove_btn.setVisibility(visibility);
+    }
+
+    private void setMovingModeFabsVisibility(boolean isVisible) {
+        if (isVisible) {
+            mFabCancelMoveButton.setVisibility(View.VISIBLE);
+            mFabConfirmMoveButton.setVisibility(View.VISIBLE);
+        } else {
+            mFabCancelMoveButton.setVisibility(View.GONE);
+            mFabConfirmMoveButton.setVisibility(View.GONE);
+        }
+    }
+
+    private void initAddAssetFab() {
+        mFab = (FloatingActionButton) mRootView.findViewById(R.id.add_asset_button);
+        mFab.setOnClickListener(v -> mViewListeners.onAddAssetFabClick());
+    }
+
+    private void initPathBar() {
+        TextView pathBarRoot = (TextView) mRootView.findViewById(R.id.pathbar_root);
+        pathBarRoot.setOnClickListener(v -> mViewListeners.onPathbarRootClick());
+
+        mPathBar = (RecyclerView) mRootView.findViewById(R.id.pathbar_pathview);
+        LinearLayoutManager llm = new LinearLayoutManager(this.getContext());
+        llm.setOrientation(LinearLayoutManager.HORIZONTAL);
+        llm.setStackFromEnd(true);
+        mPathBar.setLayoutManager(llm);
+
+        mPathBarLayout = mRootView.findViewById(R.id.pathbar_layout);
+    }
+
+    private void initMovingModeFabs() {
+        mFabConfirmMoveButton = (FloatingActionButton) mRootView.findViewById(R.id.confirm_move_button);
+        mFabConfirmMoveButton.setOnClickListener(v -> mViewListeners.onMovingModeConfirmClick());
+
+        mFabCancelMoveButton = (FloatingActionButton) mRootView.findViewById(R.id.cancel_move_button);
+        mFabCancelMoveButton.setOnClickListener(v -> mViewListeners.onMovingModeCancelClick());
+    }
+
+    private void initAssetsListView() {
+        RecyclerView assetListView = (RecyclerView) mRootView.findViewById(R.id.assets_list);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(
+                assetListView.getContext(), LinearLayoutManager.VERTICAL, false);
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(
+                assetListView.getContext(),
+                layoutManager.getOrientation());
+        assetListView.setLayoutManager(layoutManager);
+        assetListView.addItemDecoration(dividerItemDecoration);
+        assetListView.setAdapter(mAdapter);
+    }
+
+    private void initSelectionModeButtons() {
+        mCancel_btn = (Button) mRootView.findViewById(R.id.selection_cancel_button);
+        mSelectAll_btn = (Button) mRootView.findViewById(R.id.selection_select_all_button);
+        mDelete_btn = (Button) mRootView.findViewById(R.id.selection_delete_button);
+        mMove_btn = (Button) mRootView.findViewById(R.id.selection_move_button);
+
+        mCancel_btn.setOnClickListener(v -> mViewListeners.onSelectionModeCancelClick());
+        mSelectAll_btn.setOnClickListener(v -> mViewListeners.onSelectionModeSelectAllClick());
+        mDelete_btn.setOnClickListener(v -> mViewListeners.onSelectionModeDeleteClick());
+        mMove_btn.setOnClickListener(v -> mViewListeners.onSelectionModeMoveClick());
+    }
+
+    private AlertDialog buildDeleteDialog(String message, List<String> deletingAssetIds) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+        builder.setTitle(message);
+
+        builder.setPositiveButton(R.string.delete_asset_confirm_button,
+                (dialog, which) -> mViewListeners.onDeleteDialogConfirmClick(deletingAssetIds));
+        //creates the Cancel button and what happens when clicked
+        builder.setNegativeButton(R.string.cancel_button, (dialog, id) ->
+                mPresenter.loadCurrentContentsWithMode(ContentsViewMode.Default));
+        return builder.create();
+    }
+
+    private boolean sortContentAssetsBy(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.sort_menu_by_name:
+                mSortMethod = new SortMethod(
+                        AssetRecyclerAdapter.SortParam.Name,
+                        false);
+                break;
+            case R.id.sort_menu_by_create:
+                mSortMethod = new SortMethod(
+                        AssetRecyclerAdapter.SortParam.CreatedAt,
+                        true);
+                break;
+            case R.id.sort_menu_by_modify:
+                mSortMethod = new SortMethod(
+                        AssetRecyclerAdapter.SortParam.ModifiedAt,
+                        true);
+                break;
+            case R.id.sort_menu_by_default:
+                mSortMethod = new SortMethod();
+                break;
+        }
+        mAdapter.sortData(mSortMethod.sortParam, mSortMethod.desc);
+        return true;
+    }
+
+    private static final class SortMethod {
+        private final AssetRecyclerAdapter.SortParam sortParam;
+        private final boolean desc;
+
+        private SortMethod() {
+            this.sortParam = AssetRecyclerAdapter.SortParam.Default;
+            this.desc = false;
+        }
+
+        private SortMethod(
+                AssetRecyclerAdapter.SortParam sortParam,
+                boolean desc) {
+            this.sortParam = sortParam;
+            this.desc = desc;
+        }
+
+        private boolean isDefault() {
+            return this.sortParam.equals(AssetRecyclerAdapter.SortParam.Default)
+                    && !desc;
+        }
+    }
+
     //region UI COMPONENTS
 
     private View mRootView;
@@ -498,6 +531,7 @@ public class ContentsFragment extends Fragment implements IContentsView {
     private IContentsPresenter mPresenter;
     private SwipeActivity mActivity;
     private IContentsView.ViewListeners mViewListeners = new ContentsViewListeners();
+    private SortMethod mSortMethod;
 
     //endregion
 }
