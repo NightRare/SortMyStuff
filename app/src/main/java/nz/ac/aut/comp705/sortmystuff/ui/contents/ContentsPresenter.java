@@ -137,6 +137,17 @@ public class ContentsPresenter implements IContentsPresenter {
     }
 
     @Override
+    public void renameAsset(String assetId, String newName) {
+        try {
+            mDataManager.updateAssetName(assetId, newName);
+            mView.showMessage("Asset renamed.");
+            loadCurrentContents();
+        } catch (IllegalArgumentException e) {
+            mView.showMessage(e.getMessage());
+        }
+    }
+
+    @Override
     public void deleteCurrentAsset() {
         if(mCurrentAssetId.equals(ROOT_ASSET_ID))
             mView.showMessage("Cannot delete the root asset");

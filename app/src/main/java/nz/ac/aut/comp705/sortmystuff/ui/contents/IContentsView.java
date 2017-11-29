@@ -51,6 +51,8 @@ public interface IContentsView extends IView<IContentsPresenter> {
      */
     void showDeleteDialog(boolean deletingCurrentAsset);
 
+    void showRenameAssetDialog(String assetId, String oldName);
+
     void showLoadingContentsError(Throwable exception);
 
     interface ViewListeners {

@@ -12,11 +12,14 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -219,6 +222,31 @@ public class ContentsFragment extends Fragment implements IContentsView {
     }
 
     @Override
+    public void showRenameAssetDialog(String assetId, String oldName) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+        builder.setTitle(R.string.rename_asset_action_title);
+
+        View addAssetLayout = mActivity.getLayoutInflater().inflate(R.layout.app_edittext_dialog, null);
+        builder.setView(addAssetLayout);
+
+        EditText input = (EditText) addAssetLayout.findViewById(R.id.app_edittext_input);
+        input.setText(oldName);
+        input.setInputType(InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+        input.setSingleLine();
+        input.setSelectAllOnFocus(true);
+
+        builder.setPositiveButton(R.string.add_asset_confirm_button, (dialog, which) ->
+                mPresenter.renameAsset(assetId, input.getText().toString()));
+
+        builder.setNegativeButton(R.string.cancel_button, (dialog, id) -> dialog.cancel());
+
+        builder.show()
+                // auto pop up the keyboard
+                .getWindow()
+                .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+    }
+
+    @Override
     public void showMessage(String message) {
         Toast.makeText(mActivity, message, Toast.LENGTH_SHORT).show();
     }
@@ -331,7 +359,8 @@ public class ContentsFragment extends Fragment implements IContentsView {
         public boolean onAssetMoreOptionsClick(IAsset clickedAsset, MenuItem clickedOption) {
             switch (clickedOption.getItemId()) {
                 case R.id.asset_more_rename:
-
+                    showRenameAssetDialog(clickedAsset.getId(), clickedAsset.getName());
+                    return true;
             }
             return false;
         }

@@ -411,8 +411,13 @@ public class DataManager implements IDataManager, IDebugHelper {
     public void updateAssetName(String assetId, final String newName) {
         checkNotNull(assetId);
         checkNotNull(newName);
-        Preconditions.checkArgument(!newName.replaceAll(" ", "").isEmpty());
-        Preconditions.checkArgument(newName.length() < AppConfigs.ASSET_NAME_CAP);
+        Preconditions.checkArgument(
+                !newName.replaceAll(" ", "").isEmpty(),
+                "The name cannot be empty");
+        Preconditions.checkArgument(
+                newName.length() <= AppConfigs.ASSET_NAME_CAP,
+                "The length of the name should be shorter than "
+                + AppConfigs.ASSET_NAME_CAP + " characters");
 
         long modifyTimestamp = System.currentTimeMillis();
         LoggedAction updateAsset = executedFromLog -> {

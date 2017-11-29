@@ -16,6 +16,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -273,24 +274,25 @@ public class DetailsFragment extends Fragment implements IDetailsView {
                     !item.getType().equals(DetailType.Date))
                 return;
 
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(view.getContext());
-            dialogBuilder.setTitle(item.getLabel());
-            //dialog box setup
-            Context context = view.getContext();
-            LinearLayout layout = new LinearLayout(context);
-            layout.setOrientation(LinearLayout.VERTICAL);
+            AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
+            builder.setTitle(item.getLabel());
+
+            View addAssetLayout = mActivity.getLayoutInflater().inflate(R.layout.app_edittext_dialog, null);
+            builder.setView(addAssetLayout);
+
             //field text configuration
-            EditText fieldText = createEditText(context, layout);
+            EditText fieldText = (EditText) addAssetLayout.findViewById(R.id.app_edittext_input);
             fieldText.setText((String) item.getField());
+            fieldText.setInputType(InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+            fieldText.setSingleLine(false);
 
             //button setup
-            dialogBuilder.setView(layout);
-            dialogBuilder.setPositiveButton(R.string.edit_detail_confirm_button, (dialog2, which) ->
+            builder.setPositiveButton(R.string.edit_detail_confirm_button, (dialog2, which) ->
                     onConfirmEditTextDetail(item, fieldText.getText().toString()));
-            dialogBuilder.setNegativeButton(R.string.cancel_button, (dialog2, which) ->
+            builder.setNegativeButton(R.string.cancel_button, (dialog2, which) ->
                     onCancelEditTextDetail(dialog2, item, fieldText.getText().toString()));
 
-            dialogBuilder.show()
+            builder.show()
                     // auto pop up the keyboard
                     .getWindow()
                     .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);

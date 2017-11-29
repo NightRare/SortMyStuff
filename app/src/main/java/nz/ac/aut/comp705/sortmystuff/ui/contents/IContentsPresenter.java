@@ -62,6 +62,8 @@ public interface IContentsPresenter extends IPresenter {
      */
     void moveAssets(List<String> assetIds);
 
+    void renameAsset(String assetId, String newName);
+
     void deleteCurrentAsset();
 
     /**
