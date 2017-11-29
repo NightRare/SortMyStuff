@@ -1,6 +1,7 @@
 package nz.ac.aut.comp705.sortmystuff.di;
 
 import android.app.Application;
+import android.support.annotation.NonNull;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.firebase.auth.FirebaseUser;
@@ -127,11 +128,13 @@ public class Factory implements IFactory{
     }
 
     @Override
-    public void setFeatureToggle(Features featureToggle) {
+    public void setFeatureToggle(@NonNull Features featureToggle) {
         mFeatToggle = checkNotNull(featureToggle);
         mDataManager.setFeatureToggle(featureToggle);
+        mRemoteRepo.setFeatureToggle(featureToggle);
     }
 
+    @NonNull
     @Override
     public Features getFeatureToggle() {
         return mFeatToggle;

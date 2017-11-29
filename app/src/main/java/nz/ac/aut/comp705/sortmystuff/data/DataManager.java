@@ -2,6 +2,7 @@ package nz.ac.aut.comp705.sortmystuff.data;
 
 import android.graphics.Bitmap;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.util.ArrayMap;
 
 import com.google.common.base.Preconditions;
@@ -669,10 +670,11 @@ public class DataManager implements IDataManager, IDebugHelper {
     //region ISortMyStuffAppComponent METHODS
 
     @Override
-    public void setFeatureToggle(Features featureToggle) {
+    public void setFeatureToggle(@NonNull Features featureToggle) {
         mFeatToggle = checkNotNull(featureToggle);
     }
 
+    @NonNull
     @Override
     public Features getFeatureToggle() {
         return mFeatToggle;

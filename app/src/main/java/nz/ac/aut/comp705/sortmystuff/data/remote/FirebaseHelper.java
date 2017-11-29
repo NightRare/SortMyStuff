@@ -22,6 +22,7 @@ import java.util.NoSuchElementException;
 
 import javax.inject.Inject;
 
+import nz.ac.aut.comp705.sortmystuff.Features;
 import nz.ac.aut.comp705.sortmystuff.data.IDataRepository;
 import nz.ac.aut.comp705.sortmystuff.data.IDebugHelper;
 import nz.ac.aut.comp705.sortmystuff.data.local.LocalResourceLoader;
@@ -51,17 +52,24 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     public static final Long MAX_BYTES_LENGTH = 10L * 1024L * 1024L;  // 10 mb
 
     @Inject
-    public FirebaseHelper(LocalResourceLoader resLoader, @UserDatabaseRef DatabaseReference userDB,
-                          @AppResDatabaseRef DatabaseReference appResDB, StorageReference storageReference,
-                          @RegularScheduler ISchedulerProvider schedulerProvider) {
+    public FirebaseHelper(
+            LocalResourceLoader resLoader,
+            @UserDatabaseRef DatabaseReference userDB,
+            @AppResDatabaseRef DatabaseReference appResDB,
+            StorageReference storageReference,
+            @RegularScheduler ISchedulerProvider schedulerProvider,
+            Features featToggle) {
         mResLoader = checkNotNull(resLoader);
         mUserDB = checkNotNull(userDB);
         mAppResDB = checkNotNull(appResDB);
         mUserST = checkNotNull(storageReference);
         mSchedulerProvider = checkNotNull(schedulerProvider);
+        mFeatureToggle = checkNotNull(featToggle);
 
-//        deleteAllRecycledAssets();
-//        deleteAllRecycledDetails();
+        if(mFeatureToggle.DevelopmentMode) {
+            deleteAllRecycledAssets();
+            deleteAllRecycledDetails();
+        }
     }
 
     @Override
@@ -283,6 +291,16 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
         mUserST.delete();
     }
 
+    @Override
+    public void setFeatureToggle(@NonNull Features featureToggle) {
+        mFeatureToggle = checkNotNull(featureToggle);
+    }
+
+    @NonNull
+    @Override
+    public Features getFeatureToggle() {
+        return mFeatureToggle;
+    }
 
     //region PRIVATE STUFF
 
@@ -514,6 +532,8 @@ public class FirebaseHelper implements IDataRepository, IDebugHelper {
     private final StorageReference mUserST;
     private final LocalResourceLoader mResLoader;
     private final ISchedulerProvider mSchedulerProvider;
+    private volatile Features mFeatureToggle;
     private volatile OnDataChangeCallback<FAsset> mOnAssetsDataChangeCallback;
     private volatile OnDataChangeCallback<FDetail> mOnDetailsDataChangeCallback;
+
 }

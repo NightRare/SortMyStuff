@@ -2,12 +2,13 @@ package nz.ac.aut.comp705.sortmystuff.data;
 
 import java.util.List;
 
+import nz.ac.aut.comp705.sortmystuff.ISortMyStuffAppComponent;
 import nz.ac.aut.comp705.sortmystuff.data.models.FAsset;
 import nz.ac.aut.comp705.sortmystuff.data.models.FCategory;
 import nz.ac.aut.comp705.sortmystuff.data.models.FDetail;
 import rx.Observable;
 
-public interface IDataRepository {
+public interface IDataRepository extends ISortMyStuffAppComponent{
 
     //region RETRIEVE METHODS
 
