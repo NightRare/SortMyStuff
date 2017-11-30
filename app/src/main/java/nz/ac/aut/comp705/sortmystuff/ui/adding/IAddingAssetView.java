@@ -24,13 +24,9 @@ public interface IAddingAssetView extends IView<IAddingAssetPresenter>{
 
     interface ViewListeners {
 
-        void onClickItem(View view, IDetail item);
-
         void onClickPhoto(View view);
 
         void onLongClickPhoto(View view);
-
-        void onConfirmEditTextDetail(IDetail<String> item, String text);
 
         void onConfirmAddAsset();
     }

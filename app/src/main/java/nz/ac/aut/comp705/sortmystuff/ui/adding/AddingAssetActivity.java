@@ -1,7 +1,6 @@
 package nz.ac.aut.comp705.sortmystuff.ui.adding;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -17,13 +16,11 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -37,14 +34,13 @@ import nz.ac.aut.comp705.sortmystuff.Features;
 import nz.ac.aut.comp705.sortmystuff.R;
 import nz.ac.aut.comp705.sortmystuff.SortMyStuffApp;
 import nz.ac.aut.comp705.sortmystuff.data.models.CategoryType;
-import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
+import nz.ac.aut.comp705.sortmystuff.data.models.DetailForm;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
 import nz.ac.aut.comp705.sortmystuff.di.IFactory;
 import nz.ac.aut.comp705.sortmystuff.ui.BaseActivity;
 import nz.ac.aut.comp705.sortmystuff.utils.AppStrings;
 import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
 
-import static android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static nz.ac.aut.comp705.sortmystuff.utils.AppStrings.ROOT_ASSET_ID;
 
@@ -60,7 +56,7 @@ public class AddingAssetActivity extends BaseActivity implements IAddingAssetVie
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        mDetailsAdapter = new DetailListAdapter(this, new ArrayList<>(), mViewListeners);
+        mDetailsAdapter = new DetailListAdapter(this, new ArrayList<>());
         mCameraInitialLaunch = true;
 
         String containerId = getIntent().getStringExtra(AppStrings.INTENT_CONTAINER_ID);
@@ -182,9 +178,9 @@ public class AddingAssetActivity extends BaseActivity implements IAddingAssetVie
 
     @Override
     public void showDetails(List<IDetail> details) {
-        List<IDetail> detailWrappers = new ArrayList<>();
+        List<DetailForm> detailWrappers = new ArrayList<>();
         for (IDetail detail : details) {
-            detailWrappers.add(new DetailModel(detail));
+            detailWrappers.add(new DetailForm(detail));
         }
         mDetailsAdapter.replaceData(detailWrappers);
     }
@@ -207,20 +203,12 @@ public class AddingAssetActivity extends BaseActivity implements IAddingAssetVie
     @Override
     public void goBack() {
         String assetCreated = mPresenter.getCreatedAssetId();
-//        if (assetCreated != null &&
-//                mFeatToggle.PhotoDetection &&
-//                mFeatToggle.DelayPhotoDetection) {
-//            Intent detectName = new Intent(this, PhotoRecognitionService.class);
-//            detectName.putExtra(AppStrings.INTENT_NAME_DETECTION_ASSET_ID, assetCreated);
-//            startService(detectName);
-//        }
 
-        if(assetCreated != null) {
+        if (assetCreated != null) {
             Intent data = new Intent();
             data.putExtra(AppStrings.INTENT_ASSET_ID, assetCreated);
             setResult(RESULT_OK, data);
-        }
-        else {
+        } else {
             setResult(RESULT_CANCELED);
         }
 
@@ -256,7 +244,7 @@ public class AddingAssetActivity extends BaseActivity implements IAddingAssetVie
             categories.add(cy);
         }
         mSpinnerAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, categories);
+                R.layout.adding_asset_category_spinner_item, categories);
 
         mSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mSpinner.setAdapter(mSpinnerAdapter);
@@ -293,45 +281,8 @@ public class AddingAssetActivity extends BaseActivity implements IAddingAssetVie
         startActivityForResult(intent, AppStrings.REQUEST_TAKE_PHOTO);
     }
 
-    private EditText createEditText(Context context, LinearLayout layout) {
-        final EditText editText = new EditText(context);
-        editText.setSingleLine();
-        editText.setInputType(TYPE_TEXT_FLAG_CAP_SENTENCES);
-        layout.addView(editText);
-        return editText;
-    }
-
     private class AddingAssetViewListener implements
-            IAddingAssetView.ViewListeners,
-            DetailListAdapter.DetailItemListener {
-
-        @Override
-        public void onClickItem(View view, IDetail item) {
-            if (!item.getType().equals(DetailType.Text) &&
-                    !item.getType().equals(DetailType.Date))
-                return;
-
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(view.getContext());
-            dialogBuilder.setTitle(item.getLabel());
-            //dialog box setup
-            Context context = view.getContext();
-            LinearLayout layout = new LinearLayout(context);
-            layout.setOrientation(LinearLayout.VERTICAL);
-            //field text configuration
-            EditText fieldText = createEditText(context, layout);
-            fieldText.setText((String) item.getField());
-
-            //button setup
-            dialogBuilder.setView(layout);
-            dialogBuilder.setPositiveButton(R.string.edit_detail_confirm_button, (dialog2, which) ->
-                    onConfirmEditTextDetail(item, fieldText.getText().toString()));
-            dialogBuilder.setNegativeButton(R.string.cancel_button, (dialog, which) -> dialog.cancel());
-
-            dialogBuilder.show()
-                    // auto pop up the keyboard
-                    .getWindow()
-                    .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
-        }
+            IAddingAssetView.ViewListeners {
 
         @Override
         public void onClickPhoto(View view) {
@@ -352,78 +303,10 @@ public class AddingAssetActivity extends BaseActivity implements IAddingAssetVie
         }
 
         @Override
-        public void onConfirmEditTextDetail(IDetail<String> item, String text) {
-            DetailModel<String> detail = (DetailModel<String>) item;
-            detail.setField(text);
-            mDetailsAdapter.notifyDataSetChanged();
-        }
-
-        @Override
         public void onConfirmAddAsset() {
             String name = mNameView.getText().toString();
             CategoryType category = (CategoryType) mSpinner.getSelectedItem();
-            mPresenter.createAsset(name, category, mPhoto, mDetailsAdapter.getItems());
-        }
-    }
-
-    private static class DetailModel<T> implements IDetail<T> {
-
-        private IDetail<T> mEntity;
-        private T mField;
-
-        DetailModel(IDetail<T> entity) {
-            mEntity = entity;
-        }
-
-        @Override
-        public String getId() {
-            return mEntity.getId();
-        }
-
-        @Override
-        public String getAssetId() {
-            return mEntity.getAssetId();
-        }
-
-        @Override
-        public DetailType getType() {
-            return mEntity.getType();
-        }
-
-        @Override
-        public String getLabel() {
-            return mEntity.getLabel();
-        }
-
-        @Override
-        public T getField() {
-            return mField == null ? mEntity.getField() : mField;
-        }
-
-        @Override
-        public Long getCreateTimestamp() {
-            return mEntity.getCreateTimestamp();
-        }
-
-        @Override
-        public Long getModifyTimestamp() {
-            return mEntity.getModifyTimestamp();
-        }
-
-        @Override
-        public int getPosition() {
-            return mEntity.getPosition();
-        }
-
-        @Override
-        public boolean isDefaultFieldValue() {
-            // if mField is not null, then return true
-            // else return the value of the entity.isDefaultFieldValue()
-            return mField == null && mEntity.isDefaultFieldValue();
-        }
-
-        public void setField(T field) {
-            mField = field;
+            mPresenter.createAsset(name, category, mPhoto, mDetailsAdapter.getItemsAsIDetail());
         }
     }
 
