@@ -38,6 +38,7 @@ import nz.ac.aut.comp705.sortmystuff.data.models.DetailForm;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
 import nz.ac.aut.comp705.sortmystuff.di.IFactory;
 import nz.ac.aut.comp705.sortmystuff.ui.BaseActivity;
+import nz.ac.aut.comp705.sortmystuff.utils.AppConfigs;
 import nz.ac.aut.comp705.sortmystuff.utils.AppStrings;
 import nz.ac.aut.comp705.sortmystuff.utils.BitmapHelper;
 
@@ -305,6 +306,14 @@ public class AddingAssetActivity extends BaseActivity implements IAddingAssetVie
         @Override
         public void onConfirmAddAsset() {
             String name = mNameView.getText().toString();
+            name = name.trim();
+            if (name.isEmpty() || name.length() > AppConfigs.ASSET_NAME_CAP) {
+                showMessage(name.isEmpty() ?
+                        "The name cannot be empty." :
+                        "The name cannot be longer than " + AppConfigs.ASSET_NAME_CAP + " characters.");
+                return;
+            }
+
             CategoryType category = (CategoryType) mSpinner.getSelectedItem();
             mPresenter.createAsset(name, category, mPhoto, mDetailsAdapter.getItemsAsIDetail());
         }

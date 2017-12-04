@@ -7,6 +7,7 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -19,7 +20,6 @@ import nz.ac.aut.comp705.sortmystuff.data.models.DetailType;
 import nz.ac.aut.comp705.sortmystuff.data.models.IDetail;
 
 import static android.text.InputType.TYPE_DATETIME_VARIATION_DATE;
-import static android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class DetailListAdapter extends
@@ -51,7 +51,7 @@ public class DetailListAdapter extends
         if (detail.getType().equals(DetailType.Date))
             holder.mFieldView.setInputType(TYPE_DATETIME_VARIATION_DATE);
         else
-            holder.mFieldView.setInputType(TYPE_TEXT_FLAG_CAP_SENTENCES);
+            holder.mFieldView.setInputType(EditorInfo.TYPE_TEXT_FLAG_CAP_SENTENCES);
 
         holder.mFieldView.addTextChangedListener(new TextWatcher() {
             @Override
