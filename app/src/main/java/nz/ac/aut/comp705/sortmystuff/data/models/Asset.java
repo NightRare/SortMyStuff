@@ -425,10 +425,12 @@ public final class Asset implements IAsset {
 
         if (isRoot()) return false;
 
-        if (from.contentIds.remove(this.id)) {
-            containerId = to.id;
-            // if the new container already contains this, then no need for adding
-            return to.contentIds.contains(this.id) || to.contentIds.add(this.id);
+        synchronized (this) {
+            if (from.contentIds.remove(this.id)) {
+                containerId = to.id;
+                // if the new container already contains this, then no need for adding
+                return to.contentIds.contains(this.id) || to.contentIds.add(this.id);
+            }
         }
         return false;
     }
